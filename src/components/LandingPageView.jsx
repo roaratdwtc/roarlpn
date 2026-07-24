@@ -13,7 +13,10 @@ import {
   X, 
   Search, 
   Heart,
-  ChevronRight
+  ChevronRight,
+  CheckCircle,
+  HelpCircle,
+  ThumbsUp
 } from 'lucide-react';
 import './LandingPageView.css';
 
@@ -25,299 +28,23 @@ const TOURS_DATA = [
     url: 'https://roaradventuretourism.com/tour/evening-desert-safari/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/11/EveningDesertSafarin.webp',
     category: 'safari',
-    price: 150,
+    price: 149,
     rating: 4.9,
-    reviews: 1240,
-    desc: 'Experience the magical Dubai desert at sunset. Includes dune bashing, camel rides, henna painting, live belly dancing, Tanoura shows, and a premium BBQ buffet dinner.',
-    featured: true
+    reviews: 1540,
+    desc: 'The classic evening safari package in Lehbab Red Dunes. Includes dune bashing in 4x4 Land Cruisers, live shows (Belly dance, fire show, Tanoura), short camel ride, sandboarding, and a full BBQ buffet dinner with vegetarian and non-vegetarian selections.',
+    inclusions: ['Home/Hotel Pickup & Dropoff', 'Dune Bashing in 4x4 Land Cruisers', 'Live Entertainment Shows', 'Short Camel Ride', 'Unlimited Water & Soft Drinks', 'BBQ Buffet Dinner (Veg & Non-Veg)', 'Henna Tattoo for Ladies', 'Arabic Costumes', 'Sunset Photography']
   },
   {
-    id: 'dune-buggy-dubai',
-    title: 'Dune Buggy in Dubai',
-    url: 'https://roaradventuretourism.com/tour/dune-buggy-in-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/canam-scaled-4-Seater.jpg',
-    category: 'buggy',
-    price: 450,
-    rating: 4.8,
-    reviews: 980,
-    desc: 'Take command of a high-performance Can-Am Maverick buggy. Climb the highest red dunes of Dubai with your professional desert guide guiding the way.',
-    featured: true
-  },
-  {
-    id: 'vip-desert-safari',
+    id: 'vip-desert-safari-dubai',
     title: 'VIP Desert Safari in Dubai',
     url: 'https://roaradventuretourism.com/tour/vip-desert-safari-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/VIPDesertSafari.webp',
     category: 'safari',
-    price: 299,
-    rating: 4.9,
-    reviews: 820,
-    desc: 'Unmatched desert luxury. Enjoy VIP table service with private air-conditioned seating, high-end international dining, and personalized adventure guides.',
-    featured: true
-  },
-  {
-    id: 'dubai-city-tour',
-    title: 'Dubai City Tour',
-    url: 'https://roaradventuretourism.com/tour/dubai-city-tour/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp',
-    category: 'city',
-    price: 99,
-    rating: 4.7,
-    reviews: 1450,
-    desc: 'Discover Dubai’s iconic landmarks. Visit Burj Al Arab, Palm Jumeirah, Dubai Marina, and explore historic neighborhoods like Al Fahidi and the gold souks.',
-    featured: true
-  },
-  {
-    id: 'abu-dhabi-city-tour',
-    title: 'Abu Dhabi City Tour',
-    url: 'https://roaradventuretourism.com/tour/book-abu-dhabi-city-tour/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/Abudhabicitytourmosque.webp',
-    category: 'city',
     price: 199,
-    rating: 4.8,
-    reviews: 1120,
-    desc: 'A full-day trip to the capital city of UAE. Visit the spectacular Sheikh Zayed Grand Mosque, Emirates Palace, Heritage Village, and Ferrari World.',
-    featured: true
-  },
-  {
-    id: 'marina-cruise-dinner',
-    title: 'Dubai Marina Cruise Dinner',
-    url: 'https://roaradventuretourism.com/tour/dubai-marina-cruise-dinner/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaimarinacruisedinner.webp',
-    category: 'cruise',
-    price: 120,
-    rating: 4.7,
-    reviews: 730,
-    desc: 'Settle into a glass-enclosed traditional wooden dhow or modern yacht at Dubai Marina. Enjoy an upscale buffet dinner with live performances against Dubai’s skyline.',
-    featured: true
-  },
-  {
-    id: 'camel-riding-safari',
-    title: 'Camel Riding Safari Dubai',
-    url: 'https://roaradventuretourism.com/tour/camel-riding-safari-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/10/camelriding.avif',
-    category: 'safari',
-    price: 110,
-    rating: 4.8,
-    reviews: 640,
-    desc: 'Take a relaxed journey through Dubai’s conservation reserve on camelback, experiencing the desert’s ecosystem as ancient Bedouins did.',
-    featured: false
-  },
-  {
-    id: 'hatta-day-trip',
-    title: 'Hatta Day Trip with Mountain Tour',
-    url: 'https://roaradventuretourism.com/tour/hatta-day-trip-with-mountain-tour/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/hattamountaintourdubai.webp',
-    category: 'city',
-    price: 220,
-    rating: 4.6,
-    reviews: 410,
-    desc: 'Escape the city to the historic mountain enclave of Hatta. Kayak on the turquoise Hatta Dam, hike the trails, and visit Hatta Heritage Village.',
-    featured: false
-  },
-  {
-    id: 'morning-desert-safari',
-    title: 'Morning Desert Safari in Dubai',
-    url: 'https://roaradventuretourism.com/tour/morning-desert-safari-in-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/MorningDesertSafari.webp',
-    category: 'safari',
-    price: 120,
-    rating: 4.8,
-    reviews: 890,
-    desc: 'Witness the desert wake up. Includes early-morning dune bashing, sandboarding down steep slopes, camel rides, and light Arabic breakfast packages.',
-    featured: false
-  },
-  {
-    id: 'safari-without-dune-bashing',
-    title: 'Dubai Desert Safari without Dune Bashing',
-    url: 'https://roaradventuretourism.com/tour/dubai-desert-safari-without-dune-bashing/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2026/02/desertsafariwithoutdunebashingindubai.avif',
-    category: 'safari',
-    price: 130,
-    rating: 4.7,
-    reviews: 350,
-    desc: 'A peaceful, scenic desert encounter designed for families, pregnant ladies, or elderly guests. Focuses directly on nature walks and campsite entertainment.',
-    featured: false
-  },
-  {
-    id: 'private-desert-safari',
-    title: 'Private Desert Safari Dubai',
-    url: 'https://roaradventuretourism.com/tour/private-desert-safari-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/PrivateDesertSafariDubai.webp',
-    category: 'safari',
-    price: 799,
     rating: 4.9,
-    reviews: 290,
-    desc: 'A private 4x4 land cruiser for you and your family/group. Fully customizable schedule, private dinner setup, and dedicated driver-guide.',
-    featured: false
-  },
-  {
-    id: 'vip-safari-quad-bike',
-    title: 'VIP Desert Safari with Quad Bike',
-    url: 'https://roaradventuretourism.com/tour/vip-desert-safari-with-quad-bike/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/vipdesertsafariwithquadbike.webp',
-    category: 'buggy',
-    price: 349,
-    rating: 4.9,
-    reviews: 580,
-    desc: 'Luxury safari bundle combined with a thrilling session of all-terrain quad biking. Enjoy VIP table service and priority access at the Bedouin campsite.',
-    featured: false
-  },
-  {
-    id: 'sharjah-city-tour',
-    title: 'Sharjah City Tour',
-    url: 'https://roaradventuretourism.com/tour/sharjah-city-tour/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp', // fallback
-    category: 'city',
-    price: 130,
-    rating: 4.6,
-    reviews: 210,
-    desc: 'Tour the Cultural Capital of the UAE. Explore the historic souks, grand mosques, and the King Faisal Mosque, with museum entry tickets included.',
-    featured: false
-  },
-  {
-    id: 'dune-buggy-adventure',
-    title: 'Dune Buggy Adventure in Dubai',
-    url: 'https://roaradventuretourism.com/tour/dune-buggy-adventure-in-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/QuadBikingAndDuneBuggyDubai.jpg',
-    category: 'buggy',
-    price: 399,
-    rating: 4.8,
-    reviews: 460,
-    desc: 'Unleash your inner adventurer with raw engine power. Conquer custom dune tracks and enjoy spectacular desert photography stops with our guides.',
-    featured: false
-  },
-  {
-    id: 'safari-quad-bike',
-    title: 'Dubai Desert Safari with Quad Bike',
-    url: 'https://roaradventuretourism.com/tour/dubai-desert-safari-with-quad-bike/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg',
-    category: 'buggy',
-    price: 199,
-    rating: 4.7,
-    reviews: 1320,
-    desc: 'Our bestselling evening desert safari package bundled together with a 30-minute self-drive quad biking session in our desert arenas.',
-    featured: false
-  },
-  {
-    id: 'morning-safari-quadbike',
-    title: 'Morning Desert Safari with Quadbike',
-    url: 'https://roaradventuretourism.com/tour/morning-desert-safari-with-quadbike/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/Quad-biking-in-Dubai-desert-safa.jpg',
-    category: 'buggy',
-    price: 179,
-    rating: 4.8,
-    reviews: 790,
-    desc: 'An action-packed morning safari. Ride high-powered quad bikes, sandboard down slopes, and enjoy traditional Arabic hospitality before the midday heat.',
-    featured: false
-  },
-  {
-    id: 'evening-safari-bbq',
-    title: 'Evening Desert Safari with BBQ Dinner',
-    url: 'https://roaradventuretourism.com/tour/evening-desert-safari-with-bbq-dinner/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/11/EveningDesertSafariwithbbqdinnerroaradventureswl.webp',
-    category: 'safari',
-    price: 139,
-    rating: 4.8,
-    reviews: 910,
-    desc: 'A premium evening package highlighting traditional Emirati cuisines, freshly grilled BBQ, live tanoura, belly dancing, and stargazing.',
-    featured: false
-  },
-  {
-    id: 'hot-air-balloon',
-    title: 'Hot Air Balloon Ride Dubai',
-    url: 'https://roaradventuretourism.com/tour/hot-air-balloon-ride-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/1theUB87jbw7r532MtQFn8w.jpg',
-    category: 'cruise',
-    price: 999,
-    rating: 4.9,
-    reviews: 310,
-    desc: 'Float peacefully 4,000 feet above the pristine Arabian desert. Enjoy sunrise views, in-flight falcon shows, followed by a gourmet Bedouin breakfast.',
-    featured: true
-  },
-  {
-    id: 'dune-bashing-adventure',
-    title: 'Dune Bashing Adventure in Dubai',
-    url: 'https://roaradventuretourism.com/tour/dune-bashing-adventure-in-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/tour_649_63e8b2d97a090.jpg',
-    category: 'safari',
-    price: 120,
-    rating: 4.8,
-    reviews: 840,
-    desc: 'A dedicated roller-coaster ride over high desert dunes. Fast-paced, thrilling 4x4 maneuvers with professional safari-licensed drivers.',
-    featured: false
-  },
-  {
-    id: 'red-dunes-safari',
-    title: 'Red Dunes Safari',
-    url: 'https://roaradventuretourism.com/tour/red-dunes-safari/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-header1.jpg',
-    category: 'safari',
-    price: 160,
-    rating: 4.9,
-    reviews: 1180,
-    desc: 'Explore the high-altitude crimson sand dunes of Al Lahbab. Ideal for premium dune bashing, sandboarding, and authentic desert camp experiences.',
-    featured: false
-  },
-  {
-    id: 'overnight-safari',
-    title: 'Overnight Desert Safari Dubai',
-    url: 'https://roaradventuretourism.com/tour/overnight-desert-safari-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/OvernightDesertSafari.webp',
-    category: 'safari',
-    price: 349,
-    rating: 4.8,
-    reviews: 260,
-    desc: 'Sleep under the starry desert sky. Includes evening safari events, overnight stay in premium Bedouin tents, sleeping bags, and cooked breakfast.',
-    featured: false
-  },
-  {
-    id: 'sunrise-safari',
-    title: 'Sunrise Desert Safari Dubai',
-    url: 'https://roaradventuretourism.com/tour/sunrise-desert-safari-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/gallery-01709121792-sunrise-dese.jpg',
-    category: 'safari',
-    price: 140,
-    rating: 4.7,
-    reviews: 190,
-    desc: 'Witness a brilliant sunrise over desert dunes. Great for morning photography, camel rides, dune drives, and fresh Arabian coffee setups.',
-    featured: false
-  },
-  {
-    id: 'dhow-cruise-dinner',
-    title: 'Dhow Cruise Dinner in Dubai',
-    url: 'https://roaradventuretourism.com/tour/dhow-cruise-dinner-in-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/91auwe9632in9yhrixuqzuznmolq_155-scaled.jpg',
-    category: 'cruise',
-    price: 85,
-    rating: 4.6,
-    reviews: 670,
-    desc: 'Cruise along the historic Dubai Creek on a traditional wooden boat. Feast on international barbecue items and watch Tanoura dancers spin under the stars.',
-    featured: false
-  },
-  {
-    id: 'polaris-rzr-buggy',
-    title: 'Polaris RZR 1000cc Dune Buggy Dubai',
-    url: 'https://roaradventuretourism.com/tour/polaris-rzr-1000cc-dune-buggy-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/dxbsafari-Dune-Buggy4.jpg',
-    category: 'buggy',
-    price: 599,
-    rating: 4.9,
-    reviews: 320,
-    desc: 'Drive the absolute apex of off-road engineering: the Polaris RZR 1000. Features massive suspension travel and immense torque for serious thrill-seekers.',
-    featured: true
-  },
-  {
-    id: 'quad-bike-tour',
-    title: 'Quad Bike Tour in Dubai',
-    url: 'https://roaradventuretourism.com/tour/quad-bike-tour-in-dubai/',
-    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg', // reuse
-    category: 'buggy',
-    price: 150,
-    rating: 4.7,
-    reviews: 540,
-    desc: 'Drive your own all-terrain vehicle through wide-open desert playgrounds. Safe, thrilling, and suitable for all skill levels under guiding rangers.',
-    featured: false
+    reviews: 1820,
+    desc: 'Premium desert experience with VIP treatment. Skip the campsite queues and enjoy dedicated sofa seating, table service, separate BBQ areas, and personalized guides, alongside standard dune bashing and live campsite shows.',
+    inclusions: ['All Evening Safari Inclusions', 'Separate BBQ for VIPs', 'VIP Sofa Seating', 'Table Service for Drinks & Food', 'AC VIP Seating Upgrade Available', 'Priority Camel Riding Access']
   },
   {
     id: 'premium-desert-safari',
@@ -327,22 +54,328 @@ const TOURS_DATA = [
     category: 'safari',
     price: 249,
     rating: 4.9,
+    reviews: 980,
+    desc: 'Top-tier red dunes safari package containing direct pickup/dropoff in high-end Land Cruisers, a 30-minute quad bike session, private campgrounds access, and VIP table dining service.',
+    inclusions: ['Pickup & Dropoff in Land Cruiser', '30 Minutes Quad Biking', 'VIP Sofa Seating', 'Separate BBQ Buffet Area', 'Belly Dance, Fire & Tanoura Shows', 'Henna Tattooing & Sunset Photo Stops']
+  },
+  {
+    id: 'morning-desert-safari',
+    title: 'Morning Desert Safari in Dubai',
+    url: 'https://roaradventuretourism.com/tour/morning-desert-safari-in-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/MorningDesertSafari.webp',
+    category: 'safari',
+    price: 120,
+    rating: 4.8,
+    reviews: 640,
+    desc: 'Perfect for morning adventurers. Experience the refreshing desert breeze, early morning dune bashing, camel riding, sandboarding, and photography stops under clear blue skies before the midday heat.',
+    inclusions: ['Home/Hotel Pickup & Dropoff', 'Dune Bashing in 4x4 Land Cruisers', 'Land Cruiser Pickup & Dropoff', 'Short Camel Ride', 'Long Camel Ride (Extra)', 'Quad Bike & Buggy (Extra)', 'Falcon Pictures Stop']
+  },
+  {
+    id: 'overnight-desert-safari',
+    title: 'Overnight Desert Safari Dubai',
+    url: 'https://roaradventuretourism.com/tour/overnight-desert-safari-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/OvernightDesertSafari.webp',
+    category: 'safari',
+    price: 349,
+    rating: 4.8,
     reviews: 410,
-    desc: 'Elevate your desert experience with high-end buffet spreads, comfortable seating areas, personalized guides, and faster tracks for dune drives.',
-    featured: false
+    desc: 'Spend the night under the stars in Al Awir or Lahbab desert. Includes the entire evening desert safari program, overnight camping in comfortable tents with pillows and blankets, stargazing, and morning breakfast.',
+    inclusions: ['All Evening Safari Inclusions', 'Pillow, Blanket & Private Tent', 'Overnight Camping Setup', 'Stargazing & Campfire Session', 'Fresh Arabic Breakfast', 'All Time Slots Available on Request']
+  },
+  {
+    id: 'private-desert-safari',
+    title: 'Private Desert Safari Dubai',
+    url: 'https://roaradventuretourism.com/tour/private-desert-safari-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/PrivateDesertSafariDubai.webp',
+    category: 'safari',
+    price: 799,
+    rating: 4.9,
+    reviews: 320,
+    desc: 'An exclusive desert tour designed for families, honeymooners, or corporate groups. Enjoy a dedicated 4x4 Land Cruiser, customized timing schedules, and private dinner tables/campsite spaces.',
+    inclusions: ['Exclusive Private 4x4 Cruiser', 'doorstep Pickup & Dropoff', 'Customized Tour Schedule', 'Private VIP Table & Seating', 'Dune Bashing or Gentle Nature Drive', 'Full Evening Campsite Inclusions']
+  },
+  {
+    id: 'dune-buggy-dubai',
+    title: 'Dune Buggy in Dubai',
+    url: 'https://roaradventuretourism.com/tour/dune-buggy-in-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/canam-scaled-4-Seater.jpg',
+    category: 'buggy',
+    price: 450,
+    rating: 4.8,
+    reviews: 1120,
+    desc: 'Command your own premium multi-seater Can-Am Maverick buggy. Take on high red dunes under the instruction of certified guides. Fully equipped with automatic transmissions and safety roll cages.',
+    inclusions: ['Self-Drive Can-Am Buggy', 'Safety Gear (Helmets, Goggles)', 'Certified Desert Tour Guide', 'Open Desert Dunes Driving', 'Refreshments & Soft Drinks', 'Doorstep Transfer Included']
+  },
+  {
+    id: 'polaris-rzr-buggy',
+    title: 'Polaris RZR 1000cc Dune Buggy Dubai',
+    url: 'https://roaradventuretourism.com/tour/polaris-rzr-1000cc-dune-buggy-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/dxbsafari-Dune-Buggy4.jpg',
+    category: 'buggy',
+    price: 599,
+    rating: 4.9,
+    reviews: 290,
+    desc: 'Drive the pinnacle of dune buggy performance: the Polaris RZR 1000cc. Engineered with high-clearance suspension travel and raw power to climb the steepest red dunes with ease.',
+    inclusions: ['Self-Drive Polaris RZR 1000cc', 'Professional Instructors', 'Full Safety Briefing & Gear', 'Guided Red Dunes Excursion', 'Soft Drinks & Ice Water', 'Hotel Pickup & Dropoff Option']
+  },
+  {
+    id: 'quad-bike-tour',
+    title: 'Quad Bike Tour in Dubai',
+    url: 'https://roaradventuretourism.com/tour/quad-bike-tour-in-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg',
+    category: 'buggy',
+    price: 150,
+    rating: 4.7,
+    reviews: 840,
+    desc: 'Drive powerful all-terrain ATVs across custom sand circuits and open desert dunes. Ideal for beginners and expert riders looking for high-octane desert motorsports.',
+    inclusions: ['ATV Quad Bike Self-Drive', 'Helmets & Protection Gear', 'Safety Instructor & Guiding', 'Dune Photostop Opportunities', 'Water & Soft Drinks']
+  },
+  {
+    id: 'dubai-city-tour',
+    title: 'Dubai City Tour',
+    url: 'https://roaradventuretourism.com/tour/dubai-city-tour/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp',
+    category: 'city',
+    price: 99,
+    rating: 4.7,
+    reviews: 1380,
+    desc: 'Discover the contrasts of Dubai. A comprehensive tour highlighting modern architectural wonders (Burj Khalifa, Burj Al Arab, Palm Jumeirah) alongside historic markets (Gold & Spice Souk).',
+    inclusions: ['Air-Conditioned Tourism Bus/Coach', 'Professional English-Speaking Guide', 'doorstep Pickup & Dropoff', 'Visit Burj Al Arab (Photostop)', 'Visit Palm Jumeirah & Atlantis', 'Explore Deira Souks & Creek']
+  },
+  {
+    id: 'abu-dhabi-city-tour',
+    title: 'Abu Dhabi City Tour',
+    url: 'https://roaradventuretourism.com/tour/book-abu-dhabi-city-tour/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/Abudhabicitytourmosque.webp',
+    category: 'city',
+    price: 199,
+    rating: 4.8,
+    reviews: 1040,
+    desc: 'Embark on a full-day trip to the UAE’s capital. Tour the spectacular Sheikh Zayed Grand Mosque, Yas Island, Heritage Village, and capture photos at Emirates Palace.',
+    inclusions: ['Full-Day Guided Tour from Dubai', 'Sheikh Zayed Grand Mosque Access', 'Explore Yas Island & Marina Mall', 'Emirates Palace (Photostop)', 'Professional Tour Guide', 'All Entrance Tickets Included']
+  },
+  {
+    id: 'sharjah-city-tour',
+    title: 'Sharjah City Tour',
+    url: 'https://roaradventuretourism.com/tour/sharjah-city-tour/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp',
+    category: 'city',
+    price: 130,
+    rating: 4.6,
+    reviews: 190,
+    desc: 'Explore the Cultural Capital of the UAE. Tour historical sites, traditional souks (Blue Souk), the magnificent King Faisal Mosque, and the Sharjah museum district.',
+    inclusions: ['Guided Sightseeing Program', 'Visit Central Blue Souk', 'King Faisal Mosque (Photostop)', 'Historical Museum entry tickets', 'Pickup & Dropoff from Dubai/Sharjah']
+  },
+  {
+    id: 'hatta-day-trip',
+    title: 'Hatta Day Trip with Mountain Tour',
+    url: 'https://roaradventuretourism.com/tour/hatta-day-trip-with-mountain-tour/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/hattamountaintourdubai.webp',
+    category: 'city',
+    price: 220,
+    rating: 4.6,
+    reviews: 310,
+    desc: 'Journey to the Hajar Mountains. Kayak across the clear waters of Hatta Dam, hike scenic trails, and explore the ancient Hatta Heritage Village.',
+    inclusions: ['Pickup & Dropoff in SUV/4x4', 'Scenic Mountain Drive to Hatta', 'Visit Hatta Dam & Kayak stop', 'Explore Hatta Heritage Village', 'Hatta Hill Park & Honeybee Discovery']
+  },
+  {
+    id: 'marina-cruise-dinner',
+    title: 'Dubai Marina Cruise Dinner',
+    url: 'https://roaradventuretourism.com/tour/dubai-marina-cruise-dinner/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaimarinacruisedinner.webp',
+    category: 'cruise',
+    price: 120,
+    rating: 4.7,
+    reviews: 860,
+    desc: 'Glance at Dubai Marina’s illuminated skyscrapers on a double-decker glass boat or luxury yacht. Includes an upscale international buffet dinner and traditional Tanoura performances.',
+    inclusions: ['2 Hours Luxury Marina Cruise', 'International Buffet Dinner (Veg & Non-Veg)', 'Live Tanoura Dance Performance', 'Welcome Arabic Coffee & Dates', 'Air-Conditioned Lower Deck', 'Open-Air Scenic Upper Deck']
+  },
+  {
+    id: 'dhow-cruise-dinner',
+    title: 'Dhow Cruise Dinner in Dubai',
+    url: 'https://roaradventuretourism.com/tour/dhow-cruise-dinner-in-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/91auwe9632in9yhrixuqzuznmolq_155-scaled.jpg',
+    category: 'cruise',
+    price: 85,
+    rating: 4.6,
+    reviews: 580,
+    desc: 'Float along the historic Dubai Creek on a traditional rustic wooden dhow. Enjoy classic Arabic BBQ dishes, soft background music, and Tanoura dance shows.',
+    inclusions: ['2 Hours Traditional Creek Cruise', 'Arabic BBQ Buffet Dinner', 'Tanoura Dance Performance', 'Unlimited Refreshments', 'Background Melodic Music']
+  },
+  {
+    id: 'hot-air-balloon',
+    title: 'Hot Air Balloon Ride Dubai',
+    url: 'https://roaradventuretourism.com/tour/hot-air-balloon-ride-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/1theUB87jbw7r532MtQFn8w.jpg',
+    category: 'cruise',
+    price: 999,
+    rating: 4.9,
+    reviews: 280,
+    desc: 'Ascend 4,000 feet above the Dubai desert at sunrise. Catch panoramic views of the sand dunes, watch a live in-flight falcon display, followed by a gourmet breakfast.',
+    inclusions: ['Gourmet Bedouin Breakfast', 'In-Flight Falcon Show', 'Sunrise Balloon Flight (1 Hour)', 'Flight Certificate Signed by Pilot', 'doorstep Hotel Transfers']
+  },
+  {
+    id: 'camel-riding-safari',
+    title: 'Camel Riding Safari Dubai',
+    url: 'https://roaradventuretourism.com/tour/camel-riding-safari-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/10/camelriding.avif',
+    category: 'safari',
+    price: 110,
+    rating: 4.8,
+    reviews: 510,
+    desc: 'A dedicated, slow-paced desert journey on camelback. Spot native wildlife like Arabian Oryx and gazelles in the Dubai Desert Conservation Reserve.',
+    inclusions: ['Guided Camel Caravan Ride', 'Wildlife Spotting Walks', 'Traditional Bedouin Camp Visit', 'doorstep Desert Transfer', 'Water & Coffee Refreshments']
+  },
+  {
+    id: 'safari-without-dune-bashing',
+    title: 'Dubai Desert Safari without Dune Bashing',
+    url: 'https://roaradventuretourism.com/tour/dubai-desert-safari-without-dune-bashing/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2026/02/desertsafariwithoutdunebashingindubai.avif',
+    category: 'safari',
+    price: 130,
+    rating: 4.7,
+    reviews: 240,
+    desc: 'Specifically designed for pregnant women, families with toddlers, elderly guests, or anyone wanting to skip high-impact off-roading. Drive straight to camp.',
+    inclusions: ['Direct Camp SUV Transfer', 'Nature & Stargazing Walks', 'Camel Ride & Henna Painting', 'Live Dance & Fire shows', 'BBQ Buffet Dinner']
+  },
+  {
+    id: 'vip-safari-quad-bike',
+    title: 'VIP Desert Safari with Quad Bike',
+    url: 'https://roaradventuretourism.com/tour/vip-desert-safari-with-quad-bike/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/vipdesertsafariwithquadbike.webp',
+    category: 'buggy',
+    price: 349,
+    rating: 4.9,
+    reviews: 490,
+    desc: 'Double the excitement. Combine the high-end VIP Evening Safari and private camp table service with an open-desert quad biking excursion.',
+    inclusions: ['30 Minutes Quad Biking Session', 'All VIP Desert Safari Inclusions', 'priority access at Camp activities', 'Private Sofa Table Service']
+  },
+  {
+    id: 'dune-buggy-adventure',
+    title: 'Dune Buggy Adventure in Dubai',
+    url: 'https://roaradventuretourism.com/tour/dune-buggy-adventure-in-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/QuadBikingAndDuneBuggyDubai.jpg',
+    category: 'buggy',
+    price: 399,
+    rating: 4.8,
+    reviews: 350,
+    desc: 'Self-drive buggy rental packages built for pure adventure. Conquer steep sand hills, make custom photo stops, and enjoy driving high-powered engines.',
+    inclusions: ['Self-Drive ATV/Buggy Session', 'Safety Instruction & Guiding', 'Helmet, Goggles, and Safety Harness', 'Soft Drinks & Chilled Water']
+  },
+  {
+    id: 'safari-quad-bike',
+    title: 'Dubai Desert Safari with Quad Bike',
+    url: 'https://roaradventuretourism.com/tour/dubai-desert-safari-with-quad-bike/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg',
+    category: 'buggy',
+    price: 199,
+    rating: 4.7,
+    reviews: 1210,
+    desc: 'The best-value combo. Enjoy our complete Evening Desert Safari package bundled together with a 30-minute self-drive quad biking session in our designated tracks.',
+    inclusions: ['30 Minutes Quad Bike Ride', 'Home/Hotel Pickup & Dropoff', 'Dune Bashing in 4x4 Land Cruisers', 'BBQ Buffet Dinner & Entertainment']
+  },
+  {
+    id: 'morning-safari-quadbike',
+    title: 'Morning Desert Safari with Quadbike',
+    url: 'https://roaradventuretourism.com/tour/morning-desert-safari-with-quadbike/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/Quad-biking-in-Dubai-desert-safa.jpg',
+    category: 'buggy',
+    price: 179,
+    rating: 4.8,
+    reviews: 580,
+    desc: 'Beat the heat with a morning tour. Includes active sand dune quad biking, sandboarding, short camel ride, and refreshments before returning by noon.',
+    inclusions: ['30 Minutes Quad Biking Session', 'Dune Bashing in 4x4 Cruiser', 'Short Camel Ride & Sandboarding', 'chilled Mineral Water & Soft Drinks']
+  },
+  {
+    id: 'evening-safari-bbq',
+    title: 'Evening Desert Safari with BBQ Dinner',
+    url: 'https://roaradventuretourism.com/tour/evening-desert-safari-with-bbq-dinner/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/11/EveningDesertSafariwithbbqdinnerroaradventureswl.webp',
+    category: 'safari',
+    price: 139,
+    rating: 4.8,
+    reviews: 790,
+    desc: 'Focuses deeply on local Emirati cuisine and campsite hospitality. Includes dune drives, live shows, henna, Arabic dress up, and a large BBQ buffet.',
+    inclusions: ['Standard Evening Safari inclusions', 'Unlimited BBQ Buffet Dinner', 'Henna Painting for Ladies', 'Belly Dance & Fire performance']
+  },
+  {
+    id: 'dune-bashing-adventure',
+    title: 'Dune Bashing Adventure in Dubai',
+    url: 'https://roaradventuretourism.com/tour/dune-bashing-adventure-in-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/tour_649_63e8b2d97a090.jpg',
+    category: 'safari',
+    price: 120,
+    rating: 4.8,
+    reviews: 690,
+    desc: 'For high-impact adrenaline lovers. A dedicated, longer session of high-speed desert dune drifting in custom Land Cruisers driven by licensed pilots.',
+    inclusions: ['45 Minutes Extreme Dune Bashing', 'Experienced DTCM Safari Driver', 'Red Dunes Photography Stops', 'chilled Water & Refreshments']
+  },
+  {
+    id: 'red-dunes-safari',
+    title: 'Red Dunes Safari',
+    url: 'https://roaradventuretourism.com/tour/red-dunes-safari/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-header1.jpg',
+    category: 'safari',
+    price: 160,
+    rating: 4.9,
+    reviews: 1020,
+    desc: 'Discover Lahbab Red Dunes, famous for their steep heights and red crimson sands. Best for premium sandboarding, dune drifting, and camp stays.',
+    inclusions: ['Lahbab Red Dunes Excursion', 'Home/Hotel pickup in SUV', 'Premium Sandboarding session', 'Bedouin camp dining & live shows']
+  },
+  {
+    id: 'sunrise-desert-safari',
+    title: 'Sunrise Desert Safari Dubai',
+    url: 'https://roaradventuretourism.com/tour/sunrise-desert-safari-dubai/',
+    image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/gallery-01709121792-sunrise-dese.jpg',
+    category: 'safari',
+    price: 140,
+    rating: 4.7,
+    reviews: 150,
+    desc: 'Watch the sun rise over the high desert dunes. Perfect for morning photography enthusiasts, camel rides, and fresh Arabian coffee setups.',
+    inclusions: ['Early Morning Hotel Pickup', 'Sunrise Stargazing to Dawn', 'Arabic Coffee & Dates at camp', 'Gentle Dunes Drive & Photoshoots']
+  }
+];
+
+// Locations data for doorstep pickup descriptions
+const LOCATIONS_DATA = [
+  {
+    name: 'Dubai Marina & JBR',
+    desc: 'Living in Dubai Marina or JBR? Get ready for a Premium Safari Tour Pick/Drop from your Residence/Hotel like Promenade, Time Place Tower, Intercontinental by IHG, Marina Mall, Marsa, Sulafa Tower, Cayan Tower, Crowne Hotel, Hilton The Walk, Rimal 6, Amwaj, Bahar & Murjan, Rixos Premium, Sofitel, Amwaj Rotana, FIVE LUXE JBR, The Ritz-Carlton Dubai, Le Royal Meridien, Ramada, Sheraton, and Habtoor Grand.',
+    hotels: ['Atlantis The Palm', 'Rixos Premium JBR', 'Sofitel JBR', 'Cayan Tower', 'Promenade Marina']
+  },
+  {
+    name: 'Bur Dubai & Karama',
+    desc: 'doorstep Pickup & Dropoff from Al Karama, Jafiliya, Al Mankhool, Oud Metha, and Bur Dubai. Pickup points include Grand Excelsior, Holiday Inn, Orchid Vue, Novotel, Omega Hotel, Xclusive Maples, Citymax, Al Fahidi, Admiral Plaza, Gateway, Park Regis Kris Kin, Golden Sands 10, Arabian Courtyard, Four Points, and Dolphin Show Creek Hotel.',
+    hotels: ['Park Regis Kris Kin', 'Holiday Inn Bur Dubai', 'Citymax Bur Dubai', 'Golden Sands']
+  },
+  {
+    name: 'Deira & Al Rigga',
+    desc: 'Book your safari from Deira City Center, Abu Hail, Hor Al Anz, Al Nahda, Al Rigga, Baniyas, Khabaisi, Naif, and Gold Souk. We offer pickups from hotels like Ramada by Wyndham, Hyatt Regency Galleria, Landmark, Ibis, Novotel Gold District, Fortune Pearl, and Boonmax.',
+    hotels: ['Deira City Center Hotel', 'Ramada Deira', 'Hyatt Regency Galleria', 'Ibis Deira']
+  },
+  {
+    name: 'Downtown, Business Bay & DWTC',
+    desc: 'doorstep Pickup/Dropoff from DWTC, Al Satwa, Zabeel, Al Jafiliya, Jumeirah 1, DIFC, Downtown, Business Bay, Jumeirah, Al Wasl, and Al Mina. Ideal for corporate groups and tourists staying at Downtown luxury hotels.',
+    hotels: ['Burj Khalifa area', 'Address Downtown', 'JW Marriott Marquis', 'DIFC Residences']
+  },
+  {
+    name: 'Palm Jumeirah & Jebel Ali',
+    desc: 'We offer doorstep Pickup/Dropoff from Palm Jumeirah hotels like Marriott Resort, The View At The Palm, Atlantis The Palm, Atlantis The Royal, East Crescent residences, Anantara Residences, Pullman, and Sofitel. Also covering Discovery Gardens, Jebel Ali, and Dubai Sports City.',
+    hotels: ['Atlantis The Royal', 'Atlantis The Palm', 'Anantara Palm Jumeirah', 'Marriott Resort']
   }
 ];
 
 export default function LandingPageView() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeLocationIndex, setActiveLocationIndex] = useState(0);
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Monitor scroll for glass header sticky effect
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
+      if (window.scrollY > 40) {
         setIsHeaderScrolled(true);
       } else {
         setIsHeaderScrolled(false);
@@ -369,20 +402,21 @@ export default function LandingPageView() {
       <header className={`lp-header ${isHeaderScrolled ? 'scrolled' : ''}`}>
         <div className="lp-container lp-nav">
           <a href="#" className="lp-logo">
-            <img src="/logo.jpg" alt="Roar Adventure Tourism LLC Logo" />
+            <img src="/logo.jpg" alt="Roar Adventure Tourism Logo" />
             <span className="lp-logo-text">ROAR ADVENTURE</span>
           </a>
 
           <ul className="lp-nav-links">
             <li><a href="#about" className="lp-nav-link">About Us</a></li>
-            <li><a href="#tours" className="lp-nav-link active">Experiences</a></li>
-            <li><a href="#why-us" className="lp-nav-link">Why Choose Us</a></li>
+            <li><a href="#packages" className="lp-nav-link active">Deals & Packages</a></li>
+            <li><a href="#locations" className="lp-nav-link">Pickup Locations</a></li>
+            <li><a href="#process" className="lp-nav-link">Booking Process</a></li>
             <li><a href="#contact" className="lp-nav-link">Contact</a></li>
           </ul>
 
           <div className="lp-nav-actions">
-            <a href="https://wa.me/97145578679" className="lp-btn-contact" target="_blank" rel="noopener noreferrer">
-              <Phone size={16} /> <span>+971 4 557 8679</span>
+            <a href="https://wa.me/971589344077" className="lp-btn-contact" target="_blank" rel="noopener noreferrer">
+              <Phone size={14} /> <span>+971 58 934 4077</span>
             </a>
             <button onClick={handleBookNowClick} className="lp-btn-primary header-btn">
               Book Online
@@ -405,13 +439,14 @@ export default function LandingPageView() {
         </div>
         <ul className="lp-mobile-nav-links">
           <li><a href="#about" className="lp-mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>About Us</a></li>
-          <li><a href="#tours" className="lp-mobile-nav-link active" onClick={() => setIsMobileMenuOpen(false)}>Experiences</a></li>
-          <li><a href="#why-us" className="lp-mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Why Choose Us</a></li>
+          <li><a href="#packages" className="lp-mobile-nav-link active" onClick={() => setIsMobileMenuOpen(false)}>Deals & Packages</a></li>
+          <li><a href="#locations" className="lp-mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Pickup Locations</a></li>
+          <li><a href="#process" className="lp-mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Booking Process</a></li>
           <li><a href="#contact" className="lp-mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Contact</a></li>
         </ul>
-        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <a href="https://wa.me/97145578679" className="lp-btn-secondary" style={{ justifyContent: 'center' }} target="_blank" rel="noopener noreferrer">
-            <Phone size={16} /> WhatsApp Call
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <a href="https://wa.me/971589344077" className="lp-btn-secondary" style={{ justifyContent: 'center' }} target="_blank" rel="noopener noreferrer">
+            <Phone size={14} /> WhatsApp Inquiry
           </a>
           <button onClick={() => { setIsMobileMenuOpen(false); handleBookNowClick(); }} className="lp-btn-primary" style={{ justifyContent: 'center' }}>
             Book Online
@@ -421,252 +456,394 @@ export default function LandingPageView() {
 
       {/* HERO SECTION */}
       <section className="lp-hero">
-        <div className="lp-hero-bg" style={{ backgroundImage: 'url(https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-header1.jpg)' }}></div>
-        <div className="lp-hero-bg-overlay"></div>
-        <div className="lp-container">
-          <div className="lp-hero-content">
-            <span className="lp-hero-tagline">
-              <Sparkles size={14} /> Dubai's Premier Adventure Operator
-            </span>
-            <h1 className="lp-hero-title">
-              Experience the True Spirit of <span>Arabian Adventure</span>
-            </h1>
-            <p className="lp-hero-desc">
-              Explore Dubai's red desert dunes in custom Can-Am buggies, ride majestic camels at sunset, and dine in luxury Bedouin camps. Book premium tours backed by DTCM licensing and high-end security.
-            </p>
-            <div className="lp-hero-btns">
-              <button onClick={handleBookNowClick} className="lp-btn-primary lp-btn-pulse">
-                Instantly Book Safaris <ArrowRight size={16} />
-              </button>
-              <a href="#tours" className="lp-btn-secondary">
-                View All Experiences
-              </a>
-            </div>
+        <div className="lp-hero-bg" style={{ backgroundImage: 'url(https://roaradventuretourism.com/wp-content/uploads/2025/07/Untitled-design-7.png)' }}></div>
+        <div className="lp-hero-content lp-container">
+          <span className="lp-hero-tagline">
+            <Sparkles size={14} /> DET & DTCM Approved Safari Operator
+          </span>
+          <h1 className="lp-hero-title">
+            VIP Desert Safari Dubai <br />
+            <span>Best Safari Deals & Packages 2026</span>
+          </h1>
+          <p className="lp-hero-desc">
+            Experience premium Desert Safaris in Lehbab Red Dunes & Al Awir Desert. Trusted by tourists from the USA, UK, Germany, France, Italy, and beyond. Book directly with Roar Adventure Tourism LLC for best rates and licensed quality.
+          </p>
 
-            <div className="lp-hero-stats">
-              <div className="lp-stat-item">
-                <span className="lp-stat-number">150K+</span>
-                <span className="lp-stat-label">Happy Guests</span>
-              </div>
-              <div className="lp-stat-item">
-                <span className="lp-stat-number">26+</span>
-                <span className="lp-stat-label">Luxury Packages</span>
-              </div>
-              <div className="lp-stat-item">
-                <span className="lp-stat-number">4.9/5</span>
-                <span className="lp-stat-label">TripAdvisor Rating</span>
-              </div>
+          <div className="lp-hero-badges">
+            <div className="lp-hero-badge-item">
+              <CheckCircle size={16} className="lp-hero-badge-icon" />
+              <span>DET & DTCM Licensed</span>
             </div>
+            <div className="lp-hero-badge-item">
+              <CheckCircle size={16} className="lp-hero-badge-icon" />
+              <span>Instant Confirmation</span>
+            </div>
+            <div className="lp-hero-badge-item">
+              <CheckCircle size={16} className="lp-hero-badge-icon" />
+              <span>Book Now Pay Later</span>
+            </div>
+            <div className="lp-hero-badge-item">
+              <CheckCircle size={16} className="lp-hero-badge-icon" />
+              <span>FREE Cancellation</span>
+            </div>
+          </div>
+
+          <div className="lp-hero-btns">
+            <button onClick={handleBookNowClick} className="lp-btn-primary lp-btn-pulse">
+              Book VIP Desert Safari <ArrowRight size={16} />
+            </button>
+            <a href="#packages" className="lp-btn-secondary">
+              Explore 2026 Packages
+            </a>
           </div>
         </div>
       </section>
 
-      {/* EXPLORER SECTION (WITH ALL 26 TOURS) */}
-      <section id="tours" className="lp-explorer">
+      {/* MAIN SAFARI PACKAGES EXPLORER (WITH ALL 26 TOURS) */}
+      <section id="packages" className="lp-section">
         <div className="lp-container">
           <div className="lp-section-header">
-            <span className="lp-section-subtitle">Premium Adventures</span>
-            <h2 className="lp-section-title">Discover Our Curated Experiences</h2>
+            <span className="lp-section-subtitle">Dubai Adventure Packages</span>
+            <h2 className="lp-section-title">VIP Desert Safari Prices & Timings</h2>
             <p className="lp-section-desc">
-              Explore the rich variety of Dubai adventures. Filter through our 26 signature safaris, off-road self-drives, creek cruises, and scenic city excursions.
+              Choose from shared, private, or luxury tours. VIP prices start from 149aed/person with doorstep pickup & dropoff from hotels, apartments, and villas across Dubai and Sharjah.
             </p>
           </div>
 
-          {/* Search & Tabs control bar */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', alignItems: 'center', marginBottom: '48px' }}>
-            <div style={{ position: 'relative', width: '100%', maxWidth: '480px' }}>
+          {/* Search and Tabs Filter Bar */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', marginBottom: '40px' }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '460px' }}>
               <input 
                 type="text" 
-                placeholder="Search packages (e.g. Can-Am, BBQ, Overnight...)" 
+                placeholder="Search packages (e.g. Can-Am, BBQ, VIP, Sunrise...)" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
                   width: '100%',
-                  padding: '14px 20px 14px 46px',
-                  borderRadius: '30px',
+                  padding: '12px 18px 12px 42px',
+                  borderRadius: '25px',
                   border: '1.5px solid var(--lp-border)',
-                  background: 'var(--lp-glass)',
-                  color: 'var(--lp-light)',
-                  fontSize: '14px',
+                  background: 'var(--lp-bg-white)',
+                  color: 'var(--lp-text-body)',
+                  fontSize: '13.5px',
                   outline: 'none',
-                  backdropFilter: 'blur(8px)',
+                  boxShadow: 'var(--lp-card-shadow)',
                   transition: 'border-color 0.3s'
                 }}
                 onFocus={(e) => e.target.style.borderColor = 'var(--lp-primary)'}
                 onBlur={(e) => e.target.style.borderColor = 'var(--lp-border)'}
               />
-              <Search size={18} style={{ position: 'absolute', left: '18px', top: '16px', color: 'var(--lp-muted)' }} />
+              <Search size={16} style={{ position: 'absolute', left: '16px', top: '15px', color: 'var(--lp-text-muted)' }} />
             </div>
 
-            <div className="lp-filter-tabs">
-              <button className={`lp-tab-btn ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>All Experiences</button>
-              <button className={`lp-tab-btn ${activeTab === 'safari' ? 'active' : ''}`} onClick={() => setActiveTab('safari')}>Desert Safaris</button>
-              <button className={`lp-tab-btn ${activeTab === 'buggy' ? 'active' : ''}`} onClick={() => setActiveTab('buggy')}>Buggy & ATV Rides</button>
-              <button className={`lp-tab-btn ${activeTab === 'city' ? 'active' : ''}`} onClick={() => setActiveTab('city')}>City Tours & Day Trips</button>
-              <button className={`lp-tab-btn ${activeTab === 'cruise' ? 'active' : ''}`} onClick={() => setActiveTab('cruise')}>Cruises & Sky Escapes</button>
+            <div className="lp-packages-tabs">
+              <button className={`lp-packages-tab-btn ${activeTab === 'all' ? 'active' : ''}`} onClick={() => setActiveTab('all')}>All Packages</button>
+              <button className={`lp-packages-tab-btn ${activeTab === 'safari' ? 'active' : ''}`} onClick={() => setActiveTab('safari')}>Desert Safaris</button>
+              <button className={`lp-packages-tab-btn ${activeTab === 'buggy' ? 'active' : ''}`} onClick={() => setActiveTab('buggy')}>Dune Buggy & ATVs</button>
+              <button className={`lp-packages-tab-btn ${activeTab === 'city' ? 'active' : ''}`} onClick={() => setActiveTab('city')}>City Excursions</button>
+              <button className={`lp-packages-tab-btn ${activeTab === 'cruise' ? 'active' : ''}`} onClick={() => setActiveTab('cruise')}>Yacht Cruises & Sky</button>
             </div>
           </div>
 
-          {/* Grid of Tours */}
-          <div className="lp-grid">
+          {/* Grid of Redesigned Packages */}
+          <div className="lp-packages-grid">
             {filteredTours.map((tour) => (
-              <article key={tour.id} className="lp-card">
-                <div className="lp-card-img-wrapper">
-                  <img src={tour.image} alt={`${tour.title} Redesigned Card Image`} className="lp-card-img" loading="lazy" />
-                  <span className="lp-card-badge">{tour.category === 'safari' ? 'Desert Safari' : tour.category === 'buggy' ? 'Offroad' : tour.category === 'city' ? 'City Tour' : 'Sightseeing'}</span>
-                  <div className="lp-card-overlay"></div>
+              <article key={tour.id} className="lp-package-card">
+                <span className="lp-package-badge">{tour.category === 'safari' ? 'Safari Deal' : tour.category === 'buggy' ? 'Offroad ATV' : tour.category === 'city' ? 'Sightseeing' : 'Cruising'}</span>
+                <h3 className="lp-package-title">{tour.title}</h3>
+                
+                <div className="lp-package-meta">
+                  <div className="lp-package-meta-item">
+                    <Star size={14} fill="var(--lp-accent)" className="lp-package-meta-icon" />
+                    <strong>{tour.rating}</strong>
+                    <span>({tour.reviews} reviews)</span>
+                  </div>
+                  <div className="lp-package-meta-item">
+                    <Compass size={14} className="lp-package-meta-icon" />
+                    <span>2026 Timings</span>
+                  </div>
                 </div>
-                <div className="lp-card-content">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                    <h3 className="lp-card-title">{tour.title}</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--lp-secondary)', fontSize: '13px', fontWeight: '700' }}>
-                      <Star size={14} fill="currentColor" /> {tour.rating}
-                    </div>
+
+                <p style={{ fontSize: '13.5px', color: 'var(--lp-text-body)', marginBottom: '16px', lineHeight: '1.4' }}>
+                  {tour.desc}
+                </p>
+
+                {tour.inclusions && (
+                  <ul className="lp-package-features-list">
+                    {tour.inclusions.slice(0, 5).map((inc, index) => (
+                      <li key={index} className="lp-package-feature-item">
+                        <CheckCircle size={14} className="lp-package-feature-check" />
+                        <span>{inc}</span>
+                      </li>
+                    ))}
+                    {tour.inclusions.length > 5 && (
+                      <li className="lp-package-feature-item" style={{ color: 'var(--lp-primary)', fontWeight: '600', fontStyle: 'italic' }}>
+                        + {tour.inclusions.length - 5} more inclusions
+                      </li>
+                    )}
+                  </ul>
+                )}
+
+                <div className="lp-package-footer">
+                  <div className="lp-package-price-wrap">
+                    <span className="lp-package-price-label">Price Start</span>
+                    <div className="lp-package-price-value">{tour.price} <span>AED</span></div>
                   </div>
-                  <p className="lp-card-desc">{tour.desc}</p>
-                  <div className="lp-card-meta">
-                    <div>
-                      <span className="lp-card-price-label">Price from</span>
-                      <div className="lp-card-price-value">{tour.price} <span>AED</span></div>
-                    </div>
-                    {/* Crucial requirement: anchor text explicitly points to exact live URLs */}
-                    <a 
-                      href={tour.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="lp-card-btn"
-                      title={`Book live session for ${tour.title}`}
-                    >
-                      Explore Tour <ChevronRight size={14} />
-                    </a>
-                  </div>
+                  <a 
+                    href={tour.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="lp-btn-primary"
+                    style={{ padding: '8px 16px', fontSize: '12px' }}
+                    title={`Go to live details for ${tour.title}`}
+                  >
+                    View Details
+                  </a>
                 </div>
               </article>
             ))}
           </div>
 
           {filteredTours.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--lp-muted)' }}>
-              <Compass size={40} style={{ marginBottom: '16px' }} />
-              <p>No experiences found matching your criteria. Try another search or filter.</p>
+            <div style={{ textAlign: 'center', padding: '50px 0', color: 'var(--lp-text-muted)' }}>
+              <Compass size={32} style={{ marginBottom: '12px', color: 'var(--lp-primary)' }} />
+              <p>No safari deals found. Try a different search filter.</p>
             </div>
           )}
         </div>
       </section>
 
-      {/* WHY CHOOSE US */}
-      <section id="why-us" className="lp-why-choose">
+      {/* WHY CHOOSE ROAR SECTION */}
+      <section id="why-us" className="lp-section alt-bg">
+        <div className="lp-container lp-why-container">
+          <div className="lp-why-text-col">
+            <span className="lp-section-subtitle">Trusted Safari Operator</span>
+            <h2 className="lp-section-title">Best Desert Safari Company in Dubai</h2>
+            <p className="lp-hero-desc" style={{ marginBottom: '24px' }}>
+              Roar Adventure Tourism LLC stands out with over 80,000 satisfied customers and 1500+ five-star reviews on Google, TripAdvisor, and major travel booking channels. We operate our own fleet of Land Cruisers and quad bikes directly.
+            </p>
+            <div className="lp-why-stats">
+              <div className="lp-why-stat-item">
+                <span className="lp-why-stat-num">80k+</span>
+                <span className="lp-why-stat-label">Happy Guests</span>
+              </div>
+              <div className="lp-why-stat-item">
+                <span className="lp-why-stat-num">1500+</span>
+                <span className="lp-why-stat-label">5★ Reviews</span>
+              </div>
+              <div className="lp-why-stat-item">
+                <span className="lp-why-stat-num">100%</span>
+                <span className="lp-why-stat-label">DTCM Approved</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="lp-why-card-grid">
+            <div className="lp-why-feature-card">
+              <div className="lp-why-icon-wrap"><Award /></div>
+              <h3 className="lp-why-card-title">Best Rates Guarantee</h3>
+              <p className="lp-why-card-desc">Direct operator bookings ensure you bypass agency commissions and get local wholesale rates.</p>
+            </div>
+            <div className="lp-why-feature-card">
+              <div className="lp-why-icon-wrap"><Shield /></div>
+              <h3 className="lp-why-card-title">Book Now Pay Later</h3>
+              <p className="lp-why-card-desc">No upfront credit card deposit needed for standard tours. Secure reservations instantly.</p>
+            </div>
+            <div className="lp-why-feature-card">
+              <div className="lp-why-icon-wrap"><Clock /></div>
+              <h3 className="lp-why-card-title">24/7 Live Support</h3>
+              <p className="lp-why-card-desc">Direct lines to tour supervisors on WhatsApp for instant timing customisations.</p>
+            </div>
+            <div className="lp-why-feature-card">
+              <div className="lp-why-icon-wrap"><Sparkles /></div>
+              <h3 className="lp-why-card-title">Customizable Tours</h3>
+              <p className="lp-why-card-desc">Easily add camel rides, quad biking, private seating upgrades, or skip dune bashing.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* INTERACTIVE DOORSTEP PICKUP LOCATIONS PANEL */}
+      <section id="locations" className="lp-section">
         <div className="lp-container">
           <div className="lp-section-header">
-            <span className="lp-section-subtitle">Why Choose Roar</span>
-            <h2 className="lp-section-title">The Roar Quality Guarantee</h2>
+            <span className="lp-section-subtitle">Convenient Pickups</span>
+            <h2 className="lp-section-title">Doorstep Pick/Drop Locations</h2>
             <p className="lp-section-desc">
-              We own our fleet of vehicles, operate under direct regulatory compliance, and recruit the finest Bedouin campsite hosts in Dubai.
+              We offer doorstep pickups in comfortable 4x4 Land Cruisers or modern vehicles across all major neighborhoods in Dubai and Sharjah. Click on a zone below to see detailed pickup options.
             </p>
           </div>
 
-          <div className="lp-features-grid">
-            <div className="lp-feature-card">
-              <div className="lp-feature-icon">
-                <Award />
+          <div className="lp-locations-grid">
+            {LOCATIONS_DATA.map((loc, idx) => (
+              <div 
+                key={idx} 
+                className={`lp-location-card ${activeLocationIndex === idx ? 'active' : ''}`}
+                onClick={() => setActiveLocationIndex(idx)}
+              >
+                <MapPin size={18} className="lp-package-meta-icon" style={{ margin: '0 auto 8px auto' }} />
+                <div className="lp-location-name">{loc.name}</div>
               </div>
-              <h3 className="lp-feature-title">DTCM Licensed Operator</h3>
-              <p className="lp-feature-desc">Certified by the Department of Economy and Tourism in Dubai. We host and operate 100% of our tours directly.</p>
-            </div>
+            ))}
+          </div>
 
-            <div className="lp-feature-card">
-              <div className="lp-feature-icon">
-                <Shield />
-              </div>
-              <h3 className="lp-feature-title">5-Star Safety Protocol</h3>
-              <p className="lp-feature-desc">All buggies have full roll-cages, multi-point harness seatbelts, and off-road safety tracking.</p>
-            </div>
-
-            <div className="lp-feature-card">
-              <div className="lp-feature-icon">
-                <Clock />
-              </div>
-              <h3 className="lp-feature-title">Flexible Cancellations</h3>
-              <p className="lp-feature-desc">Cancel up to 24 hours in advance for a full refund. Quick weather re-booking supports all guests.</p>
-            </div>
-
-            <div className="lp-feature-card">
-              <div className="lp-feature-icon">
-                <Sparkles />
-              </div>
-              <h3 className="lp-feature-title">Custom Bedouin Camps</h3>
-              <p className="lp-feature-desc">Our campgrounds offer genuine hospitality, clean facilities, premium seating, and gourmet food choices.</p>
+          <div className="lp-locations-details-panel">
+            <h3 className="lp-location-details-title">Pickup details for {LOCATIONS_DATA[activeLocationIndex].name}</h3>
+            <p className="lp-location-details-text" style={{ marginBottom: '20px' }}>
+              {LOCATIONS_DATA[activeLocationIndex].desc}
+            </p>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <strong style={{ fontSize: '13px', color: 'var(--lp-text-title)' }}>Key Pick-up Hotels covered:</strong>
+              {LOCATIONS_DATA[activeLocationIndex].hotels.map((h, i) => (
+                <span key={i} style={{ background: 'var(--lp-bg-sand)', border: '1px solid var(--lp-border)', padding: '4px 10px', borderRadius: '15px', fontSize: '12px' }}>
+                  {h}
+                </span>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* INTERACTIVE BOOKING CTA BANNER */}
-      <section className="lp-cta">
+      {/* TARGET AUDIENCE AUDIENCE SEGMENT DEALS */}
+      <section className="lp-section alt-bg">
+        <div className="lp-container">
+          <div className="lp-section-header">
+            <span className="lp-section-subtitle">Tailored Desert Safaris</span>
+            <h2 className="lp-section-title">Special Packages for Every Traveler</h2>
+            <p className="lp-section-desc">
+              Whether you are traveling solo, planning a family trip with toddlers, celebrating an anniversary, or organizing corporate outings, we customize our camps to support your needs.
+            </p>
+          </div>
+
+          <div className="lp-why-card-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            <div className="lp-why-feature-card">
+              <h3 className="lp-why-card-title" style={{ fontSize: '18px', color: 'var(--lp-primary)', marginBottom: '10px' }}>Family & Toddler Safaris</h3>
+              <p className="lp-why-card-desc" style={{ fontSize: '13.5px' }}>
+                Skips aggressive dune bashing. Direct camp transfers allow young children (ages 1-8) and mothers to enjoy camel rides and shows safely.
+              </p>
+            </div>
+            <div className="lp-why-feature-card">
+              <h3 className="lp-why-card-title" style={{ fontSize: '18px', color: 'var(--lp-primary)', marginBottom: '10px' }}>Romantic Safari for Couples</h3>
+              <p className="lp-why-card-desc" style={{ fontSize: '13.5px' }}>
+                Honeymooners, birthday, or anniversary setups. Premium seating space, personalized sunset tables, and gourmet grills.
+              </p>
+            </div>
+            <div className="lp-why-feature-card">
+              <h3 className="lp-why-card-title" style={{ fontSize: '18px', color: 'var(--lp-primary)', marginBottom: '10px' }}>Gentle / Senior Citizens Safari</h3>
+              <p className="lp-why-card-desc" style={{ fontSize: '13.5px' }}>
+                Designed for pregnant women, people with back pain or heart health concerns. Gentle drives straight to campgrounds.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* STEPS TO BOOK CORNER */}
+      <section id="process" className="lp-section">
+        <div className="lp-container">
+          <div className="lp-section-header">
+            <span className="lp-section-subtitle">How It Works</span>
+            <h2 className="lp-section-title">Our Easy 4-Step Booking Process</h2>
+            <p className="lp-section-desc">
+              Secure your desert tour in less than 2 minutes. No advance credit card details required for standard packages.
+            </p>
+          </div>
+
+          <div className="lp-process-flow">
+            <div className="lp-process-step">
+              <span className="lp-process-num">1</span>
+              <div className="lp-process-icon"><Compass size={20} /></div>
+              <h3 className="lp-process-title">Choose Package</h3>
+              <p className="lp-process-desc">Select from Standard, VIP, Premium, or Private Desert Safari deals.</p>
+            </div>
+            <div className="lp-process-step">
+              <span className="lp-process-num">2</span>
+              <div className="lp-process-icon"><Phone size={20} /></div>
+              <h3 className="lp-process-title">WhatsApp Inquiry</h3>
+              <p className="lp-process-desc">Send WhatsApp with your guest count, selected package, and hotel pickup location.</p>
+            </div>
+            <div className="lp-process-step">
+              <span className="lp-process-num">3</span>
+              <div className="lp-process-icon"><ThumbsUp size={20} /></div>
+              <h3 className="lp-process-title">Confirm Booking</h3>
+              <p className="lp-process-desc">Receive instant e-booking confirmation. Free cancellations up to 24 hours.</p>
+            </div>
+            <div className="lp-process-step">
+              <span className="lp-process-num">4</span>
+              <div className="lp-process-icon"><CheckCircle size={20} /></div>
+              <h3 className="lp-process-title">Enjoy Tour</h3>
+              <p className="lp-process-desc">Our Land Cruiser driver picks you up from your doorstep. Pay cash/card on arrival.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* QUICK INQUIRY CALL ACTION BOX */}
+      <section id="contact" className="lp-section alt-bg">
         <div className="lp-container">
           <div className="lp-cta-box">
-            <span className="lp-cta-subtitle">Ready for the adventure?</span>
-            <h2 className="lp-cta-title">Build Your Custom Dream Desert Adventure Package</h2>
+            <span className="lp-cta-subtitle">Instantly Confirm Your Tour</span>
+            <h2 className="lp-cta-title">Don’t miss out on premium desert safari adventure experiences</h2>
             <p className="lp-cta-desc">
-              Mix and match Evening Safaris with dune buggy upgrades, long camel rides, and custom photography services in our real-time interactive booking builder.
+              Talk directly to our desert supervisors to customize your timing, request private tables, or query quad bike availability. 
             </p>
-            <div className="lp-cta-btn-group">
-              <button onClick={handleBookNowClick} className="lp-btn-primary lp-btn-pulse" style={{ fontSize: '15px', padding: '14px 36px' }}>
-                Open Interactive Builder <ArrowRight size={18} />
-              </button>
-              <a href="https://wa.me/97145578679" target="_blank" rel="noopener noreferrer" className="lp-btn-secondary" style={{ fontSize: '15px', padding: '14px 36px' }}>
-                Chat with Tour Planner
+            <div className="lp-hero-btns">
+              <a href="https://wa.me/971589344077" className="lp-btn-primary lp-btn-pulse" target="_blank" rel="noopener noreferrer" style={{ padding: '14px 32px' }}>
+                WhatsApp Call +971 58 934 4077
               </a>
+              <button onClick={handleBookNowClick} className="lp-btn-secondary" style={{ padding: '14px 32px' }}>
+                Use Interactive Booking Form
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FOOTER WITH COMPREHENSIVE DIRECTORY OF ALL 26 TOURS */}
-      <footer id="contact" className="lp-footer">
+      {/* FOOTER DIRECTORY OF ALL 26 TOURS */}
+      <footer className="lp-footer">
         <div className="lp-container">
           <div className="lp-footer-grid">
             <div className="lp-footer-info">
               <span className="lp-logo-text" style={{ fontSize: '22px' }}>ROAR ADVENTURE</span>
               <p className="lp-footer-desc">
-                Roar Adventure Tourism LLC is an award-winning tour operator providing desert safaris, offroad dune buggies, city tours, and cruise dinning inside Dubai, UAE.
+                Roar Adventure Tourism LLC is a premier licensed tour operator based in Dubai, UAE, specializing in VIP desert safaris, high-power Can-Am buggies, and luxurious creek and yacht cruise dinning.
               </p>
               <div className="lp-footer-socials">
-                <a href="#" className="lp-social-btn"><Heart size={16} /></a>
-                <a href="#" className="lp-social-btn"><Compass size={16} /></a>
-                <a href="#" className="lp-social-btn"><Star size={16} /></a>
+                <a href="#" className="lp-social-btn"><Heart size={14} /></a>
+                <a href="#" className="lp-social-btn"><Compass size={14} /></a>
+                <a href="#" className="lp-social-btn"><Star size={14} fill="currentColor" /></a>
               </div>
             </div>
 
             <div>
-              <h3 className="lp-footer-col-title">Quick Links</h3>
+              <h3 className="lp-footer-col-title">Navigation Links</h3>
               <ul className="lp-footer-links">
-                <li><a href="#about" className="lp-footer-link"><ChevronRight size={12} /> About Our Agency</a></li>
-                <li><a href="#tours" className="lp-footer-link"><ChevronRight size={12} /> Explore Packages</a></li>
-                <li><a href="#why-us" className="lp-footer-link"><ChevronRight size={12} /> Quality Guarantees</a></li>
-                <li><button onClick={handleBookNowClick} className="lp-footer-link" style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}><ChevronRight size={12} /> Interactive Builder</button></li>
+                <li><a href="#about" className="lp-footer-link"><ChevronRight size={10} /> About Us</a></li>
+                <li><a href="#packages" className="lp-footer-link"><ChevronRight size={10} /> Packages & Prices</a></li>
+                <li><a href="#locations" className="lp-footer-link"><ChevronRight size={10} /> doorStep Pickups</a></li>
+                <li><a href="#process" className="lp-footer-link"><ChevronRight size={10} /> Stepped Guide</a></li>
               </ul>
             </div>
 
             <div>
-              <h3 className="lp-footer-col-title">Safari Categories</h3>
+              <h3 className="lp-footer-col-title">Key Areas covered</h3>
               <ul className="lp-footer-links">
-                <li><a href="#tours" onClick={() => setActiveTab('safari')} className="lp-footer-link"><ChevronRight size={12} /> Desert Safaris</a></li>
-                <li><a href="#tours" onClick={() => setActiveTab('buggy')} className="lp-footer-link"><ChevronRight size={12} /> Offroad ATV & Buggy</a></li>
-                <li><a href="#tours" onClick={() => setActiveTab('city')} className="lp-footer-link"><ChevronRight size={12} /> City Sightseeing</a></li>
-                <li><a href="#tours" onClick={() => setActiveTab('cruise')} className="lp-footer-link"><ChevronRight size={12} /> Yacht Cruises</a></li>
+                <li><a href="#locations" className="lp-footer-link"><ChevronRight size={10} /> Dubai Marina & JBR</a></li>
+                <li><a href="#locations" className="lp-footer-link"><ChevronRight size={10} /> Bur Dubai & Karama</a></li>
+                <li><a href="#locations" className="lp-footer-link"><ChevronRight size={10} /> Deira & Al Rigga</a></li>
+                <li><a href="#locations" className="lp-footer-link"><ChevronRight size={10} /> Downtown & DWTC</a></li>
               </ul>
             </div>
 
             <div className="lp-footer-contact">
-              <h3 className="lp-footer-col-title">Get In Touch</h3>
+              <h3 className="lp-footer-col-title">Licensed Office</h3>
               <div className="lp-footer-contact-item">
                 <MapPin className="lp-footer-contact-icon" />
                 <span>Dubai World Trade Centre (DWTC), Sheikh Zayed Rd, Dubai, UAE</span>
               </div>
               <div className="lp-footer-contact-item">
                 <Phone className="lp-footer-contact-icon" />
-                <span>+971 4 557 8679</span>
+                <span>+971 4 557 8679 (Office)</span>
               </div>
               <div className="lp-footer-contact-item">
                 <Compass className="lp-footer-contact-icon" />
@@ -675,9 +852,9 @@ export default function LandingPageView() {
             </div>
           </div>
 
-          {/* ALL 26 SITEMAP TOUR PAGES LINKED IN THE COMPREHENSIVE DIRECTORY */}
+          {/* SITEMAP LINK INTEGRATION SECTION */}
           <div className="lp-footer-directory">
-            <h4 className="lp-directory-title">All Adventure Packages & Live Tour Links</h4>
+            <h4 className="lp-directory-title">Roar Adventure Tourism LLC - Sitemap Tour Index</h4>
             <div className="lp-directory-tags">
               {TOURS_DATA.map((tour) => (
                 <a 
@@ -695,8 +872,8 @@ export default function LandingPageView() {
           </div>
 
           <div className="lp-footer-bottom">
-            <p>&copy; {new Date().getFullYear()} Roar Adventure Tourism LLC. Licensed DTCM Tour Operator. All rights reserved.</p>
-            <p style={{ display: 'flex', gap: '20px' }}>
+            <p>&copy; {new Date().getFullYear()} Roar Adventure Tourism LLC. Approved by Dubai Department of Economy and Tourism (DET). All rights reserved.</p>
+            <p style={{ display: 'flex', gap: '16px' }}>
               <a href="#">Privacy Policy</a>
               <a href="#">Terms & Conditions</a>
             </p>
