@@ -4,6 +4,7 @@
   "description": "Static HTML & CSS Landing Page for Roar Adventure Tourism LLC",
   "scripts": {
     "randomize": "node scripts/randomize_anchors.cjs",
+    "build": "node scripts/build.cjs",
     "deploy": "node scripts/deploy.cjs"
   }
 }
