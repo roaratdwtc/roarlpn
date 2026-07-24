@@ -6,6 +6,6 @@
     "randomize": "node scripts/randomize_anchors.cjs",
     "build": "node scripts/build.cjs",
     "deploy": "node scripts/deploy.cjs",
-    "deploy:surge": "node scripts/deploy_surge.cjs"
+    "deploy:surge": "node scripts/build.cjs && npx surge dist roar-desert-safari.surge.sh"
   }
 }
