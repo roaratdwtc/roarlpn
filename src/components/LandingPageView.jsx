@@ -25,7 +25,7 @@ import './LandingPageView.css';
 const TOURS_DATA = [
   {
     id: 'evening-safari',
-    title: 'Desert Safari with BBQ Dinner',
+    title: 'Dubai Evening Safari Tour 2026',
     url: 'https://roaradventuretourism.com/tour/evening-desert-safari/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/11/EveningDesertSafarin.webp',
     category: 'safari',
@@ -80,7 +80,7 @@ const TOURS_DATA = [
   },
   {
     id: 'premium-desert-safari',
-    title: 'Premium Campsite Dinner Tour',
+    title: 'Premium Safari with Quadbike',
     url: 'https://roaradventuretourism.com/tour/premium-desert-safari/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/10/PremiumDesertSafariDubai.webp',
     category: 'safari',
@@ -106,7 +106,7 @@ const TOURS_DATA = [
   },
   {
     id: 'morning-desert-safari',
-    title: 'Early Morning Desert Safari',
+    title: 'Morning Safari In Al Awir',
     url: 'https://roaradventuretourism.com/tour/morning-desert-safari-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/MorningDesertSafari.webp',
     category: 'safari',
@@ -133,7 +133,7 @@ const TOURS_DATA = [
   },
   {
     id: 'overnight-desert-safari',
-    title: 'Sleep in Desert Safari Package',
+    title: '24 Hour Desert Safari Dubai',
     url: 'https://roaradventuretourism.com/tour/overnight-desert-safari-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/OvernightDesertSafari.webp',
     category: 'safari',
@@ -159,7 +159,7 @@ const TOURS_DATA = [
   },
   {
     id: 'private-desert-safari',
-    title: 'Private 4x4 Desert Safari',
+    title: 'Private Family Desert Safari',
     url: 'https://roaradventuretourism.com/tour/private-desert-safari-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/PrivateDesertSafariDubai.webp',
     category: 'safari',
@@ -185,7 +185,7 @@ const TOURS_DATA = [
   },
   {
     id: 'dune-buggy-dubai',
-    title: 'Can-Am Buggy Tour Dubai',
+    title: 'Dubai Dune Buggy Rental',
     url: 'https://roaradventuretourism.com/tour/dune-buggy-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/canam-scaled-4-Seater.jpg',
     category: 'buggy',
@@ -237,7 +237,7 @@ const TOURS_DATA = [
   },
   {
     id: 'quad-bike-tour',
-    title: 'Dubai Quad Biking Tour',
+    title: 'Single Quad Bike Adventure',
     url: 'https://roaradventuretourism.com/tour/quad-bike-tour-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg',
     category: 'buggy',
@@ -262,7 +262,7 @@ const TOURS_DATA = [
   },
   {
     id: 'dubai-city-tour',
-    title: 'Dubai Landmarks Tour',
+    title: 'Dubai Guided Sightseeing Tour',
     url: 'https://roaradventuretourism.com/tour/dubai-city-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp',
     category: 'city',
@@ -288,7 +288,7 @@ const TOURS_DATA = [
   },
   {
     id: 'abu-dhabi-city-tour',
-    title: 'Abu Dhabi City Tour',
+    title: 'Book Abu Dhabi City Tour',
     url: 'https://roaradventuretourism.com/tour/book-abu-dhabi-city-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/Abudhabicitytourmosque.webp',
     category: 'city',
@@ -314,7 +314,7 @@ const TOURS_DATA = [
   },
   {
     id: 'sharjah-city-tour',
-    title: 'Sharjah Museum Tour',
+    title: 'Sharjah Cultural Heritage Tour',
     url: 'https://roaradventuretourism.com/tour/sharjah-city-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp',
     category: 'city',
@@ -339,7 +339,7 @@ const TOURS_DATA = [
   },
   {
     id: 'hatta-day-trip',
-    title: 'Hatta Kayaking & Heritage Tour',
+    title: 'Hatta Mountain Tour from Dubai',
     url: 'https://roaradventuretourism.com/tour/hatta-day-trip-with-mountain-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/hattamountaintourdubai.webp',
     category: 'city',
@@ -364,7 +364,7 @@ const TOURS_DATA = [
   },
   {
     id: 'marina-cruise-dinner',
-    title: 'Dubai Marina Cruise Dinner',
+    title: 'Marina Yacht Dinner Cruise',
     url: 'https://roaradventuretourism.com/tour/dubai-marina-cruise-dinner/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaimarinacruisedinner.webp',
     category: 'cruise',
@@ -415,7 +415,7 @@ const TOURS_DATA = [
   },
   {
     id: 'hot-air-balloon',
-    title: 'Hot Air Balloon Ride Dubai',
+    title: 'Dubai Desert Hot Air Balloon Tour',
     url: 'https://roaradventuretourism.com/tour/hot-air-balloon-ride-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/1theUB87jbw7r532MtQFn8w.jpg',
     category: 'cruise',
@@ -440,7 +440,7 @@ const TOURS_DATA = [
   },
   {
     id: 'camel-riding-safari',
-    title: 'Camel Trekking Tour Dubai',
+    title: 'Desert Safari with Camel Ride',
     url: 'https://roaradventuretourism.com/tour/camel-riding-safari-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/10/camelriding.avif',
     category: 'safari',
@@ -490,7 +490,7 @@ const TOURS_DATA = [
   },
   {
     id: 'vip-safari-quad-bike',
-    title: 'VIP Quad Biking Safari Dubai',
+    title: 'Luxury Safari and Quad Bike',
     url: 'https://roaradventuretourism.com/tour/vip-desert-safari-with-quad-bike/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/vipdesertsafariwithquadbike.webp',
     category: 'buggy',
@@ -514,7 +514,7 @@ const TOURS_DATA = [
   },
   {
     id: 'dune-buggy-adventure',
-    title: 'Dune Buggy Adventure in Dubai',
+    title: 'Offroad Buggy Excursion Dubai',
     url: 'https://roaradventuretourism.com/tour/dune-buggy-adventure-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/QuadBikingAndDuneBuggyDubai.jpg',
     category: 'buggy',
@@ -538,7 +538,7 @@ const TOURS_DATA = [
   },
   {
     id: 'safari-quad-bike',
-    title: 'Red Dunes Safari with ATV',
+    title: 'Dubai Quad Biking Safari Deal',
     url: 'https://roaradventuretourism.com/tour/dubai-desert-safari-with-quad-bike/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg',
     category: 'buggy',
@@ -586,7 +586,7 @@ const TOURS_DATA = [
   },
   {
     id: 'evening-safari-bbq',
-    title: 'Campsite BBQ Safari Dubai',
+    title: 'Evening Desert Safari with BBQ Dinner',
     url: 'https://roaradventuretourism.com/tour/evening-desert-safari-with-bbq-dinner/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/11/EveningDesertSafariwithbbqdinnerroaradventureswl.webp',
     category: 'safari',
@@ -610,7 +610,7 @@ const TOURS_DATA = [
   },
   {
     id: 'dune-bashing-adventure',
-    title: 'High Dunes Drifting Excursion',
+    title: 'Extreme Dune Bashing Dubai',
     url: 'https://roaradventuretourism.com/tour/dune-bashing-adventure-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/tour_649_63e8b2d97a090.jpg',
     category: 'safari',
@@ -634,7 +634,7 @@ const TOURS_DATA = [
   },
   {
     id: 'red-dunes-safari',
-    title: 'Lahbab Red Dunes Desert Safari',
+    title: 'Premium Red Dunes Safari',
     url: 'https://roaradventuretourism.com/tour/red-dunes-safari/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-header1.jpg',
     category: 'safari',
@@ -733,7 +733,7 @@ export default function LandingPageView() {
   }, []);
 
   const handleBookNowClick = () => {
-    window.location.hash = '#/book';
+    window.open('https://wa.me/971589344077', '_blank');
   };
 
   const filteredTours = TOURS_DATA.filter(tour => {
