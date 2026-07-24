@@ -36,7 +36,7 @@ Terms:
 1. Free Cancellation before 24 hours  
 2. 50% refund before 12 hours.   
 3. 0 refund for no showup or same day cancellation.   
-For Cancellation Reschedule or Modifications please Call/WhatsApp +97145578679.`;
+For Cancellation Reschedule or Modifications please Call/WhatsApp +971589344077.`;
   const phoneClean = cleanPhone(booking.whatsapp);
   return `https://wa.me/${phoneClean}?text=${encodeURIComponent(msg)}`;
 }
@@ -87,7 +87,7 @@ Terms:
 1. Free Cancellation before 24 hours  
 2. 50% refund before 12 hours.   
 3. 0 refund for no showup or same day cancellation.   
-For Cancellation Reschedule or Modifications please Call/WhatsApp +97145578679.`;
+For Cancellation Reschedule or Modifications please Call/WhatsApp +971589344077.`;
 }
 
 // Helper: detect if a package is a morning / city / Hatta daytime tour (no camp use)

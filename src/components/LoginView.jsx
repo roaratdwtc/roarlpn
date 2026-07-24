@@ -31,7 +31,7 @@ export default function LoginView({ onLoginSuccess }) {
           name: 'Roar Adventure Tourism LLC',
           slug: 'roar',
           email: 'info@roaradventuretourism.com',
-          whatsapp: '+97145578679',
+          whatsapp: '+971589344077',
           address: 'Dubai World Trade Centre (DWTC), Sheikh Zayed Rd, Dubai, UAE',
           contactPerson: 'Mr. Abid Ali'
         });
@@ -88,7 +88,7 @@ export default function LoginView({ onLoginSuccess }) {
           name: 'Roar Adventure Tourism LLC',
           slug: 'roar',
           email: 'info@roaradventuretourism.com',
-          whatsapp: '+97145578679',
+          whatsapp: '+971589344077',
           address: 'Dubai World Trade Centre (DWTC), Sheikh Zayed Rd, Dubai, UAE',
           contactPerson: 'Mr. Abid Ali'
         });

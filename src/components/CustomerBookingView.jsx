@@ -344,7 +344,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
     if (!b) return "";
     const ref = b.id.replace("book-", "").toUpperCase() + "ASD";
     const t = `Hi Roar Adventure Tourism, confirming Ref# ${ref}:\n1. Name: ${b.customerName}\n2. WhatsApp: ${b.whatsapp}\n3. Guests: ${b.pax} pax\n4. Package: ${b.packageName}\n5. Date: ${(b.date||"").split("-").reverse().join("/")}\n6. Pickup: ${b.pickupLocation}${b.roomNo ? ` Rm ${b.roomNo}` : ""}${b.addonName ? `\n7. Addons: ${b.addonName}` : ""}\n${b.addonName ? "8" : "7"}. Total: AED ${b.price} (Pay on Arrival)`;
-    return `https://wa.me/97145578679?text=${encodeURIComponent(t)}`;
+    return `https://wa.me/971589344077?text=${encodeURIComponent(t)}`;
   };
 
   /* ── Success Screen ──────────────────────────────────────────────────── */
@@ -725,7 +725,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       </div>
 
       {/* Floating WhatsApp */}
-      <a href="https://wa.me/97145578679?text=Hi%20Roar%20Adventure%20Tourism%2C%20I%20need%20help%20booking." target="_blank" rel="noopener noreferrer" className="floating-wa">
+      <a href="https://wa.me/971589344077?text=Hi%20Roar%20Adventure%20Tourism%2C%20I%20need%20help%20booking." target="_blank" rel="noopener noreferrer" className="floating-wa">
         <Send size={14} /> <span className="wa-text">Chat with Us</span>
       </a>
 

@@ -131,7 +131,7 @@ export default function CompanyDetailsView({ companyDetails, onSave }) {
                 name="whatsapp"
                 value={formData.whatsapp}
                 onChange={handleChange}
-                placeholder="e.g. +97145578679"
+                placeholder="e.g. +971589344077"
                 required
                 className="form-control"
                 style={{ width: '100%' }}

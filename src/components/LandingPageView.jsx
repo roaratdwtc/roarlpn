@@ -21,10 +21,11 @@ import {
 import './LandingPageView.css';
 
 // Exact 26 tours list from sitemap-post-type-tour.xml with respective live URLs and live images
+// @@ANCHOR_RANDOMIZER_START@@
 const TOURS_DATA = [
   {
     id: 'evening-safari',
-    title: 'Evening Desert Safari',
+    title: 'Desert Safari with BBQ Dinner',
     url: 'https://roaradventuretourism.com/tour/evening-desert-safari/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/11/EveningDesertSafarin.webp',
     category: 'safari',
@@ -32,11 +33,28 @@ const TOURS_DATA = [
     rating: 4.9,
     reviews: 1540,
     desc: 'The classic evening safari package in Lehbab Red Dunes. Includes dune bashing in 4x4 Land Cruisers, live shows (Belly dance, fire show, Tanoura), short camel ride, sandboarding, and a full BBQ buffet dinner with vegetarian and non-vegetarian selections.',
-    inclusions: ['Home/Hotel Pickup & Dropoff', 'Dune Bashing in 4x4 Land Cruisers', 'Live Entertainment Shows', 'Short Camel Ride', 'Unlimited Water & Soft Drinks', 'BBQ Buffet Dinner (Veg & Non-Veg)', 'Henna Tattoo for Ladies', 'Arabic Costumes', 'Sunset Photography']
+    inclusions: [
+      'Home/Hotel Pickup & Dropoff',
+      'Dune Bashing in 4x4 Land Cruisers',
+      'Live Entertainment Shows',
+      'Short Camel Ride',
+      'Unlimited Water & Soft Drinks',
+      'BBQ Buffet Dinner (Veg & Non-Veg)',
+      'Henna Tattoo for Ladies',
+      'Arabic Costumes',
+      'Sunset Photography',
+    ],
+    anchorVariations: [
+      'Evening Desert Safari',
+      'Evening Desert Safari Dubai',
+      'VIP Evening Desert Safari Deals',
+      'Dubai Evening Safari Tour 2026',
+      'Desert Safari with BBQ Dinner',
+    ]
   },
   {
     id: 'vip-desert-safari-dubai',
-    title: 'VIP Desert Safari in Dubai',
+    title: 'VIP Safari with Sofa Seating',
     url: 'https://roaradventuretourism.com/tour/vip-desert-safari-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/VIPDesertSafari.webp',
     category: 'safari',
@@ -44,11 +62,25 @@ const TOURS_DATA = [
     rating: 4.9,
     reviews: 1820,
     desc: 'Premium desert experience with VIP treatment. Skip the campsite queues and enjoy dedicated sofa seating, table service, separate BBQ areas, and personalized guides, alongside standard dune bashing and live campsite shows.',
-    inclusions: ['All Evening Safari Inclusions', 'Separate BBQ for VIPs', 'VIP Sofa Seating', 'Table Service for Drinks & Food', 'AC VIP Seating Upgrade Available', 'Priority Camel Riding Access']
+    inclusions: [
+      'All Evening Safari Inclusions',
+      'Separate BBQ for VIPs',
+      'VIP Sofa Seating',
+      'Table Service for Drinks & Food',
+      'AC VIP Seating Upgrade Available',
+      'Priority Camel Riding Access',
+    ],
+    anchorVariations: [
+      'VIP Desert Safari in Dubai',
+      'VIP Desert Safari Dubai Deals',
+      'Luxury Desert Safari Dubai',
+      'VIP Safari with Sofa Seating',
+      'VIP Desert Camp Dubai',
+    ]
   },
   {
     id: 'premium-desert-safari',
-    title: 'Premium Desert Safari',
+    title: 'Premium Campsite Dinner Tour',
     url: 'https://roaradventuretourism.com/tour/premium-desert-safari/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/10/PremiumDesertSafariDubai.webp',
     category: 'safari',
@@ -56,11 +88,25 @@ const TOURS_DATA = [
     rating: 4.9,
     reviews: 980,
     desc: 'Top-tier red dunes safari package containing direct pickup/dropoff in high-end Land Cruisers, a 30-minute quad bike session, private campgrounds access, and VIP table dining service.',
-    inclusions: ['Pickup & Dropoff in Land Cruiser', '30 Minutes Quad Biking', 'VIP Sofa Seating', 'Separate BBQ Buffet Area', 'Belly Dance, Fire & Tanoura Shows', 'Henna Tattooing & Sunset Photo Stops']
+    inclusions: [
+      'Pickup & Dropoff in Land Cruiser',
+      '30 Minutes Quad Biking',
+      'VIP Sofa Seating',
+      'Separate BBQ Buffet Area',
+      'Belly Dance, Fire & Tanoura Shows',
+      'Henna Tattooing & Sunset Photo Stops',
+    ],
+    anchorVariations: [
+      'Premium Desert Safari',
+      'Premium Desert Safari Dubai',
+      'Premium Safari with Quadbike',
+      'Luxury Red Dunes Safari Package',
+      'Premium Campsite Dinner Tour',
+    ]
   },
   {
     id: 'morning-desert-safari',
-    title: 'Morning Desert Safari in Dubai',
+    title: 'Early Morning Desert Safari',
     url: 'https://roaradventuretourism.com/tour/morning-desert-safari-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/MorningDesertSafari.webp',
     category: 'safari',
@@ -68,11 +114,26 @@ const TOURS_DATA = [
     rating: 4.8,
     reviews: 640,
     desc: 'Perfect for morning adventurers. Experience the refreshing desert breeze, early morning dune bashing, camel riding, sandboarding, and photography stops under clear blue skies before the midday heat.',
-    inclusions: ['Home/Hotel Pickup & Dropoff', 'Dune Bashing in 4x4 Land Cruisers', 'Land Cruiser Pickup & Dropoff', 'Short Camel Ride', 'Long Camel Ride (Extra)', 'Quad Bike & Buggy (Extra)', 'Falcon Pictures Stop']
+    inclusions: [
+      'Home/Hotel Pickup & Dropoff',
+      'Dune Bashing in 4x4 Land Cruisers',
+      'Land Cruiser Pickup & Dropoff',
+      'Short Camel Ride',
+      'Long Camel Ride (Extra)',
+      'Quad Bike & Buggy (Extra)',
+      'Falcon Pictures Stop',
+    ],
+    anchorVariations: [
+      'Morning Desert Safari in Dubai',
+      'Morning Desert Safari Dubai',
+      'Morning Safari with Camel Ride',
+      'Early Morning Desert Safari',
+      'Morning Safari In Al Awir',
+    ]
   },
   {
     id: 'overnight-desert-safari',
-    title: 'Overnight Desert Safari Dubai',
+    title: 'Sleep in Desert Safari Package',
     url: 'https://roaradventuretourism.com/tour/overnight-desert-safari-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/OvernightDesertSafari.webp',
     category: 'safari',
@@ -80,11 +141,25 @@ const TOURS_DATA = [
     rating: 4.8,
     reviews: 410,
     desc: 'Spend the night under the stars in Al Awir or Lahbab desert. Includes the entire evening desert safari program, overnight camping in comfortable tents with pillows and blankets, stargazing, and morning breakfast.',
-    inclusions: ['All Evening Safari Inclusions', 'Pillow, Blanket & Private Tent', 'Overnight Camping Setup', 'Stargazing & Campfire Session', 'Fresh Arabic Breakfast', 'All Time Slots Available on Request']
+    inclusions: [
+      'All Evening Safari Inclusions',
+      'Pillow, Blanket & Private Tent',
+      'Overnight Camping Setup',
+      'Stargazing & Campfire Session',
+      'Fresh Arabic Breakfast',
+      'All Time Slots Available on Request',
+    ],
+    anchorVariations: [
+      'Overnight Desert Safari Dubai',
+      'Sleep in Desert Safari Package',
+      'Overnight Camping Safari Dubai',
+      'Desert Camping with Breakfast',
+      '24 Hour Desert Safari Dubai',
+    ]
   },
   {
     id: 'private-desert-safari',
-    title: 'Private Desert Safari Dubai',
+    title: 'Private 4x4 Desert Safari',
     url: 'https://roaradventuretourism.com/tour/private-desert-safari-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/PrivateDesertSafariDubai.webp',
     category: 'safari',
@@ -92,11 +167,25 @@ const TOURS_DATA = [
     rating: 4.9,
     reviews: 320,
     desc: 'An exclusive desert tour designed for families, honeymooners, or corporate groups. Enjoy a dedicated 4x4 Land Cruiser, customized timing schedules, and private dinner tables/campsite spaces.',
-    inclusions: ['Exclusive Private 4x4 Cruiser', 'doorstep Pickup & Dropoff', 'Customized Tour Schedule', 'Private VIP Table & Seating', 'Dune Bashing or Gentle Nature Drive', 'Full Evening Campsite Inclusions']
+    inclusions: [
+      'Exclusive Private 4x4 Cruiser',
+      'doorstep Pickup & Dropoff',
+      'Customized Tour Schedule',
+      'Private VIP Table & Seating',
+      'Dune Bashing or Gentle Nature Drive',
+      'Full Evening Campsite Inclusions',
+    ],
+    anchorVariations: [
+      'Private Desert Safari Dubai',
+      'Private 4x4 Desert Safari',
+      'Exclusive Private Safari Dubai',
+      'Private Family Desert Safari',
+      'Custom Private Desert Tour',
+    ]
   },
   {
     id: 'dune-buggy-dubai',
-    title: 'Dune Buggy in Dubai',
+    title: 'Can-Am Buggy Tour Dubai',
     url: 'https://roaradventuretourism.com/tour/dune-buggy-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/canam-scaled-4-Seater.jpg',
     category: 'buggy',
@@ -104,11 +193,25 @@ const TOURS_DATA = [
     rating: 4.8,
     reviews: 1120,
     desc: 'Command your own premium multi-seater Can-Am Maverick buggy. Take on high red dunes under the instruction of certified guides. Fully equipped with automatic transmissions and safety roll cages.',
-    inclusions: ['Self-Drive Can-Am Buggy', 'Safety Gear (Helmets, Goggles)', 'Certified Desert Tour Guide', 'Open Desert Dunes Driving', 'Refreshments & Soft Drinks', 'Doorstep Transfer Included']
+    inclusions: [
+      'Self-Drive Can-Am Buggy',
+      'Safety Gear (Helmets, Goggles)',
+      'Certified Desert Tour Guide',
+      'Open Desert Dunes Driving',
+      'Refreshments & Soft Drinks',
+      'Doorstep Transfer Included',
+    ],
+    anchorVariations: [
+      'Dune Buggy in Dubai',
+      'Dubai Dune Buggy Rental',
+      'Can-Am Buggy Tour Dubai',
+      'Self Drive Dune Buggy Dubai',
+      'Offroad Buggy Tour Lahbab',
+    ]
   },
   {
     id: 'polaris-rzr-buggy',
-    title: 'Polaris RZR 1000cc Dune Buggy Dubai',
+    title: 'High Performance Polaris Buggy',
     url: 'https://roaradventuretourism.com/tour/polaris-rzr-1000cc-dune-buggy-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/dxbsafari-Dune-Buggy4.jpg',
     category: 'buggy',
@@ -116,11 +219,25 @@ const TOURS_DATA = [
     rating: 4.9,
     reviews: 290,
     desc: 'Drive the pinnacle of dune buggy performance: the Polaris RZR 1000cc. Engineered with high-clearance suspension travel and raw power to climb the steepest red dunes with ease.',
-    inclusions: ['Self-Drive Polaris RZR 1000cc', 'Professional Instructors', 'Full Safety Briefing & Gear', 'Guided Red Dunes Excursion', 'Soft Drinks & Ice Water', 'Hotel Pickup & Dropoff Option']
+    inclusions: [
+      'Self-Drive Polaris RZR 1000cc',
+      'Professional Instructors',
+      'Full Safety Briefing & Gear',
+      'Guided Red Dunes Excursion',
+      'Soft Drinks & Ice Water',
+      'Hotel Pickup & Dropoff Option',
+    ],
+    anchorVariations: [
+      'Polaris RZR 1000cc Dune Buggy Dubai',
+      'Polaris RZR Dune Buggy Dubai 1000 CC',
+      'Polaris 1000cc Buggy Ride',
+      'Polaris RZR Red Dunes Rental',
+      'High Performance Polaris Buggy',
+    ]
   },
   {
     id: 'quad-bike-tour',
-    title: 'Quad Bike Tour in Dubai',
+    title: 'Dubai Quad Biking Tour',
     url: 'https://roaradventuretourism.com/tour/quad-bike-tour-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg',
     category: 'buggy',
@@ -128,11 +245,24 @@ const TOURS_DATA = [
     rating: 4.7,
     reviews: 840,
     desc: 'Drive powerful all-terrain ATVs across custom sand circuits and open desert dunes. Ideal for beginners and expert riders looking for high-octane desert motorsports.',
-    inclusions: ['ATV Quad Bike Self-Drive', 'Helmets & Protection Gear', 'Safety Instructor & Guiding', 'Dune Photostop Opportunities', 'Water & Soft Drinks']
+    inclusions: [
+      'ATV Quad Bike Self-Drive',
+      'Helmets & Protection Gear',
+      'Safety Instructor & Guiding',
+      'Dune Photostop Opportunities',
+      'Water & Soft Drinks',
+    ],
+    anchorVariations: [
+      'Quad Bike Tour in Dubai',
+      'Single Quad Bike Adventure',
+      'Dubai Quad Biking Tour',
+      'All Terrain Quad Bike Dubai',
+      'Open Desert Quad Biking Ride',
+    ]
   },
   {
     id: 'dubai-city-tour',
-    title: 'Dubai City Tour',
+    title: 'Dubai Landmarks Tour',
     url: 'https://roaradventuretourism.com/tour/dubai-city-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp',
     category: 'city',
@@ -140,7 +270,21 @@ const TOURS_DATA = [
     rating: 4.7,
     reviews: 1380,
     desc: 'Discover the contrasts of Dubai. A comprehensive tour highlighting modern architectural wonders (Burj Khalifa, Burj Al Arab, Palm Jumeirah) alongside historic markets (Gold & Spice Souk).',
-    inclusions: ['Air-Conditioned Tourism Bus/Coach', 'Professional English-Speaking Guide', 'doorstep Pickup & Dropoff', 'Visit Burj Al Arab (Photostop)', 'Visit Palm Jumeirah & Atlantis', 'Explore Deira Souks & Creek']
+    inclusions: [
+      'Air-Conditioned Tourism Bus/Coach',
+      'Professional English-Speaking Guide',
+      'doorstep Pickup & Dropoff',
+      'Visit Burj Al Arab (Photostop)',
+      'Visit Palm Jumeirah & Atlantis',
+      'Explore Deira Souks & Creek',
+    ],
+    anchorVariations: [
+      'Dubai City Tour',
+      'Dubai City Tour Booking',
+      'Dubai Guided Sightseeing Tour',
+      'Half Day Dubai City Tour',
+      'Dubai Landmarks Tour',
+    ]
   },
   {
     id: 'abu-dhabi-city-tour',
@@ -152,11 +296,25 @@ const TOURS_DATA = [
     rating: 4.8,
     reviews: 1040,
     desc: 'Embark on a full-day trip to the UAE’s capital. Tour the spectacular Sheikh Zayed Grand Mosque, Yas Island, Heritage Village, and capture photos at Emirates Palace.',
-    inclusions: ['Full-Day Guided Tour from Dubai', 'Sheikh Zayed Grand Mosque Access', 'Explore Yas Island & Marina Mall', 'Emirates Palace (Photostop)', 'Professional Tour Guide', 'All Entrance Tickets Included']
+    inclusions: [
+      'Full-Day Guided Tour from Dubai',
+      'Sheikh Zayed Grand Mosque Access',
+      'Explore Yas Island & Marina Mall',
+      'Emirates Palace (Photostop)',
+      'Professional Tour Guide',
+      'All Entrance Tickets Included',
+    ],
+    anchorVariations: [
+      'Abu Dhabi City Tour',
+      'Book Abu Dhabi City Tour',
+      'Abu Dhabi Day Trip from Dubai',
+      'Grand Mosque Tour Abu Dhabi',
+      'Abu Dhabi Guided Sightseeing',
+    ]
   },
   {
     id: 'sharjah-city-tour',
-    title: 'Sharjah City Tour',
+    title: 'Sharjah Museum Tour',
     url: 'https://roaradventuretourism.com/tour/sharjah-city-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp',
     category: 'city',
@@ -164,11 +322,24 @@ const TOURS_DATA = [
     rating: 4.6,
     reviews: 190,
     desc: 'Explore the Cultural Capital of the UAE. Tour historical sites, traditional souks (Blue Souk), the magnificent King Faisal Mosque, and the Sharjah museum district.',
-    inclusions: ['Guided Sightseeing Program', 'Visit Central Blue Souk', 'King Faisal Mosque (Photostop)', 'Historical Museum entry tickets', 'Pickup & Dropoff from Dubai/Sharjah']
+    inclusions: [
+      'Guided Sightseeing Program',
+      'Visit Central Blue Souk',
+      'King Faisal Mosque (Photostop)',
+      'Historical Museum entry tickets',
+      'Pickup & Dropoff from Dubai/Sharjah',
+    ],
+    anchorVariations: [
+      'Sharjah City Tour',
+      'Sharjah Guided City Tour',
+      'Sharjah Cultural Heritage Tour',
+      'Sightseeing Tour in Sharjah',
+      'Sharjah Museum Tour',
+    ]
   },
   {
     id: 'hatta-day-trip',
-    title: 'Hatta Day Trip with Mountain Tour',
+    title: 'Hatta Kayaking & Heritage Tour',
     url: 'https://roaradventuretourism.com/tour/hatta-day-trip-with-mountain-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/hattamountaintourdubai.webp',
     category: 'city',
@@ -176,7 +347,20 @@ const TOURS_DATA = [
     rating: 4.6,
     reviews: 310,
     desc: 'Journey to the Hajar Mountains. Kayak across the clear waters of Hatta Dam, hike scenic trails, and explore the ancient Hatta Heritage Village.',
-    inclusions: ['Pickup & Dropoff in SUV/4x4', 'Scenic Mountain Drive to Hatta', 'Visit Hatta Dam & Kayak stop', 'Explore Hatta Heritage Village', 'Hatta Hill Park & Honeybee Discovery']
+    inclusions: [
+      'Pickup & Dropoff in SUV/4x4',
+      'Scenic Mountain Drive to Hatta',
+      'Visit Hatta Dam & Kayak stop',
+      'Explore Hatta Heritage Village',
+      'Hatta Hill Park & Honeybee Discovery',
+    ],
+    anchorVariations: [
+      'Hatta Day Trip with Mountain Tour',
+      'Hatta Mountain Tour from Dubai',
+      'Hatta Kayaking & Heritage Tour',
+      'Hatta Day Trip Booking',
+      'Dubai to Hatta Mountain Excursion',
+    ]
   },
   {
     id: 'marina-cruise-dinner',
@@ -188,11 +372,25 @@ const TOURS_DATA = [
     rating: 4.7,
     reviews: 860,
     desc: 'Glance at Dubai Marina’s illuminated skyscrapers on a double-decker glass boat or luxury yacht. Includes an upscale international buffet dinner and traditional Tanoura performances.',
-    inclusions: ['2 Hours Luxury Marina Cruise', 'International Buffet Dinner (Veg & Non-Veg)', 'Live Tanoura Dance Performance', 'Welcome Arabic Coffee & Dates', 'Air-Conditioned Lower Deck', 'Open-Air Scenic Upper Deck']
+    inclusions: [
+      '2 Hours Luxury Marina Cruise',
+      'International Buffet Dinner (Veg & Non-Veg)',
+      'Live Tanoura Dance Performance',
+      'Welcome Arabic Coffee & Dates',
+      'Air-Conditioned Lower Deck',
+      'Open-Air Scenic Upper Deck',
+    ],
+    anchorVariations: [
+      'Dubai Marina Cruise Dinner',
+      'Marina Yacht Dinner Cruise',
+      'Luxury Marina Cruise Dubai',
+      'Marina Buffet Cruise Dinner',
+      'Dubai Marina Dhow Cruise',
+    ]
   },
   {
     id: 'dhow-cruise-dinner',
-    title: 'Dhow Cruise Dinner in Dubai',
+    title: 'Dubai Creek Dhow Cruise Dinner',
     url: 'https://roaradventuretourism.com/tour/dhow-cruise-dinner-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/91auwe9632in9yhrixuqzuznmolq_155-scaled.jpg',
     category: 'cruise',
@@ -200,7 +398,20 @@ const TOURS_DATA = [
     rating: 4.6,
     reviews: 580,
     desc: 'Float along the historic Dubai Creek on a traditional rustic wooden dhow. Enjoy classic Arabic BBQ dishes, soft background music, and Tanoura dance shows.',
-    inclusions: ['2 Hours Traditional Creek Cruise', 'Arabic BBQ Buffet Dinner', 'Tanoura Dance Performance', 'Unlimited Refreshments', 'Background Melodic Music']
+    inclusions: [
+      '2 Hours Traditional Creek Cruise',
+      'Arabic BBQ Buffet Dinner',
+      'Tanoura Dance Performance',
+      'Unlimited Refreshments',
+      'Background Melodic Music',
+    ],
+    anchorVariations: [
+      'Dhow Cruise Dinner in Dubai',
+      'Creek Dhow Cruise Dinner',
+      'Traditional Dhow Cruise Buffet',
+      'Creek Yacht Buffet Dinner',
+      'Dubai Creek Dhow Cruise Dinner',
+    ]
   },
   {
     id: 'hot-air-balloon',
@@ -212,11 +423,24 @@ const TOURS_DATA = [
     rating: 4.9,
     reviews: 280,
     desc: 'Ascend 4,000 feet above the Dubai desert at sunrise. Catch panoramic views of the sand dunes, watch a live in-flight falcon display, followed by a gourmet breakfast.',
-    inclusions: ['Gourmet Bedouin Breakfast', 'In-Flight Falcon Show', 'Sunrise Balloon Flight (1 Hour)', 'Flight Certificate Signed by Pilot', 'doorstep Hotel Transfers']
+    inclusions: [
+      'Gourmet Bedouin Breakfast',
+      'In-Flight Falcon Show',
+      'Sunrise Balloon Flight (1 Hour)',
+      'Flight Certificate Signed by Pilot',
+      'doorstep Hotel Transfers',
+    ],
+    anchorVariations: [
+      'Hot Air Balloon Ride Dubai',
+      'Sunrise Hot Air Balloon Flight',
+      'Luxury Balloon Ride over Desert',
+      'Hot Air Balloon Dubai Booking',
+      'Dubai Desert Hot Air Balloon Tour',
+    ]
   },
   {
     id: 'camel-riding-safari',
-    title: 'Camel Riding Safari Dubai',
+    title: 'Camel Trekking Tour Dubai',
     url: 'https://roaradventuretourism.com/tour/camel-riding-safari-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/10/camelriding.avif',
     category: 'safari',
@@ -224,7 +448,20 @@ const TOURS_DATA = [
     rating: 4.8,
     reviews: 510,
     desc: 'A dedicated, slow-paced desert journey on camelback. Spot native wildlife like Arabian Oryx and gazelles in the Dubai Desert Conservation Reserve.',
-    inclusions: ['Guided Camel Caravan Ride', 'Wildlife Spotting Walks', 'Traditional Bedouin Camp Visit', 'doorstep Desert Transfer', 'Water & Coffee Refreshments']
+    inclusions: [
+      'Guided Camel Caravan Ride',
+      'Wildlife Spotting Walks',
+      'Traditional Bedouin Camp Visit',
+      'doorstep Desert Transfer',
+      'Water & Coffee Refreshments',
+    ],
+    anchorVariations: [
+      'Camel Riding Safari Dubai',
+      'Desert Safari with Camel Ride',
+      'Traditional Camel Caravan Dubai',
+      'Camel Trekking Tour Dubai',
+      'Bedouin Camel Riding Safari',
+    ]
   },
   {
     id: 'safari-without-dune-bashing',
@@ -236,11 +473,24 @@ const TOURS_DATA = [
     rating: 4.7,
     reviews: 240,
     desc: 'Specifically designed for pregnant women, families with toddlers, elderly guests, or anyone wanting to skip high-impact off-roading. Drive straight to camp.',
-    inclusions: ['Direct Camp SUV Transfer', 'Nature & Stargazing Walks', 'Camel Ride & Henna Painting', 'Live Dance & Fire shows', 'BBQ Buffet Dinner']
+    inclusions: [
+      'Direct Camp SUV Transfer',
+      'Nature & Stargazing Walks',
+      'Camel Ride & Henna Painting',
+      'Live Dance & Fire shows',
+      'BBQ Buffet Dinner',
+    ],
+    anchorVariations: [
+      'Dubai Desert Safari without Dune Bashing',
+      'Desert Safari without Dune Bashing',
+      'Safari for Pregnant Ladies Dubai',
+      'Gentle Desert Safari Dubai',
+      'Safari for Seniors Citizens',
+    ]
   },
   {
     id: 'vip-safari-quad-bike',
-    title: 'VIP Desert Safari with Quad Bike',
+    title: 'VIP Quad Biking Safari Dubai',
     url: 'https://roaradventuretourism.com/tour/vip-desert-safari-with-quad-bike/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/vipdesertsafariwithquadbike.webp',
     category: 'buggy',
@@ -248,7 +498,19 @@ const TOURS_DATA = [
     rating: 4.9,
     reviews: 490,
     desc: 'Double the excitement. Combine the high-end VIP Evening Safari and private camp table service with an open-desert quad biking excursion.',
-    inclusions: ['30 Minutes Quad Biking Session', 'All VIP Desert Safari Inclusions', 'priority access at Camp activities', 'Private Sofa Table Service']
+    inclusions: [
+      '30 Minutes Quad Biking Session',
+      'All VIP Desert Safari Inclusions',
+      'priority access at Camp activities',
+      'Private Sofa Table Service',
+    ],
+    anchorVariations: [
+      'VIP Desert Safari with Quad Bike',
+      'VIP Safari with Quad Bike Ride',
+      'VIP Quad Biking Safari Dubai',
+      'Luxury Safari and Quad Bike',
+      'VIP Red Dunes Quad Safari',
+    ]
   },
   {
     id: 'dune-buggy-adventure',
@@ -260,11 +522,23 @@ const TOURS_DATA = [
     rating: 4.8,
     reviews: 350,
     desc: 'Self-drive buggy rental packages built for pure adventure. Conquer steep sand hills, make custom photo stops, and enjoy driving high-powered engines.',
-    inclusions: ['Self-Drive ATV/Buggy Session', 'Safety Instruction & Guiding', 'Helmet, Goggles, and Safety Harness', 'Soft Drinks & Chilled Water']
+    inclusions: [
+      'Self-Drive ATV/Buggy Session',
+      'Safety Instruction & Guiding',
+      'Helmet, Goggles, and Safety Harness',
+      'Soft Drinks & Chilled Water',
+    ],
+    anchorVariations: [
+      'Dune Buggy Adventure in Dubai',
+      'Self Drive Buggy Rental Dubai',
+      'Dune Buggy Adventure Ride',
+      'Offroad Buggy Excursion Dubai',
+      'Desert Buggy Ride Lahbab',
+    ]
   },
   {
     id: 'safari-quad-bike',
-    title: 'Dubai Desert Safari with Quad Bike',
+    title: 'Red Dunes Safari with ATV',
     url: 'https://roaradventuretourism.com/tour/dubai-desert-safari-with-quad-bike/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg',
     category: 'buggy',
@@ -272,7 +546,19 @@ const TOURS_DATA = [
     rating: 4.7,
     reviews: 1210,
     desc: 'The best-value combo. Enjoy our complete Evening Desert Safari package bundled together with a 30-minute self-drive quad biking session in our designated tracks.',
-    inclusions: ['30 Minutes Quad Bike Ride', 'Home/Hotel Pickup & Dropoff', 'Dune Bashing in 4x4 Land Cruisers', 'BBQ Buffet Dinner & Entertainment']
+    inclusions: [
+      '30 Minutes Quad Bike Ride',
+      'Home/Hotel Pickup & Dropoff',
+      'Dune Bashing in 4x4 Land Cruisers',
+      'BBQ Buffet Dinner & Entertainment',
+    ],
+    anchorVariations: [
+      'Dubai Desert Safari with Quad Bike',
+      'Desert Safari with Quad Bike Ride',
+      'Evening Safari and Quad Bike',
+      'Red Dunes Safari with ATV',
+      'Dubai Quad Biking Safari Deal',
+    ]
   },
   {
     id: 'morning-safari-quadbike',
@@ -284,11 +570,23 @@ const TOURS_DATA = [
     rating: 4.8,
     reviews: 580,
     desc: 'Beat the heat with a morning tour. Includes active sand dune quad biking, sandboarding, short camel ride, and refreshments before returning by noon.',
-    inclusions: ['30 Minutes Quad Biking Session', 'Dune Bashing in 4x4 Cruiser', 'Short Camel Ride & Sandboarding', 'chilled Mineral Water & Soft Drinks']
+    inclusions: [
+      '30 Minutes Quad Biking Session',
+      'Dune Bashing in 4x4 Cruiser',
+      'Short Camel Ride & Sandboarding',
+      'chilled Mineral Water & Soft Drinks',
+    ],
+    anchorVariations: [
+      'Morning Desert Safari with Quadbike',
+      'Morning Safari With Quadbike',
+      'Morning Quad Bike Safari Dubai',
+      'Early Morning ATV Tour',
+      'Morning Red Dunes ATV Ride',
+    ]
   },
   {
     id: 'evening-safari-bbq',
-    title: 'Evening Desert Safari with BBQ Dinner',
+    title: 'Campsite BBQ Safari Dubai',
     url: 'https://roaradventuretourism.com/tour/evening-desert-safari-with-bbq-dinner/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/11/EveningDesertSafariwithbbqdinnerroaradventureswl.webp',
     category: 'safari',
@@ -296,11 +594,23 @@ const TOURS_DATA = [
     rating: 4.8,
     reviews: 790,
     desc: 'Focuses deeply on local Emirati cuisine and campsite hospitality. Includes dune drives, live shows, henna, Arabic dress up, and a large BBQ buffet.',
-    inclusions: ['Standard Evening Safari inclusions', 'Unlimited BBQ Buffet Dinner', 'Henna Painting for Ladies', 'Belly Dance & Fire performance']
+    inclusions: [
+      'Standard Evening Safari inclusions',
+      'Unlimited BBQ Buffet Dinner',
+      'Henna Painting for Ladies',
+      'Belly Dance & Fire performance',
+    ],
+    anchorVariations: [
+      'Evening Desert Safari with BBQ Dinner',
+      'Evening Safari with BBQ Dinner',
+      'Campsite BBQ Safari Dubai',
+      'Red Dunes Buffet Safari Dinner',
+      'Evening Desert Safari Package',
+    ]
   },
   {
     id: 'dune-bashing-adventure',
-    title: 'Dune Bashing Adventure in Dubai',
+    title: 'High Dunes Drifting Excursion',
     url: 'https://roaradventuretourism.com/tour/dune-bashing-adventure-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/tour_649_63e8b2d97a090.jpg',
     category: 'safari',
@@ -308,11 +618,23 @@ const TOURS_DATA = [
     rating: 4.8,
     reviews: 690,
     desc: 'For high-impact adrenaline lovers. A dedicated, longer session of high-speed desert dune drifting in custom Land Cruisers driven by licensed pilots.',
-    inclusions: ['45 Minutes Extreme Dune Bashing', 'Experienced DTCM Safari Driver', 'Red Dunes Photography Stops', 'chilled Water & Refreshments']
+    inclusions: [
+      '45 Minutes Extreme Dune Bashing',
+      'Experienced DTCM Safari Driver',
+      'Red Dunes Photography Stops',
+      'chilled Water & Refreshments',
+    ],
+    anchorVariations: [
+      'Dune Bashing Adventure in Dubai',
+      'Dune Bashing Adventure Dubai',
+      'Extreme Dune Bashing Dubai',
+      'High Dunes Drifting Excursion',
+      '4x4 Sand Dune Drifting Tour',
+    ]
   },
   {
     id: 'red-dunes-safari',
-    title: 'Red Dunes Safari',
+    title: 'Lahbab Red Dunes Desert Safari',
     url: 'https://roaradventuretourism.com/tour/red-dunes-safari/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-header1.jpg',
     category: 'safari',
@@ -320,11 +642,23 @@ const TOURS_DATA = [
     rating: 4.9,
     reviews: 1020,
     desc: 'Discover Lahbab Red Dunes, famous for their steep heights and red crimson sands. Best for premium sandboarding, dune drifting, and camp stays.',
-    inclusions: ['Lahbab Red Dunes Excursion', 'Home/Hotel pickup in SUV', 'Premium Sandboarding session', 'Bedouin camp dining & live shows']
+    inclusions: [
+      'Lahbab Red Dunes Excursion',
+      'Home/Hotel pickup in SUV',
+      'Premium Sandboarding session',
+      'Bedouin camp dining & live shows',
+    ],
+    anchorVariations: [
+      'Red Dunes Safari',
+      'Premium Red Dunes Safari',
+      'Lahbab Red Dunes Desert Safari',
+      'Al Lahbab Desert Safari Dubai',
+      'Red Sand Dunes Safari Tour',
+    ]
   },
   {
     id: 'sunrise-desert-safari',
-    title: 'Sunrise Desert Safari Dubai',
+    title: 'Sunrise Red Dunes Photography',
     url: 'https://roaradventuretourism.com/tour/sunrise-desert-safari-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/gallery-01709121792-sunrise-dese.jpg',
     category: 'safari',
@@ -332,9 +666,22 @@ const TOURS_DATA = [
     rating: 4.7,
     reviews: 150,
     desc: 'Watch the sun rise over the high desert dunes. Perfect for morning photography enthusiasts, camel rides, and fresh Arabian coffee setups.',
-    inclusions: ['Early Morning Hotel Pickup', 'Sunrise Stargazing to Dawn', 'Arabic Coffee & Dates at camp', 'Gentle Dunes Drive & Photoshoots']
+    inclusions: [
+      'Early Morning Hotel Pickup',
+      'Sunrise Stargazing to Dawn',
+      'Arabic Coffee & Dates at camp',
+      'Gentle Dunes Drive & Photoshoots',
+    ],
+    anchorVariations: [
+      'Sunrise Desert Safari Dubai',
+      'Sunrise Desert Safari',
+      'Early Morning Sunrise Safari',
+      'Sunrise Red Dunes Photography',
+      'Sunrise Safari with Camel Ride',
+    ]
   }
 ];
+// @@ANCHOR_RANDOMIZER_END@@
 
 // Locations data for doorstep pickup descriptions
 const LOCATIONS_DATA = [
@@ -843,7 +1190,7 @@ export default function LandingPageView() {
               </div>
               <div className="lp-footer-contact-item">
                 <Phone className="lp-footer-contact-icon" />
-                <span>+971 4 557 8679 (Office)</span>
+                <span>+971589344077 (Office)</span>
               </div>
               <div className="lp-footer-contact-item">
                 <Compass className="lp-footer-contact-icon" />

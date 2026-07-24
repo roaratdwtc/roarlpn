@@ -221,7 +221,7 @@ export default function MasterAdminView({ onSignOut, onImpersonate }) {
           slug: 'roar',
           email: 'info@roaradventuretourism.com',
           password: 'R4roar!786*',
-          whatsapp: '+97145578679',
+          whatsapp: '+971589344077',
           address: 'Dubai World Trade Centre (DWTC), Sheikh Zayed Rd, Dubai, UAE',
           contactPerson: 'Mr. Abid Ali',
           status: 'active',

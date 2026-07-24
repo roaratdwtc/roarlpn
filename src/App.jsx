@@ -163,7 +163,7 @@ export default function App() {
       fullName: 'Roar Adventure Tourism LLC',
       address: 'Dubai World Trade Centre (DWTC), Sheikh Zayed Rd, Dubai, UAE',
       contactPerson: 'Mr. Abid Ali',
-      whatsapp: '+97145578679',
+      whatsapp: '+971589344077',
       email: 'info@roaradventuretourism.com',
       regDate: '2016-01-01',
       licenseNo: 'DET/DTCM Licensed Tour Operator',
