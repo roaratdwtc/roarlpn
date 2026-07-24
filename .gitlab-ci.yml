@@ -3,8 +3,7 @@ image: node:20-alpine
 pages:
   stage: deploy
   script:
-    - npm install
-    - npm run build
+    - node scripts/build.cjs
     - rm -rf public
     - mv dist public
   artifacts:
