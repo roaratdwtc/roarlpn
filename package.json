@@ -6,6 +6,7 @@
     "randomize": "node scripts/randomize_anchors.cjs",
     "build": "node scripts/build.cjs",
     "deploy": "node scripts/deploy.cjs",
-    "deploy:surge": "node scripts/build.cjs && npx surge dist roar-desert-safari.surge.sh"
+    "deploy:surge": "node scripts/build.cjs && npx surge dist roar-desert-safari.surge.sh",
+    "deploy:firebase": "node scripts/build.cjs && firebase deploy --only hosting"
   }
 }
