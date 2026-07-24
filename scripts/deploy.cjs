@@ -16,14 +16,23 @@ try {
   fs.mkdirSync(deployPath);
 
   // Copy files needed for deployment
-  const filesToCopy = ['index.html', 'style.css', 'logo.jpg', 'favicon.svg', 'icons.svg'];
-  filesToCopy.forEach(file => {
-    const src = path.join(rootPath, file);
-    if (fs.existsSync(src)) {
-      fs.copyFileSync(src, path.join(deployPath, file));
-      console.log(`Copied ${file} to deployment folder.`);
-    }
-  });
+  fs.copyFileSync(path.join(rootPath, 'index.html'), path.join(deployPath, 'index.html'));
+  fs.copyFileSync(path.join(rootPath, 'style.css'), path.join(deployPath, 'style.css'));
+  console.log('Copied core index and style files to deploy folder.');
+
+  // Copy public directory assets
+  const publicPath = path.join(rootPath, 'public');
+  if (fs.existsSync(publicPath)) {
+    const files = fs.readdirSync(publicPath);
+    files.forEach(file => {
+      const src = path.join(publicPath, file);
+      const dest = path.join(deployPath, file);
+      if (fs.lstatSync(src).isFile()) {
+        fs.copyFileSync(src, dest);
+        console.log(`Copied public/${file} to deploy folder.`);
+      }
+    });
+  }
 
   // Read remote URL from main git config
   console.log('Retrieving git remote origin URL...');
@@ -38,7 +47,7 @@ try {
   execSync('git init');
   execSync('git checkout -b gh-pages');
   execSync('git add .');
-  execSync('git commit -m "Deploy static HTML site to GitHub Pages"');
+  execSync('git commit -m "Deploy static HTML site with assets to GitHub Pages"');
 
   console.log(`Force pushing build to ${remoteUrl} [gh-pages]...`);
   execSync(`git push -f ${remoteUrl} gh-pages`);
@@ -48,7 +57,7 @@ try {
   process.chdir(rootPath);
   fs.rmSync(deployPath, { recursive: true, force: true });
 
-  console.log('Successfully deployed static HTML & CSS site to GitHub Pages!');
+  console.log('Successfully deployed static HTML & CSS site with public assets to GitHub Pages!');
 } catch (error) {
   console.error('Deployment failed:', error.message);
   process.exit(1);
