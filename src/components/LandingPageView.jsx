@@ -25,7 +25,7 @@ import './LandingPageView.css';
 const TOURS_DATA = [
   {
     id: 'evening-safari',
-    title: 'Dubai Evening Safari Tour 2026',
+    title: 'Desert Safari with BBQ Dinner',
     url: 'https://roaradventuretourism.com/tour/evening-desert-safari/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/11/EveningDesertSafarin.webp',
     category: 'safari',
@@ -80,7 +80,7 @@ const TOURS_DATA = [
   },
   {
     id: 'premium-desert-safari',
-    title: 'Premium Safari with Quadbike',
+    title: 'Premium Campsite Dinner Tour',
     url: 'https://roaradventuretourism.com/tour/premium-desert-safari/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/10/PremiumDesertSafariDubai.webp',
     category: 'safari',
@@ -106,7 +106,7 @@ const TOURS_DATA = [
   },
   {
     id: 'morning-desert-safari',
-    title: 'Morning Safari In Al Awir',
+    title: 'Morning Desert Safari Dubai',
     url: 'https://roaradventuretourism.com/tour/morning-desert-safari-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/MorningDesertSafari.webp',
     category: 'safari',
@@ -133,7 +133,7 @@ const TOURS_DATA = [
   },
   {
     id: 'overnight-desert-safari',
-    title: '24 Hour Desert Safari Dubai',
+    title: 'Sleep in Desert Safari Package',
     url: 'https://roaradventuretourism.com/tour/overnight-desert-safari-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/OvernightDesertSafari.webp',
     category: 'safari',
@@ -159,7 +159,7 @@ const TOURS_DATA = [
   },
   {
     id: 'private-desert-safari',
-    title: 'Private Family Desert Safari',
+    title: 'Private Desert Safari Dubai',
     url: 'https://roaradventuretourism.com/tour/private-desert-safari-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/PrivateDesertSafariDubai.webp',
     category: 'safari',
@@ -185,7 +185,7 @@ const TOURS_DATA = [
   },
   {
     id: 'dune-buggy-dubai',
-    title: 'Dubai Dune Buggy Rental',
+    title: 'Can-Am Buggy Tour Dubai',
     url: 'https://roaradventuretourism.com/tour/dune-buggy-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/canam-scaled-4-Seater.jpg',
     category: 'buggy',
@@ -237,7 +237,7 @@ const TOURS_DATA = [
   },
   {
     id: 'quad-bike-tour',
-    title: 'Single Quad Bike Adventure',
+    title: 'Quad Bike Tour in Dubai',
     url: 'https://roaradventuretourism.com/tour/quad-bike-tour-in-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg',
     category: 'buggy',
@@ -262,7 +262,7 @@ const TOURS_DATA = [
   },
   {
     id: 'dubai-city-tour',
-    title: 'Dubai Guided Sightseeing Tour',
+    title: 'Dubai City Tour Booking',
     url: 'https://roaradventuretourism.com/tour/dubai-city-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp',
     category: 'city',
@@ -288,7 +288,7 @@ const TOURS_DATA = [
   },
   {
     id: 'abu-dhabi-city-tour',
-    title: 'Book Abu Dhabi City Tour',
+    title: 'Abu Dhabi City Tour',
     url: 'https://roaradventuretourism.com/tour/book-abu-dhabi-city-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/Abudhabicitytourmosque.webp',
     category: 'city',
@@ -314,7 +314,7 @@ const TOURS_DATA = [
   },
   {
     id: 'sharjah-city-tour',
-    title: 'Sharjah Cultural Heritage Tour',
+    title: 'Sightseeing Tour in Sharjah',
     url: 'https://roaradventuretourism.com/tour/sharjah-city-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaicitytour.webp',
     category: 'city',
@@ -339,7 +339,7 @@ const TOURS_DATA = [
   },
   {
     id: 'hatta-day-trip',
-    title: 'Hatta Mountain Tour from Dubai',
+    title: 'Hatta Day Trip Booking',
     url: 'https://roaradventuretourism.com/tour/hatta-day-trip-with-mountain-tour/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/hattamountaintourdubai.webp',
     category: 'city',
@@ -364,7 +364,7 @@ const TOURS_DATA = [
   },
   {
     id: 'marina-cruise-dinner',
-    title: 'Marina Yacht Dinner Cruise',
+    title: 'Luxury Marina Cruise Dubai',
     url: 'https://roaradventuretourism.com/tour/dubai-marina-cruise-dinner/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/dubaimarinacruisedinner.webp',
     category: 'cruise',
@@ -415,7 +415,7 @@ const TOURS_DATA = [
   },
   {
     id: 'hot-air-balloon',
-    title: 'Dubai Desert Hot Air Balloon Tour',
+    title: 'Sunrise Hot Air Balloon Flight',
     url: 'https://roaradventuretourism.com/tour/hot-air-balloon-ride-dubai/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/1theUB87jbw7r532MtQFn8w.jpg',
     category: 'cruise',
@@ -465,7 +465,7 @@ const TOURS_DATA = [
   },
   {
     id: 'safari-without-dune-bashing',
-    title: 'Dubai Desert Safari without Dune Bashing',
+    title: 'Safari for Pregnant Ladies Dubai',
     url: 'https://roaradventuretourism.com/tour/dubai-desert-safari-without-dune-bashing/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2026/02/desertsafariwithoutdunebashingindubai.avif',
     category: 'safari',
@@ -490,7 +490,7 @@ const TOURS_DATA = [
   },
   {
     id: 'vip-safari-quad-bike',
-    title: 'Luxury Safari and Quad Bike',
+    title: 'VIP Desert Safari with Quad Bike',
     url: 'https://roaradventuretourism.com/tour/vip-desert-safari-with-quad-bike/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/12/vipdesertsafariwithquadbike.webp',
     category: 'buggy',
@@ -538,7 +538,7 @@ const TOURS_DATA = [
   },
   {
     id: 'safari-quad-bike',
-    title: 'Dubai Quad Biking Safari Deal',
+    title: 'Evening Safari and Quad Bike',
     url: 'https://roaradventuretourism.com/tour/dubai-desert-safari-with-quad-bike/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/desert-safari-dubai-with-atv-qua.jpg',
     category: 'buggy',
@@ -562,7 +562,7 @@ const TOURS_DATA = [
   },
   {
     id: 'morning-safari-quadbike',
-    title: 'Morning Desert Safari with Quadbike',
+    title: 'Morning Safari With Quadbike',
     url: 'https://roaradventuretourism.com/tour/morning-desert-safari-with-quadbike/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/07/Quad-biking-in-Dubai-desert-safa.jpg',
     category: 'buggy',
@@ -586,7 +586,7 @@ const TOURS_DATA = [
   },
   {
     id: 'evening-safari-bbq',
-    title: 'Evening Desert Safari with BBQ Dinner',
+    title: 'Campsite BBQ Safari Dubai',
     url: 'https://roaradventuretourism.com/tour/evening-desert-safari-with-bbq-dinner/',
     image: 'https://roaradventuretourism.com/wp-content/uploads/2025/11/EveningDesertSafariwithbbqdinnerroaradventureswl.webp',
     category: 'safari',
@@ -732,9 +732,6 @@ export default function LandingPageView() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleBookNowClick = () => {
-    window.open('https://wa.me/971589344077', '_blank');
-  };
 
   const filteredTours = TOURS_DATA.filter(tour => {
     const matchesCategory = activeTab === 'all' || tour.category === activeTab;
@@ -749,13 +746,11 @@ export default function LandingPageView() {
       <header className={`lp-header ${isHeaderScrolled ? 'scrolled' : ''}`}>
         <div className="lp-container lp-nav">
           <a href="#" className="lp-logo">
-            <img src="/logo.jpg" alt="Roar Adventure Tourism Logo" />
             <span className="lp-logo-text">ROAR ADVENTURE</span>
           </a>
 
           <ul className="lp-nav-links">
             <li><a href="#about" className="lp-nav-link">About Us</a></li>
-            <li><a href="#packages" className="lp-nav-link active">Deals & Packages</a></li>
             <li><a href="#locations" className="lp-nav-link">Pickup Locations</a></li>
             <li><a href="#process" className="lp-nav-link">Booking Process</a></li>
             <li><a href="#contact" className="lp-nav-link">Contact</a></li>
@@ -765,9 +760,6 @@ export default function LandingPageView() {
             <a href="https://wa.me/971589344077" className="lp-btn-contact" target="_blank" rel="noopener noreferrer">
               <Phone size={14} /> <span>+971 58 934 4077</span>
             </a>
-            <button onClick={handleBookNowClick} className="lp-btn-primary header-btn">
-              Book Online
-            </button>
             <button className="lp-mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu size={24} />
             </button>
@@ -786,7 +778,6 @@ export default function LandingPageView() {
         </div>
         <ul className="lp-mobile-nav-links">
           <li><a href="#about" className="lp-mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>About Us</a></li>
-          <li><a href="#packages" className="lp-mobile-nav-link active" onClick={() => setIsMobileMenuOpen(false)}>Deals & Packages</a></li>
           <li><a href="#locations" className="lp-mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Pickup Locations</a></li>
           <li><a href="#process" className="lp-mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Booking Process</a></li>
           <li><a href="#contact" className="lp-mobile-nav-link" onClick={() => setIsMobileMenuOpen(false)}>Contact</a></li>
@@ -795,9 +786,6 @@ export default function LandingPageView() {
           <a href="https://wa.me/971589344077" className="lp-btn-secondary" style={{ justifyContent: 'center' }} target="_blank" rel="noopener noreferrer">
             <Phone size={14} /> WhatsApp Inquiry
           </a>
-          <button onClick={() => { setIsMobileMenuOpen(false); handleBookNowClick(); }} className="lp-btn-primary" style={{ justifyContent: 'center' }}>
-            Book Online
-          </button>
         </div>
       </div>
 
@@ -836,11 +824,8 @@ export default function LandingPageView() {
           </div>
 
           <div className="lp-hero-btns">
-            <button onClick={handleBookNowClick} className="lp-btn-primary lp-btn-pulse">
-              Book VIP Desert Safari <ArrowRight size={16} />
-            </button>
-            <a href="#packages" className="lp-btn-secondary">
-              Explore 2026 Packages
+            <a href="https://wa.me/971589344077" target="_blank" rel="noopener noreferrer" className="lp-btn-primary lp-btn-pulse">
+              WhatsApp Inquiry <ArrowRight size={16} />
             </a>
           </div>
         </div>
@@ -1138,9 +1123,6 @@ export default function LandingPageView() {
               <a href="https://wa.me/971589344077" className="lp-btn-primary lp-btn-pulse" target="_blank" rel="noopener noreferrer" style={{ padding: '14px 32px' }}>
                 WhatsApp Call +971 58 934 4077
               </a>
-              <button onClick={handleBookNowClick} className="lp-btn-secondary" style={{ padding: '14px 32px' }}>
-                Use Interactive Booking Form
-              </button>
             </div>
           </div>
         </div>
