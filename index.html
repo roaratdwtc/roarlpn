@@ -1,13 +1,1281 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Roar Adventure Tourism - Desert Safari Booking & BI Dashboard</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>VIP Desert Safari Dubai | Best Safari Deals & Packages 2026</title>
+  <meta name="description" content="Book VIP Desert Safari Dubai with Roar Adventure Tourism. Direct operator deals for Evening, Morning, Sunrise, and Private Desert Safaris in Lehbab Red Dunes. DET & DTCM licensed.">
+  <link rel="canonical" href="https://roaradventuretourism.com/">
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- GLOBAL HEADER NAVBAR -->
+  <header class="lp-header" id="lpHeader">
+    <div class="lp-container lp-nav">
+      <a href="#" class="lp-logo">
+        <span class="lp-logo-text">ROAR ADVENTURE</span>
+      </a>
+
+      <ul class="lp-nav-links">
+        <li><a href="#about" class="lp-nav-link">About Us</a></li>
+        <li><a href="#packages" class="lp-nav-link">Deals & Packages</a></li>
+        <li><a href="#locations" class="lp-nav-link">Pickup Locations</a></li>
+        <li><a href="#process" class="lp-nav-link">Booking Process</a></li>
+        <li><a href="#contact" class="lp-nav-link">Contact</a></li>
+      </ul>
+
+      <div class="lp-nav-actions">
+        <a href="https://wa.me/971589344077" class="lp-btn-contact" target="_blank" rel="noopener noreferrer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>+971 58 934 4077</span>
+        </a>
+        <button class="lp-mobile-menu-btn" id="mobileMenuOpenBtn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MOBILE NAV DRAWER -->
+  <div class="lp-mobile-overlay" id="mobileOverlay"></div>
+  <div class="lp-mobile-drawer" id="mobileDrawer">
+    <div class="lp-mobile-drawer-header">
+      <span class="lp-logo-text">ROAR ADVENTURE</span>
+      <button class="lp-mobile-drawer-close" id="mobileMenuCloseBtn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+      </button>
+    </div>
+    <ul class="lp-mobile-nav-links">
+      <li><a href="#about" class="lp-mobile-nav-link">About Us</a></li>
+      <li><a href="#locations" class="lp-mobile-nav-link">Pickup Locations</a></li>
+      <li><a href="#process" class="lp-mobile-nav-link">Booking Process</a></li>
+      <li><a href="#contact" class="lp-mobile-nav-link">Contact</a></li>
+    </ul>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 12px;">
+      <a href="https://wa.me/971589344077" class="lp-btn-secondary" style="justify-content: center;" target="_blank" rel="noopener noreferrer">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>WhatsApp Inquiry</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- HERO SECTION -->
+  <section class="lp-hero">
+    <div class="lp-hero-bg" style="background-image: url('https://roaradventuretourism.com/wp-content/uploads/2025/07/Untitled-design-7.png');"></div>
+    <div class="lp-hero-content lp-container">
+      <span class="lp-hero-tagline">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/></svg>
+        <span>DET & DTCM Approved Safari Operator</span>
+      </span>
+      <h1 class="lp-hero-title">
+        VIP Desert Safari Dubai <br>
+        <span>Best Safari Deals & Packages 2026</span>
+      </h1>
+      <p class="lp-hero-desc">
+        Experience premium Desert Safaris in Lehbab Red Dunes & Al Awir Desert. Trusted by tourists from the USA, UK, Germany, France, Italy, and beyond. Book directly with Roar Adventure Tourism LLC for best rates and licensed quality.
+      </p>
+
+      <div class="lp-hero-badges">
+        <div class="lp-hero-badge-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lp-hero-badge-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>DET & DTCM Licensed</span>
+        </div>
+        <div class="lp-hero-badge-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lp-hero-badge-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>Instant Confirmation</span>
+        </div>
+        <div class="lp-hero-badge-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lp-hero-badge-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>Book Now Pay Later</span>
+        </div>
+        <div class="lp-hero-badge-item">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lp-hero-badge-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          <span>FREE Cancellation</span>
+        </div>
+      </div>
+
+      <div class="lp-hero-btns">
+        <a href="https://wa.me/971589344077" target="_blank" rel="noopener noreferrer" class="lp-btn-primary lp-btn-pulse">
+          <span>WhatsApp Inquiry</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right"><line x1="5" x2="19" y1="12" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN SAFARI PACKAGES EXPLORER -->
+  <section id="packages" class="lp-section">
+    <div class="lp-container">
+      <div class="lp-section-header">
+        <span class="lp-section-subtitle">Dubai Adventure Packages</span>
+        <h2 class="lp-section-title">VIP Desert Safari Prices & Timings</h2>
+        <p class="lp-section-desc">
+          Choose from shared, private, or luxury tours. VIP prices start from 149aed/person with doorstep pickup & dropoff from hotels, apartments, and villas across Dubai and Sharjah.
+        </p>
+      </div>
+
+      <!-- Tab Categories Filters -->
+      <div style="display: flex; flex-direction: column; gap: 20px; align-items: center; margin-bottom: 40px;">
+        <div class="lp-packages-tabs">
+          <button class="lp-packages-tab-btn active" data-category="all">All Packages</button>
+          <button class="lp-packages-tab-btn" data-category="safari">Desert Safaris</button>
+          <button class="lp-packages-tab-btn" data-category="buggy">Dune Buggy & ATVs</button>
+          <button class="lp-packages-tab-btn" data-category="city">City Excursions</button>
+          <button class="lp-packages-tab-btn" data-category="cruise">Yacht Cruises & Sky</button>
+        </div>
+      </div>
+
+      <!-- Packages Grid -->
+      <div class="lp-packages-grid" id="packagesGrid">
+        <!-- 1. Evening Safari -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Evening Desert Safari</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.9</strong>
+              <span>(1540 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            The classic evening safari package in Lehbab Red Dunes. Includes dune bashing in 4x4 Land Cruisers, live shows (Belly dance, fire show, Tanoura), short camel ride, sandboarding, and a full BBQ buffet dinner with vegetarian and non-vegetarian selections.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Home/Hotel Pickup & Dropoff</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Dune Bashing in 4x4 Land Cruisers</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Live Entertainment Shows</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Short Camel Ride</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">149 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_1@@ -->
+            <a href="https://roaradventuretourism.com/tour/evening-desert-safari/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 2. VIP Desert Safari -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">VIP Desert Safari in Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.9</strong>
+              <span>(1820 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Premium desert experience with VIP treatment. Skip the campsite queues and enjoy dedicated sofa seating, table service, separate BBQ areas, and personalized guides, alongside standard dune bashing and live campsite shows.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>All Evening Safari Inclusions</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Separate BBQ for VIPs</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>VIP Sofa Seating</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">199 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_2@@ -->
+            <a href="https://roaradventuretourism.com/tour/vip-desert-safari-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 3. Premium Desert Safari -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Premium Desert Safari</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.9</strong>
+              <span>(980 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Top-tier red dunes safari package containing direct pickup/dropoff in high-end Land Cruisers, a 30-minute quad bike session, private campgrounds access, and VIP table dining service.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Pickup & Dropoff in Land Cruiser</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>30 Minutes Quad Biking</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>VIP Sofa Seating</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">249 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_3@@ -->
+            <a href="https://roaradventuretourism.com/tour/premium-desert-safari/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 4. Morning Desert Safari -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Morning Desert Safari in Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.8</strong>
+              <span>(640 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Perfect for morning adventurers. Experience the refreshing desert breeze, early morning dune bashing, camel riding, sandboarding, and photography stops under clear blue skies before the midday heat.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Home/Hotel Pickup & Dropoff</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Dune Bashing in 4x4 Land Cruisers</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">120 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_4@@ -->
+            <a href="https://roaradventuretourism.com/tour/morning-desert-safari-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 5. Overnight Desert Safari -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Overnight Desert Safari Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.8</strong>
+              <span>(410 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Spend the night under the stars in Al Awir or Lahbab desert. Includes the entire evening desert safari program, overnight camping in comfortable tents with pillows and blankets, stargazing, and morning breakfast.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>All Evening Inclusions</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Pillow, Blanket & Private Tent</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">349 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_5@@ -->
+            <a href="https://roaradventuretourism.com/tour/overnight-desert-safari-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 6. Private Desert Safari -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Private Desert Safari Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.9</strong>
+              <span>(320 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            An exclusive desert tour designed for families, honeymooners, or corporate groups. Enjoy a dedicated 4x4 Land Cruiser, customized timing schedules, and private dinner tables/campsite spaces.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Exclusive Private 4x4 Cruiser</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>doorstep Pickup & Dropoff</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">799 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_6@@ -->
+            <a href="https://roaradventuretourism.com/tour/private-desert-safari-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 7. Dune Buggy Dubai -->
+        <article class="lp-package-card" data-category="buggy">
+          <span class="lp-package-badge">Offroad ATV</span>
+          <h3 class="lp-package-title">Dune Buggy in Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.8</strong>
+              <span>(1120 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Command your own premium multi-seater Can-Am Maverick buggy. Take on high red dunes under the instruction of certified guides. Fully equipped with automatic transmissions and safety roll cages.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Self-Drive Can-Am Buggy</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Safety Gear (Helmets, Goggles)</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">450 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_7@@ -->
+            <a href="https://roaradventuretourism.com/tour/dune-buggy-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 8. Polaris RZR Buggy -->
+        <article class="lp-package-card" data-category="buggy">
+          <span class="lp-package-badge">Offroad ATV</span>
+          <h3 class="lp-package-title">Polaris RZR 1000cc Dune Buggy Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.9</strong>
+              <span>(290 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Drive the pinnacle of dune buggy performance: the Polaris RZR 1000cc. Engineered with high-clearance suspension travel and raw power to climb the steepest red dunes with ease.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Self-Drive Polaris RZR 1000cc</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Guided Red Dunes Excursion</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">599 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_8@@ -->
+            <a href="https://roaradventuretourism.com/tour/polaris-rzr-1000cc-dune-buggy-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 9. Quad Bike Tour -->
+        <article class="lp-package-card" data-category="buggy">
+          <span class="lp-package-badge">Offroad ATV</span>
+          <h3 class="lp-package-title">Quad Bike Tour in Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.7</strong>
+              <span>(840 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Drive powerful all-terrain ATVs across custom sand circuits and open desert dunes. Ideal for beginners and expert riders looking for high-octane desert motorsports.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>ATV Quad Bike Self-Drive</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Helmets & Protection Gear</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">150 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_9@@ -->
+            <a href="https://roaradventuretourism.com/tour/quad-bike-tour-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 10. Dubai City Tour -->
+        <article class="lp-package-card" data-category="city">
+          <span class="lp-package-badge">Sightseeing</span>
+          <h3 class="lp-package-title">Dubai City Tour</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.7</strong>
+              <span>(1380 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Discover the contrasts of Dubai. A comprehensive tour highlighting modern architectural wonders (Burj Khalifa, Burj Al Arab, Palm Jumeirah) alongside historic markets (Gold & Spice Souk).
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Air-Conditioned Tourism Bus/Coach</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Professional English-Speaking Guide</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">99 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_10@@ -->
+            <a href="https://roaradventuretourism.com/tour/dubai-city-tour/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 11. Abu Dhabi City Tour -->
+        <article class="lp-package-card" data-category="city">
+          <span class="lp-package-badge">Sightseeing</span>
+          <h3 class="lp-package-title">Abu Dhabi City Tour</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.8</strong>
+              <span>(1040 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Embark on a full-day trip to the UAE’s capital. Tour the spectacular Sheikh Zayed Grand Mosque, Yas Island, Heritage Village, and capture photos at Emirates Palace.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Full-Day Guided Tour from Dubai</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Sheikh Zayed Grand Mosque Access</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">199 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_11@@ -->
+            <a href="https://roaradventuretourism.com/tour/book-abu-dhabi-city-tour/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 12. Sharjah City Tour -->
+        <article class="lp-package-card" data-category="city">
+          <span class="lp-package-badge">Sightseeing</span>
+          <h3 class="lp-package-title">Sharjah City Tour</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.6</strong>
+              <span>(190 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Explore the Cultural Capital of the UAE. Tour historical sites, traditional souks (Blue Souk), the magnificent King Faisal Mosque, and the Sharjah museum district.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Guided Sightseeing Program</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Visit Central Blue Souk</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">130 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_12@@ -->
+            <a href="https://roaradventuretourism.com/tour/sharjah-city-tour/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 13. Hatta Day Trip -->
+        <article class="lp-package-card" data-category="city">
+          <span class="lp-package-badge">Sightseeing</span>
+          <h3 class="lp-package-title">Hatta Day Trip with Mountain Tour</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.6</strong>
+              <span>(310 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Journey to the Hajar Mountains. Kayak across the clear waters of Hatta Dam, hike scenic trails, and explore the ancient Hatta Heritage Village.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Pickup & Dropoff in SUV/4x4</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Scenic Mountain Drive to Hatta</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">220 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_13@@ -->
+            <a href="https://roaradventuretourism.com/tour/hatta-day-trip-with-mountain-tour/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 14. Marina Cruise Dinner -->
+        <article class="lp-package-card" data-category="cruise">
+          <span class="lp-package-badge">Cruising</span>
+          <h3 class="lp-package-title">Dubai Marina Cruise Dinner</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.7</strong>
+              <span>(860 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Glance at Dubai Marina’s illuminated skyscrapers on a double-decker glass boat or luxury yacht. Includes an upscale international buffet dinner and traditional Tanoura performances.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>2 Hours Luxury Marina Cruise</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>International Buffet Dinner (Veg & Non-Veg)</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">120 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_14@@ -->
+            <a href="https://roaradventuretourism.com/tour/dubai-marina-cruise-dinner/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 15. Dhow Cruise Dinner -->
+        <article class="lp-package-card" data-category="cruise">
+          <span class="lp-package-badge">Cruising</span>
+          <h3 class="lp-package-title">Dhow Cruise Dinner in Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.6</strong>
+              <span>(580 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Float along the historic Dubai Creek on a traditional rustic wooden dhow. Enjoy classic Arabic BBQ dishes, soft background music, and Tanoura dance shows.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>2 Hours Traditional Creek Cruise</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Arabic BBQ Buffet Dinner</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">85 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_15@@ -->
+            <a href="https://roaradventuretourism.com/tour/dhow-cruise-dinner-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 16. Hot Air Balloon -->
+        <article class="lp-package-card" data-category="cruise">
+          <span class="lp-package-badge">Cruising</span>
+          <h3 class="lp-package-title">Hot Air Balloon Ride Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.9</strong>
+              <span>(280 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Ascend 4,000 feet above the Dubai desert at sunrise. Catch panoramic views of the sand dunes, watch a live in-flight falcon display, followed by a gourmet breakfast.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Gourmet Bedouin Breakfast</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Sunrise Balloon Flight (1 Hour)</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">999 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_16@@ -->
+            <a href="https://roaradventuretourism.com/tour/hot-air-balloon-ride-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 17. Camel Riding Safari -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Camel Riding Safari Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.8</strong>
+              <span>(510 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            A dedicated, slow-paced desert journey on camelback. Spot native wildlife like Arabian Oryx and gazelles in the Dubai Desert Conservation Reserve.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Guided Camel Caravan Ride</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Wildlife Spotting Walks</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">110 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_17@@ -->
+            <a href="https://roaradventuretourism.com/tour/camel-riding-safari-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 18. Safari without Dune Bashing -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Dubai Desert Safari without Dune Bashing</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.7</strong>
+              <span>(240 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Specifically designed for pregnant women, families with toddlers, elderly guests, or anyone wanting to skip high-impact off-roading. Drive straight to camp.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Direct Camp SUV Transfer</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Camel Ride & Henna Painting</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">130 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_18@@ -->
+            <a href="https://roaradventuretourism.com/tour/dubai-desert-safari-without-dune-bashing/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 19. VIP Safari with Quad Bike -->
+        <article class="lp-package-card" data-category="buggy">
+          <span class="lp-package-badge">Offroad ATV</span>
+          <h3 class="lp-package-title">VIP Desert Safari with Quad Bike</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.9</strong>
+              <span>(490 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Double the excitement. Combine the high-end VIP Evening Safari and private camp table service with an open-desert quad biking excursion.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>30 Minutes Quad Biking Session</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>All VIP Desert Safari Inclusions</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">349 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_19@@ -->
+            <a href="https://roaradventuretourism.com/tour/vip-desert-safari-with-quad-bike/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 20. Dune Buggy Adventure -->
+        <article class="lp-package-card" data-category="buggy">
+          <span class="lp-package-badge">Offroad ATV</span>
+          <h3 class="lp-package-title">Dune Buggy Adventure in Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.8</strong>
+              <span>(350 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Self-drive buggy rental packages built for pure adventure. Conquer steep sand hills, make custom photo stops, and enjoy driving high-powered engines.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Self-Drive ATV/Buggy Session</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Safety Instruction & Guiding</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">399 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_20@@ -->
+            <a href="https://roaradventuretourism.com/tour/dune-buggy-adventure-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 21. Dubai Desert Safari with Quad Bike -->
+        <article class="lp-package-card" data-category="buggy">
+          <span class="lp-package-badge">Offroad ATV</span>
+          <h3 class="lp-package-title">Dubai Desert Safari with Quad Bike</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.7</strong>
+              <span>(1210 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            The best-value combo. Enjoy our complete Evening Desert Safari package bundled together with a 30-minute self-drive quad biking session in our designated tracks.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>30 Minutes Quad Bike Ride</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Home/Hotel Pickup & Dropoff</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">199 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_21@@ -->
+            <a href="https://roaradventuretourism.com/tour/dubai-desert-safari-with-quad-bike/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 22. Morning Safari with Quadbike -->
+        <article class="lp-package-card" data-category="buggy">
+          <span class="lp-package-badge">Offroad ATV</span>
+          <h3 class="lp-package-title">Morning Desert Safari with Quadbike</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.8</strong>
+              <span>(580 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Beat the heat with a morning tour. Includes active sand dune quad biking, sandboarding, short camel ride, and refreshments before returning by noon.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>30 Minutes Quad Biking Session</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Dune Bashing in 4x4 Cruiser</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">179 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_22@@ -->
+            <a href="https://roaradventuretourism.com/tour/morning-desert-safari-with-quadbike/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 23. Evening Safari with BBQ Dinner -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Evening Desert Safari with BBQ Dinner</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.8</strong>
+              <span>(790 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Focuses deeply on local Emirati cuisine and campsite hospitality. Includes dune drives, live shows, henna, Arabic dress up, and a large BBQ buffet.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Standard Evening Safari Inclusions</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Unlimited BBQ Buffet Dinner</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">139 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_23@@ -->
+            <a href="https://roaradventuretourism.com/tour/evening-desert-safari-with-bbq-dinner/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 24. Dune Bashing Adventure -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Dune Bashing Adventure in Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.8</strong>
+              <span>(690 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            For high-impact adrenaline lovers. A dedicated, longer session of high-speed desert dune drifting in custom Land Cruisers driven by licensed pilots.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>45 Minutes Extreme Dune Bashing</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Experienced DTCM Safari Driver</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">120 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_24@@ -->
+            <a href="https://roaradventuretourism.com/tour/dune-bashing-adventure-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 25. Red Dunes Safari -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Red Dunes Safari</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.9</strong>
+              <span>(1020 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Discover Lahbab Red Dunes, famous for their steep heights and red crimson sands. Best for premium sandboarding, dune drifting, and camp stays.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Lahbab Red Dunes Excursion</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Home/Hotel pickup in SUV</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">160 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_25@@ -->
+            <a href="https://roaradventuretourism.com/tour/red-dunes-safari/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+
+        <!-- 26. Sunrise Desert Safari -->
+        <article class="lp-package-card" data-category="safari">
+          <span class="lp-package-badge">Safari Deal</span>
+          <h3 class="lp-package-title">Sunrise Desert Safari Dubai</h3>
+          <div class="lp-package-meta">
+            <div class="lp-package-meta-item">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="var(--lp-accent)" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <strong>4.7</strong>
+              <span>(150 reviews)</span>
+            </div>
+          </div>
+          <p style="font-size: 13.5px; color: var(--lp-text-body); margin-bottom: 16px; line-height: 1.4;">
+            Watch the sun rise over the high desert dunes. Perfect for morning photography enthusiasts, camel rides, and fresh Arabian coffee setups.
+          </p>
+          <ul class="lp-package-features-list">
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Early Morning Hotel Pickup</span></li>
+            <li class="lp-package-feature-item"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3" class="lp-package-feature-check"><polyline points="20 6 9 17 4 12"/></svg><span>Sunrise Stargazing to Dawn</span></li>
+          </ul>
+          <div class="lp-package-footer">
+            <div class="lp-package-price-wrap">
+              <span class="lp-package-price-label">Price Start</span>
+              <div class="lp-package-price-value">140 <span>AED</span></div>
+            </div>
+            <!-- @@LINK_26@@ -->
+            <a href="https://roaradventuretourism.com/tour/sunrise-desert-safari-dubai/" target="_blank" rel="noopener noreferrer" class="lp-btn-primary" style="padding: 8px 16px; font-size: 12px;">View Details</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY CHOOSE ROAR SECTION -->
+  <section id="about" class="lp-section alt-bg">
+    <div class="lp-container lp-why-container">
+      <div class="lp-why-text-col">
+        <span class="lp-section-subtitle">Trusted Safari Operator</span>
+        <h2 class="lp-section-title">Best Desert Safari Company in Dubai</h2>
+        <p class="lp-hero-desc" style="margin-bottom: 24px;">
+          Roar Adventure Tourism LLC stands out with over 80,000 satisfied customers and 1500+ five-star reviews on Google, TripAdvisor, and major travel booking channels. We operate our own fleet of Land Cruisers and quad bikes directly.
+        </p>
+        <div class="lp-why-stats">
+          <div class="lp-why-stat-item">
+            <span class="lp-why-stat-num">80k+</span>
+            <span class="lp-why-stat-label">Happy Guests</span>
+          </div>
+          <div class="lp-why-stat-item">
+            <span class="lp-why-stat-num">1500+</span>
+            <span class="lp-why-stat-label">5★ Reviews</span>
+          </div>
+          <div class="lp-why-stat-item">
+            <span class="lp-why-stat-num">100%</span>
+            <span class="lp-why-stat-label">DTCM Approved</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="lp-why-card-grid">
+        <div class="lp-why-feature-card">
+          <div class="lp-why-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-award"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+          </div>
+          <h3 class="lp-why-card-title">Best Rates Guarantee</h3>
+          <p class="lp-why-card-desc">Direct operator bookings ensure you bypass agency commissions and get local wholesale rates.</p>
+        </div>
+        <div class="lp-why-feature-card">
+          <div class="lp-why-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield"><path d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8-2a1 1 0 0 1 .48 0l8 2a1 1 0 0 1 .76.97Z"/></svg>
+          </div>
+          <h3 class="lp-why-card-title">Book Now Pay Later</h3>
+          <p class="lp-why-card-desc">No upfront credit card deposit needed for standard tours. Secure reservations instantly.</p>
+        </div>
+        <div class="lp-why-feature-card">
+          <div class="lp-why-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3 class="lp-why-card-title">24/7 Live Support</h3>
+          <p class="lp-why-card-desc">Direct lines to tour supervisors on WhatsApp for instant timing customisations.</p>
+        </div>
+        <div class="lp-why-feature-card">
+          <div class="lp-why-icon-wrap">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/></svg>
+          </div>
+          <h3 class="lp-why-card-title">Customizable Tours</h3>
+          <p class="lp-why-card-desc">Easily add camel rides, quad biking, private seating upgrades, or skip dune bashing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE DOORSTEP PICKUP LOCATIONS PANEL -->
+  <section id="locations" class="lp-section">
+    <div class="lp-container">
+      <div class="lp-section-header">
+        <span class="lp-section-subtitle">Convenient Pickups</span>
+        <h2 class="lp-section-title">Doorstep Pick/Drop Locations</h2>
+        <p class="lp-section-desc">
+          We offer doorstep pickups in comfortable 4x4 Land Cruisers or modern vehicles across all major neighborhoods in Dubai and Sharjah. Click on a zone below to see detailed pickup options.
+        </p>
+      </div>
+
+      <div class="lp-locations-grid">
+        <div class="lp-location-card active" data-location="0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon" style="margin: 0 auto 8px auto;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="lp-location-name">Dubai Marina & JBR</div>
+        </div>
+        <div class="lp-location-card" data-location="1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon" style="margin: 0 auto 8px auto;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="lp-location-name">Bur Dubai & Karama</div>
+        </div>
+        <div class="lp-location-card" data-location="2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon" style="margin: 0 auto 8px auto;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="lp-location-name">Deira & Al Rigga</div>
+        </div>
+        <div class="lp-location-card" data-location="3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon" style="margin: 0 auto 8px auto;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="lp-location-name">Downtown, Business Bay & DWTC</div>
+        </div>
+        <div class="lp-location-card" data-location="4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon" style="margin: 0 auto 8px auto;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="lp-location-name">Palm Jumeirah & Jebel Ali</div>
+        </div>
+      </div>
+
+      <div class="lp-locations-details-panel" id="locationsPanel">
+        <h3 class="lp-location-details-title" id="locTitle">Pickup details for Dubai Marina & JBR</h3>
+        <p class="lp-location-details-text" id="locDesc">
+          Living in Dubai Marina or JBR? Get ready for a Premium Safari Tour Pick/Drop from your Residence/Hotel like Promenade, Time Place Tower, Intercontinental by IHG, Marina Mall, Marsa, Sulafa Tower, Cayan Tower, Crowne Hotel, Hilton The Walk, Rimal 6, Amwaj, Bahar & Murjan, Rixos Premium, Sofitel, Amwaj Rotana, FIVE LUXE JBR, The Ritz-Carlton Dubai, Le Royal Meridien, Ramada, Sheraton, and Habtoor Grand.
+        </p>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 20px;">
+          <strong style="font-size: 13px; color: var(--lp-text-title);">Key Pick-up Hotels covered:</strong>
+          <span class="lp-hotel-tag" id="locHotels">Atlantis The Palm, Rixos Premium JBR, Sofitel JBR, Cayan Tower, Promenade Marina</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AUDIENCE SEGMENT DEALS -->
+  <section class="lp-section alt-bg">
+    <div class="lp-container">
+      <div class="lp-section-header">
+        <span class="lp-section-subtitle">Tailored Desert Safaris</span>
+        <h2 class="lp-section-title">Special Packages for Every Traveler</h2>
+        <p class="lp-section-desc">
+          Whether you are traveling solo, planning a family trip with toddlers, celebrating an anniversary, or organizing corporate outings, we customize our camps to support your needs.
+        </p>
+      </div>
+
+      <div class="lp-why-card-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="lp-why-feature-card">
+          <h3 class="lp-why-card-title" style="font-size: 18px; color: var(--lp-primary); margin-bottom: 10px;">Family & Toddler Safaris</h3>
+          <p class="lp-why-card-desc" style="font-size: 13.5px;">
+            Skips aggressive dune bashing. Direct camp transfers allow young children (ages 1-8) and mothers to enjoy camel rides and shows safely.
+          </p>
+        </div>
+        <div class="lp-why-feature-card">
+          <h3 class="lp-why-card-title" style="font-size: 18px; color: var(--lp-primary); margin-bottom: 10px;">Romantic Safari for Couples</h3>
+          <p class="lp-why-card-desc" style="font-size: 13.5px;">
+            Honeymooners, birthday, or anniversary setups. Premium seating space, personalized sunset tables, and gourmet grills.
+          </p>
+        </div>
+        <div class="lp-why-feature-card">
+          <h3 class="lp-why-card-title" style="font-size: 18px; color: var(--lp-primary); margin-bottom: 10px;">Gentle / Senior Citizens Safari</h3>
+          <p class="lp-why-card-desc" style="font-size: 13.5px;">
+            Designed for pregnant women, people with back pain or heart health concerns. Gentle drives straight to campgrounds.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEPS TO BOOK CORNER -->
+  <section id="process" class="lp-section">
+    <div class="lp-container">
+      <div class="lp-section-header">
+        <span class="lp-section-subtitle">How It Works</span>
+        <h2 class="lp-section-title">Our Easy 4-Step Booking Process</h2>
+        <p class="lp-section-desc">
+          Secure your desert tour in less than 2 minutes. No advance credit card details required for standard packages.
+        </p>
+      </div>
+
+      <div class="lp-process-flow">
+        <div class="lp-process-step">
+          <span class="lp-process-num">1</span>
+          <div class="lp-process-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lucide lucide-compass"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+          </div>
+          <h3 class="lp-process-title">Choose Package</h3>
+          <p class="lp-process-desc">Select from Standard, VIP, Premium, or Private Desert Safari deals.</p>
+        </div>
+        <div class="lp-process-step">
+          <span class="lp-process-num">2</span>
+          <div class="lp-process-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="lucide lucide-phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <h3 class="lp-process-title">WhatsApp Inquiry</h3>
+          <p class="lp-process-desc">Send WhatsApp with your guest count, selected package, and hotel pickup location.</p>
+        </div>
+        <div class="lp-process-step">
+          <span class="lp-process-num">3</span>
+          <div class="lp-process-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lucide lucide-thumbs-up"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/></svg>
+          </div>
+          <h3 class="lp-process-title">Confirm Booking</h3>
+          <p class="lp-process-desc">Receive instant e-booking confirmation. Free cancellations up to 24 hours.</p>
+        </div>
+        <div class="lp-process-step">
+          <span class="lp-process-num">4</span>
+          <div class="lp-process-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="lp-hero-badge-icon"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+          <h3 class="lp-process-title">Enjoy Tour</h3>
+          <p class="lp-process-desc">Our Land Cruiser driver picks you up from your doorstep. Pay cash/card on arrival.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK INQUIRY CALL ACTION BOX -->
+  <section id="contact" class="lp-section alt-bg">
+    <div class="lp-container">
+      <div class="lp-cta-box">
+        <span class="lp-cta-subtitle">Instantly Confirm Your Tour</span>
+        <h2 class="lp-cta-title">Don’t miss out on premium desert safari adventure experiences</h2>
+        <p class="lp-cta-desc">
+          Talk directly to our desert supervisors to customize your timing, request private tables, or query quad bike availability. 
+        </p>
+        <div class="lp-hero-btns">
+          <a href="https://wa.me/971589344077" class="lp-btn-primary lp-btn-pulse" target="_blank" rel="noopener noreferrer" style="padding: 14px 32px;">
+            WhatsApp Call +971 58 934 4077
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER DIRECTORY OF ALL 26 TOURS -->
+  <footer class="lp-footer">
+    <div class="lp-container">
+      <div class="lp-footer-grid">
+        <div class="lp-footer-info">
+          <span class="lp-logo-text" style="font-size: 22px;">ROAR ADVENTURE</span>
+          <p class="lp-footer-desc">
+            Roar Adventure Tourism LLC is a premier licensed tour operator based in Dubai, UAE, specializing in VIP desert safaris, high-power Can-Am buggies, and luxurious creek and yacht cruise dinning.
+          </p>
+          <div class="lp-footer-socials">
+            <a href="#" class="lp-social-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></a>
+            <a href="#" class="lp-social-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lucide lucide-compass"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></a>
+            <a href="#" class="lp-social-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" class="lp-package-meta-icon"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></a>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="lp-footer-col-title">Navigation Links</h3>
+          <ul class="lp-footer-links">
+            <li><a href="#about" class="lp-footer-link"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg> About Us</a></li>
+            <li><a href="#packages" class="lp-footer-link"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg> Packages & Prices</a></li>
+            <li><a href="#locations" class="lp-footer-link"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg> doorStep Pickups</a></li>
+            <li><a href="#process" class="lp-footer-link"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg> Stepped Guide</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="lp-footer-col-title">Key Areas covered</h3>
+          <ul class="lp-footer-links">
+            <li><a href="#locations" class="lp-footer-link"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg> Dubai Marina & JBR</a></li>
+            <li><a href="#locations" class="lp-footer-link"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg> Bur Dubai & Karama</a></li>
+            <li><a href="#locations" class="lp-footer-link"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg> Deira & Al Rigga</a></li>
+            <li><a href="#locations" class="lp-footer-link"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg> Downtown & DWTC</a></li>
+          </ul>
+        </div>
+
+        <div class="lp-footer-contact">
+          <h3 class="lp-footer-col-title">Licensed Office</h3>
+          <div class="lp-footer-contact-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lp-footer-contact-icon"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span>Dubai World Trade Centre (DWTC), Sheikh Zayed Rd, Dubai, UAE</span>
+          </div>
+          <div class="lp-footer-contact-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="lp-footer-contact-icon"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            <span>+971 58 934 4077</span>
+          </div>
+          <div class="lp-footer-contact-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="lp-footer-contact-icon"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+            <span>info@roaradventuretourism.com</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SITEMAP LINK INTEGRATION SECTION -->
+      <!-- @@SITEMAP_START@@ -->
+      <div class="lp-footer-directory">
+        <h4 class="lp-directory-title">Roar Adventure Tourism LLC - Sitemap Tour Index</h4>
+        <div class="lp-directory-tags">
+          <a href="https://roaradventuretourism.com/tour/evening-desert-safari/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_0">Evening Desert Safari Dubai</a>
+          <a href="https://roaradventuretourism.com/tour/vip-desert-safari-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_1">VIP Desert Camp Dubai</a>
+          <a href="https://roaradventuretourism.com/tour/premium-desert-safari/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_2">Premium Campsite Dinner Tour</a>
+          <a href="https://roaradventuretourism.com/tour/morning-desert-safari-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_3">Morning Safari In Al Awir</a>
+          <a href="https://roaradventuretourism.com/tour/overnight-desert-safari-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_4">24 Hour Desert Safari Dubai</a>
+          <a href="https://roaradventuretourism.com/tour/private-desert-safari-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_5">Private 4x4 Desert Safari</a>
+          <a href="https://roaradventuretourism.com/tour/dune-buggy-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_6">Self Drive Dune Buggy Dubai</a>
+          <a href="https://roaradventuretourism.com/tour/polaris-rzr-1000cc-dune-buggy-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_7">Polaris 1000cc Buggy Ride</a>
+          <a href="https://roaradventuretourism.com/tour/quad-bike-tour-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_8">Single Quad Bike Adventure</a>
+          <a href="https://roaradventuretourism.com/tour/dubai-city-tour/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_9">Dubai Guided Sightseeing Tour</a>
+          <a href="https://roaradventuretourism.com/tour/book-abu-dhabi-city-tour/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_10">Book Abu Dhabi City Tour</a>
+          <a href="https://roaradventuretourism.com/tour/sharjah-city-tour/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_11">Sharjah Guided City Tour</a>
+          <a href="https://roaradventuretourism.com/tour/hatta-day-trip-with-mountain-tour/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_12">Hatta Mountain Tour from Dubai</a>
+          <a href="https://roaradventuretourism.com/tour/dubai-marina-cruise-dinner/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_13">Marina Yacht Dinner Cruise</a>
+          <a href="https://roaradventuretourism.com/tour/dhow-cruise-dinner-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_14">Creek Yacht Buffet Dinner</a>
+          <a href="https://roaradventuretourism.com/tour/hot-air-balloon-ride-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_15">Hot Air Balloon Dubai Booking</a>
+          <a href="https://roaradventuretourism.com/tour/camel-riding-safari-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_16">Bedouin Camel Riding Safari</a>
+          <a href="https://roaradventuretourism.com/tour/dubai-desert-safari-without-dune-bashing/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_17">Desert Safari without Dune Bashing</a>
+          <a href="https://roaradventuretourism.com/tour/vip-desert-safari-with-quad-bike/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_18">Luxury Safari and Quad Bike</a>
+          <a href="https://roaradventuretourism.com/tour/dune-buggy-adventure-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_19">Dune Buggy Adventure Ride</a>
+          <a href="https://roaradventuretourism.com/tour/dubai-desert-safari-with-quad-bike/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_20">Dubai Desert Safari with Quad Bike</a>
+          <a href="https://roaradventuretourism.com/tour/morning-desert-safari-with-quadbike/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_21">Morning Red Dunes ATV Ride</a>
+          <a href="https://roaradventuretourism.com/tour/evening-desert-safari-with-bbq-dinner/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_22">Red Dunes Buffet Safari Dinner</a>
+          <a href="https://roaradventuretourism.com/tour/dune-bashing-adventure-in-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_23">Dune Bashing Adventure Dubai</a>
+          <a href="https://roaradventuretourism.com/tour/red-dunes-safari/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_24">Al Lahbab Desert Safari Dubai</a>
+          <a href="https://roaradventuretourism.com/tour/sunrise-desert-safari-dubai/" target="_blank" rel="noopener noreferrer" class="lp-directory-tag" id="tag_25">Sunrise Desert Safari</a>
+        </div>
+      </div>
+      <!-- @@SITEMAP_END@@ -->
+
+      <div class="lp-footer-bottom">
+        <p>&copy; 2026 Roar Adventure Tourism LLC. Approved by Dubai Department of Economy and Tourism (DET). All rights reserved.</p>
+        <p style="display: flex; gap: 16px;">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms & Conditions</a>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Vanilla JS Interactive Controls -->
+  <script>
+    // Header background transformation on scroll
+    window.addEventListener('scroll', function() {
+      const header = document.getElementById('lpHeader');
+      if (window.scrollY > 40) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
+    });
+
+    // Mobile menu drawer toggle
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const mobileDrawer = document.getElementById('mobileDrawer');
+    const menuOpenBtn = document.getElementById('mobileMenuOpenBtn');
+    const menuCloseBtn = document.getElementById('mobileMenuCloseBtn');
+    const mobileLinks = document.querySelectorAll('.lp-mobile-nav-link');
+
+    function openMobileMenu() {
+      mobileOverlay.classList.add('visible');
+      mobileDrawer.classList.add('open');
+    }
+
+    function closeMobileMenu() {
+      mobileOverlay.classList.remove('visible');
+      mobileDrawer.classList.remove('open');
+    }
+
+    menuOpenBtn.addEventListener('click', openMobileMenu);
+    menuCloseBtn.addEventListener('click', closeMobileMenu);
+    mobileOverlay.addEventListener('click', closeMobileMenu);
+    mobileLinks.forEach(link => link.addEventListener('click', closeMobileMenu));
+
+    // Interactive locations data panel
+    const locations = [
+      {
+        name: 'Dubai Marina & JBR',
+        desc: 'Living in Dubai Marina or JBR? Get ready for a Premium Safari Tour Pick/Drop from your Residence/Hotel like Promenade, Time Place Tower, Intercontinental by IHG, Marina Mall, Marsa, Sulafa Tower, Cayan Tower, Crowne Hotel, Hilton The Walk, Rimal 6, Amwaj, Bahar & Murjan, Rixos Premium, Sofitel, Amwaj Rotana, FIVE LUXE JBR, The Ritz-Carlton Dubai, Le Royal Meridien, Ramada, Sheraton, and Habtoor Grand.',
+        hotels: 'Atlantis The Palm, Rixos Premium JBR, Sofitel JBR, Cayan Tower, Promenade Marina'
+      },
+      {
+        name: 'Bur Dubai & Karama',
+        desc: 'doorstep Pickup & Dropoff from Al Karama, Jafiliya, Al Mankhool, Oud Metha, and Bur Dubai. Pickup points include Grand Excelsior, Holiday Inn, Orchid Vue, Novotel, Omega Hotel, Xclusive Maples, Citymax, Al Fahidi, Admiral Plaza, Gateway, Park Regis Kris Kin, Golden Sands 10, Arabian Courtyard, Four Points, and Dolphin Show Creek Hotel.',
+        hotels: 'Park Regis Kris Kin, Holiday Inn Bur Dubai, Citymax Bur Dubai, Golden Sands'
+      },
+      {
+        name: 'Deira & Al Rigga',
+        desc: 'Book your safari from Deira City Center, Abu Hail, Hor Al Anz, Al Nahda, Al Rigga, Baniyas, Khabaisi, Naif, and Gold Souk. We offer pickups from hotels like Ramada by Wyndham, Hyatt Regency Galleria, Landmark, Ibis, Novotel Gold District, Fortune Pearl, and Boonmax.',
+        hotels: 'Deira City Center Hotel, Ramada Deira, Hyatt Regency Galleria, Ibis Deira'
+      },
+      {
+        name: 'Downtown, Business Bay & DWTC',
+        desc: 'doorstep Pickup/Dropoff from DWTC, Al Satwa, Zabeel, Al Jafiliya, Jumeirah 1, DIFC, Downtown, Business Bay, Jumeirah, Al Wasl, and Al Mina. Ideal for corporate groups and tourists staying at Downtown luxury hotels.',
+        hotels: 'Burj Khalifa area, Address Downtown, JW Marriott Marquis, DIFC Residences'
+      },
+      {
+        name: 'Palm Jumeirah & Jebel Ali',
+        desc: 'We offer doorstep Pickup/Dropoff from Palm Jumeirah hotels like Marriott Resort, The View At The Palm, Atlantis The Palm, Atlantis The Royal, East Crescent residences, Anantara Residences, Pullman, and Sofitel. Also covering Discovery Gardens, Jebel Ali, and Dubai Sports City.',
+        hotels: 'Atlantis The Royal, Atlantis The Palm, Anantara Palm Jumeirah, Marriott Resort'
+      }
+    ];
+
+    const locCards = document.querySelectorAll('.lp-location-card');
+    const locTitle = document.getElementById('locTitle');
+    const locDesc = document.getElementById('locDesc');
+    const locHotels = document.getElementById('locHotels');
+
+    locCards.forEach(card => {
+      card.addEventListener('click', function() {
+        // Toggle active states
+        locCards.forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+
+        // Update data
+        const index = parseInt(this.getAttribute('data-location'));
+        const loc = locations[index];
+        locTitle.textContent = 'Pickup details for ' + loc.name;
+        locDesc.textContent = loc.desc;
+        locHotels.textContent = loc.hotels;
+      });
+    });
+
+    // Packages filtering logic
+    const categoryButtons = document.querySelectorAll('.lp-packages-tab-btn');
+    const packageCards = document.querySelectorAll('.lp-package-card');
+
+    categoryButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        categoryButtons.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        const cat = this.getAttribute('data-category');
+        packageCards.forEach(card => {
+          const cardCat = card.getAttribute('data-category');
+          if (cat === 'all' || cardCat === cat) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  </script>
+</body>
 </html>

@@ -1,5 +1,5 @@
 /* Premium Light Mode Desert Sand Theme for Roar Adventure Tourism */
-.landing-page {
+:root {
   --lp-primary: #c9762a;
   --lp-primary-rgb: 201, 118, 42;
   --lp-secondary: #e28a3b;
@@ -22,13 +22,6 @@
   --lp-glass-border: rgba(201, 118, 42, 0.12);
   --lp-card-shadow: 0 10px 30px rgba(201, 118, 42, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
   --lp-card-shadow-hover: 0 20px 40px rgba(201, 118, 42, 0.12), 0 4px 10px rgba(201, 118, 42, 0.04);
-
-  background-color: var(--lp-bg-white);
-  color: var(--lp-text-body);
-  font-family: 'Bricolage Grotesque Semi Bold', 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-  line-height: 1.6;
 }
 
 /* Animations */
@@ -43,26 +36,33 @@
   }
 }
 
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-  100% { transform: translateY(0px); }
-}
-
 @keyframes pulseGlow {
   0% { box-shadow: 0 0 0 0 rgba(201, 118, 42, 0.35); }
   70% { box-shadow: 0 0 0 10px rgba(201, 118, 42, 0); }
   100% { box-shadow: 0 0 0 0 rgba(201, 118, 42, 0); }
 }
 
-/* Base resets & utility styles inside wrapper */
-.landing-page * {
+/* Base resets & utility styles */
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-.landing-page a {
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--lp-bg-white);
+  color: var(--lp-text-body);
+  font-family: 'Bricolage Grotesque', 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+a {
   text-decoration: none;
   color: inherit;
   transition: all 0.3s ease;
@@ -105,13 +105,6 @@
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.lp-logo img {
-  height: 48px;
-  border-radius: 8px;
-  object-fit: cover;
-  border: 1px solid var(--lp-border);
 }
 
 .lp-logo-text {
@@ -389,12 +382,6 @@
 }
 
 /* Packages Grid section */
-.lp-packages-container {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
 .lp-packages-tabs {
   display: flex;
   justify-content: center;
@@ -414,6 +401,7 @@
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: var(--lp-card-shadow);
+  border-style: solid;
 }
 
 .lp-packages-tab-btn.active,
@@ -487,6 +475,7 @@
 
 .lp-package-meta-icon {
   color: var(--lp-primary);
+  flex-shrink: 0;
 }
 
 .lp-package-features-list {
@@ -628,7 +617,7 @@
 /* Locations pickup grid layout */
 .lp-locations-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 20px;
 }
 
@@ -676,6 +665,14 @@
   font-size: 14.5px;
   color: var(--lp-text-body);
   line-height: 1.5;
+}
+
+.lp-hotel-tag {
+  background: var(--lp-bg-sand);
+  border: 1px solid var(--lp-border);
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 12px;
 }
 
 /* Booking Process Stepper */
@@ -1016,7 +1013,7 @@
     gap: 40px;
   }
   .lp-locations-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
   .lp-process-flow {
     grid-template-columns: repeat(2, 1fr);
