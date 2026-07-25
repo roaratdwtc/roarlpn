@@ -7,6 +7,7 @@
     "build": "node scripts/build.cjs",
     "deploy": "node scripts/deploy.cjs",
     "deploy:surge": "node scripts/build.cjs && npx surge dist roar-desert-safari.surge.sh",
-    "deploy:firebase": "node scripts/build.cjs && firebase deploy --only hosting"
+    "deploy:firebase": "node scripts/build.cjs && firebase deploy --only hosting",
+    "start": "npx -y serve dist -l $PORT"
   }
 }
