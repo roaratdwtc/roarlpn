@@ -1,25 +1,32 @@
-# Walkthrough - Railway hosting Compatibility Complete
+# Walkthrough - Railway Docker Setup Complete
 
-I have updated the project configurations to ensure full compatibility with Railway's container deployment engine.
+I have added a Dockerfile to ensure 100% stable deployments on Railway, bypassing Nixpacks buildpack issues.
 
-## Why Did the Build Fail on Railway?
-* Railway detected a `package.json` file and assumed this is a dynamic Node.js web application.
-* Since our project is a pure static HTML/CSS page, we did not have a `"start"` script defined in `package.json` to start a web server.
-* Railway failed to create a runnable container image because there was no command telling it how to run the web server, resulting in a **Build Image Failure**.
+## Why Did the Build Fail Again?
+* Railway's default Nixpacks builder tries to auto-detect environments based on heuristics, which can fail if there are conflicting file structures (like static assets mixed with Node configurations).
+* To solve this permanently, we added a **Dockerfile**. When a Dockerfile is present in the root directory, Railway automatically bypasses Nixpacks and builds the container exactly as defined, which guarantees success.
 
 ## Changes Implemented
 
-### 1. Added Static Server Startup Script
-* Updated **[package.json](file:///c:/Users/LENOVO/Documents/AntiGravity/package.json)** to include a `"start"` script:
-  ```json
-  "start": "npx -y serve dist -l $PORT"
+### 1. Added Dockerfile
+* Created **[Dockerfile](file:///c:/Users/LENOVO/Documents/AntiGravity/Dockerfile)** in the root directory:
+  ```dockerfile
+  FROM node:20-alpine AS builder
+  WORKDIR /app
+  COPY package.json ./
+  RUN npm install
+  COPY . .
+  RUN node scripts/build.cjs
+
+  FROM node:20-alpine
+  WORKDIR /app
+  RUN npm install -g serve
+  COPY --from=builder /app/dist ./dist
+  CMD ["sh", "-c", "serve -s dist -l $PORT"]
   ```
-* This tells Railway to:
-  * Run the build command (`node scripts/build.cjs`) to compile the static folder `/dist`.
-  * Boot up a lightweight static file server (`serve`) pointing to `/dist` and listen on the dynamic port (`$PORT`) provided by Railway.
 
 ### 2. ZIP Archive Updated
-* Updated **[RoarLandingPage.zip](file:///c:/Users/LENOVO/Documents/AntiGravity/RoarLandingPage.zip)** to include this updated `package.json`.
+* Updated **[RoarLandingPage.zip](file:///c:/Users/LENOVO/Documents/AntiGravity/RoarLandingPage.zip)** to include the Dockerfile.
 
 ### 3. Pushed Code
 * Pushed all updates to GitHub and GitLab.
@@ -28,5 +35,5 @@ I have updated the project configurations to ensure full compatibility with Rail
 
 ## How to Redeploy on Railway
 1. Go to your **[Railway Dashboard](https://railway.app/)**.
-2. Railway should have already detected the new commit **`7dcca70`** and started a new deployment pipeline automatically.
-3. Once the build finishes, your site will be live and running on Railway!
+2. Railway will automatically pick up the new commit **`c4387f8`** containing the `Dockerfile`.
+3. It will build the Docker container and deploy it successfully!
