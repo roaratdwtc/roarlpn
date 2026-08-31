@@ -2166,6 +2166,8 @@ export default function BookingsView({
                     <option value="Paid on Viator">Paid on Viator</option>
                     <option value="Paid via stripe">Paid via stripe</option>
                     <option value="Paid to Partner">Paid to Partner</option>
+                    <option value="Paid via Payment Link">Paid via Payment Link</option>
+                    <option value="Paid via RAK Bank">Paid via RAK Bank</option>
                     <option value="Collection">Collection</option>
                   </select>
                 </div>
