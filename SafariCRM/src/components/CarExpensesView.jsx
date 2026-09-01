@@ -18,8 +18,22 @@ import {
   ShieldCheck, 
   FileText, 
   Clock,
-  Sparkles
+  Sparkles,
+  Phone,
+  MessageSquare,
+  UserCheck
 } from 'lucide-react';
+
+// The 7 Official Roar Company Fleet Vehicles & Assigned Drivers
+export const ROAR_FLEET_VEHICLES = [
+  { id: 'driver-adnan', name: 'Mr Adnan', whatsapp: '+971586860301', carPlate: 'FF79157', model: 'Toyota Land Cruiser V8' },
+  { id: 'driver-afzal', name: 'Mr Afzal', whatsapp: '+971563936028', carPlate: 'DD21596', model: 'Toyota Land Cruiser V8' },
+  { id: 'driver-abbasi', name: 'Mr Abbasi', whatsapp: '+971556054570', carPlate: 'G25801', model: 'Nissan Patrol Safari' },
+  { id: 'driver-shahid', name: 'Mr Shahid', whatsapp: '+971567576977', carPlate: 'D16197', model: 'Toyota Land Cruiser V8' },
+  { id: 'driver-ibadat', name: 'Mr Ibadat', whatsapp: '+971545278478', carPlate: 'I49209', model: 'Toyota Land Cruiser V8' },
+  { id: 'driver-shahmir', name: 'Mr Shahmir', whatsapp: '+971559210545', carPlate: 'BB23370', model: 'Nissan Patrol Safari' },
+  { id: 'driver-bangash', name: 'Mr Bangash', whatsapp: '+971547042682', carPlate: 'DD50781', model: 'Toyota Land Cruiser V8' }
+];
 
 const EXPENSE_CATEGORIES = [
   'Car Passing',
@@ -44,13 +58,12 @@ const PAYMENT_METHODS = [
 export default function CarExpensesView({ 
   carExpenses = [], 
   setCarExpenses, 
-  cars = [], 
   drivers = [],
   companyId = 'roar'
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [carFilter, setCarFilter] = useState('all');
+  const [selectedPlateFilter, setSelectedPlateFilter] = useState('all'); // 'all' or plate string
   const [dateFilter, setDateFilter] = useState('all'); // all, this_month, last_month, custom
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
@@ -60,13 +73,15 @@ export default function CarExpensesView({
   const [editingExpense, setEditingExpense] = useState(null);
   const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
+  // Default to first Roar vehicle
+  const defaultFleet = ROAR_FLEET_VEHICLES[0];
   const [formData, setFormData] = useState({
-    plateNo: cars[0]?.plateNo || '48590',
-    carId: cars[0]?.id || 'car-48590',
+    plateNo: defaultFleet.carPlate,
+    carId: `car-${defaultFleet.carPlate.toLowerCase()}`,
     category: 'Oil Change',
     amount: '',
     date: todayStr,
-    driverName: drivers[0]?.name || '',
+    driverName: defaultFleet.name,
     workshopName: '',
     invoiceNo: '',
     odometer: '',
@@ -75,15 +90,16 @@ export default function CarExpensesView({
     notes: ''
   });
 
-  const handleOpenAddModal = () => {
+  const handleOpenAddModal = (initialPlate = null) => {
     setEditingExpense(null);
+    const targetFleet = ROAR_FLEET_VEHICLES.find(v => v.carPlate === initialPlate) || ROAR_FLEET_VEHICLES[0];
     setFormData({
-      plateNo: cars[0]?.plateNo || '48590',
-      carId: cars[0]?.id || 'car-48590',
+      plateNo: targetFleet.carPlate,
+      carId: `car-${targetFleet.carPlate.toLowerCase()}`,
       category: 'Oil Change',
       amount: '',
       date: todayStr,
-      driverName: drivers[0]?.name || '',
+      driverName: targetFleet.name,
       workshopName: '',
       invoiceNo: '',
       odometer: '',
@@ -96,13 +112,14 @@ export default function CarExpensesView({
 
   const handleOpenEditModal = (expense) => {
     setEditingExpense(expense);
+    const matchedFleet = ROAR_FLEET_VEHICLES.find(v => v.carPlate === expense.plateNo);
     setFormData({
-      plateNo: expense.plateNo || '',
-      carId: expense.carId || '',
+      plateNo: expense.plateNo || ROAR_FLEET_VEHICLES[0].carPlate,
+      carId: expense.carId || `car-${(expense.plateNo || '').toLowerCase()}`,
       category: expense.category || 'Oil Change',
       amount: expense.amount || '',
       date: expense.date || todayStr,
-      driverName: expense.driverName || '',
+      driverName: expense.driverName || matchedFleet?.name || '',
       workshopName: expense.workshopName || '',
       invoiceNo: expense.invoiceNo || '',
       odometer: expense.odometer || '',
@@ -114,12 +131,12 @@ export default function CarExpensesView({
   };
 
   const handleCarSelectChange = (plateNo) => {
-    const matchedCar = cars.find(c => c.plateNo === plateNo);
+    const matchedFleet = ROAR_FLEET_VEHICLES.find(v => v.carPlate === plateNo);
     setFormData(prev => ({
       ...prev,
       plateNo,
-      carId: matchedCar?.id || `car-${plateNo}`,
-      driverName: matchedCar?.owner || prev.driverName
+      carId: `car-${plateNo.toLowerCase()}`,
+      driverName: matchedFleet?.name || prev.driverName
     }));
   };
 
@@ -171,15 +188,15 @@ export default function CarExpensesView({
   };
 
   // Date helpers for filtering
-  const currentMonthPrefix = todayStr.substring(0, 7); // YYYY-MM
+  const currentMonthPrefix = todayStr.substring(0, 7);
   const lastMonthDate = new Date();
   lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
   const lastMonthPrefix = new Date(lastMonthDate.getTime() - lastMonthDate.getTimezoneOffset() * 60000).toISOString().substring(0, 7);
 
-  // Filtered Expenses
+  // Filtered Expenses strictly for the 7 Roar cars
   const filteredExpenses = useMemo(() => {
     return carExpenses.filter(item => {
-      // Search
+      // Must match search
       const searchMatch = !searchTerm || 
         (item.plateNo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -188,13 +205,13 @@ export default function CarExpensesView({
         (item.invoiceNo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
 
-      // Category
+      // Category filter
       const categoryMatch = categoryFilter === 'all' || item.category === categoryFilter;
 
-      // Car
-      const carMatch = carFilter === 'all' || item.plateNo === carFilter;
+      // Plate filter
+      const plateMatch = selectedPlateFilter === 'all' || item.plateNo === selectedPlateFilter;
 
-      // Date
+      // Date filter
       let dateMatch = true;
       if (dateFilter === 'this_month') {
         dateMatch = (item.date || '').startsWith(currentMonthPrefix);
@@ -205,9 +222,21 @@ export default function CarExpensesView({
         if (customEndDate) dateMatch = dateMatch && item.date <= customEndDate;
       }
 
-      return searchMatch && categoryMatch && carMatch && dateMatch;
+      return searchMatch && categoryMatch && plateMatch && dateMatch;
     });
-  }, [carExpenses, searchTerm, categoryFilter, carFilter, dateFilter, customStartDate, customEndDate, currentMonthPrefix, lastMonthPrefix]);
+  }, [carExpenses, searchTerm, categoryFilter, selectedPlateFilter, dateFilter, customStartDate, customEndDate, currentMonthPrefix, lastMonthPrefix]);
+
+  // Per-car expenditure summary across the 7 Roar vehicles
+  const carExpensesMap = useMemo(() => {
+    const map = {};
+    ROAR_FLEET_VEHICLES.forEach(v => { map[v.carPlate] = 0; });
+    carExpenses.forEach(exp => {
+      if (map[exp.plateNo] !== undefined) {
+        map[exp.plateNo] += parseFloat(exp.amount) || 0;
+      }
+    });
+    return map;
+  }, [carExpenses]);
 
   // 8 KPI Report Calculations
   const stats = useMemo(() => {
@@ -239,18 +268,16 @@ export default function CarExpensesView({
       .filter(item => item.category === 'Accidents & Body Repair' || item.category === 'Battery & Brake Pads')
       .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
-    // 6. Top Expensed Vehicle
-    const carTotalsMap = {};
-    filteredExpenses.forEach(item => {
-      const plate = item.plateNo || 'Unknown';
-      carTotalsMap[plate] = (carTotalsMap[plate] || 0) + (parseFloat(item.amount) || 0);
-    });
+    // 6. Top Expensed Vehicle among the 7 Roar cars
     let topCarPlate = 'N/A';
     let topCarAmount = 0;
-    Object.entries(carTotalsMap).forEach(([plate, amount]) => {
-      if (amount > topCarAmount) {
-        topCarAmount = amount;
-        topCarPlate = plate;
+    let topCarDriver = '';
+    ROAR_FLEET_VEHICLES.forEach(v => {
+      const amt = carExpensesMap[v.carPlate] || 0;
+      if (amt > topCarAmount) {
+        topCarAmount = amt;
+        topCarPlate = v.carPlate;
+        topCarDriver = v.name;
       }
     });
 
@@ -258,10 +285,6 @@ export default function CarExpensesView({
     const thisMonthTotal = carExpenses
       .filter(item => (item.date || '').startsWith(currentMonthPrefix))
       .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-
-    // 8. Pending / Unpaid Maintenance
-    const pendingInvoices = filteredExpenses.filter(item => item.status === 'pending');
-    const pendingAmount = pendingInvoices.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
     return {
       totalFleetExpense,
@@ -273,11 +296,10 @@ export default function CarExpensesView({
       accidentRepairsTotal,
       topCarPlate,
       topCarAmount,
-      thisMonthTotal,
-      pendingCount: pendingInvoices.length,
-      pendingAmount
+      topCarDriver,
+      thisMonthTotal
     };
-  }, [filteredExpenses, carExpenses, currentMonthPrefix]);
+  }, [filteredExpenses, carExpenses, carExpensesMap, currentMonthPrefix]);
 
   const handlePrint = () => {
     window.print();
@@ -308,11 +330,19 @@ export default function CarExpensesView({
       {/* Top Header & Quick Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: '800', fontFamily: 'var(--font-heading)', color: 'var(--text-dark)' }}>
-            Car Expenses & Fleet Maintenance
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h2 style={{ fontSize: '22px', fontWeight: '800', fontFamily: 'var(--font-heading)', color: 'var(--text-dark)' }}>
+              Roar Company Fleet (7 Cars & Drivers)
+            </h2>
+            <span 
+              className="badge" 
+              style={{ background: 'rgba(140, 91, 48, 0.12)', color: 'var(--primary)', fontWeight: '800', fontSize: '11px', padding: '3px 8px', borderRadius: '6px' }}
+            >
+              7 Company Cars
+            </span>
+          </div>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Manage RTA passing, tyre replacements, oil changes, detailing, accidents, insurance, and Mulkiya renewals.
+            Manage RTA passing, tyres, oil changes, detailing, accidents, insurance, and Mulkiya renewals for Roar's 7 drivers.
           </p>
         </div>
 
@@ -326,12 +356,84 @@ export default function CarExpensesView({
           </button>
 
           <button 
-            onClick={handleOpenAddModal}
+            onClick={() => handleOpenAddModal()}
             className="btn btn-primary" 
             style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 14px rgba(140, 91, 48, 0.25)' }}
           >
             <Plus size={16} /> Log Car Expense
           </button>
+        </div>
+      </div>
+
+      {/* 7 Roar Drivers & Fleet Cars Selector Strip */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            ROAR 7 FLEET VEHICLES & DRIVERS
+          </span>
+          {selectedPlateFilter !== 'all' && (
+            <button 
+              onClick={() => setSelectedPlateFilter('all')} 
+              className="btn btn-secondary" 
+              style={{ fontSize: '11px', padding: '3px 8px' }}
+            >
+              View All 7 Cars
+            </button>
+          )}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+          {ROAR_FLEET_VEHICLES.map(vehicle => {
+            const isSelected = selectedPlateFilter === vehicle.carPlate;
+            const totalCarSpent = carExpensesMap[vehicle.carPlate] || 0;
+            const cleanPhone = vehicle.whatsapp.replace(/[^0-9]/g, '');
+
+            return (
+              <div 
+                key={vehicle.carPlate}
+                onClick={() => setSelectedPlateFilter(isSelected ? 'all' : vehicle.carPlate)}
+                style={{
+                  background: isSelected ? 'rgba(140, 91, 48, 0.08)' : '#ffffff',
+                  border: isSelected ? '2px solid var(--primary)' : '1.5px solid #ede6d9',
+                  borderRadius: '12px',
+                  padding: '12px 14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  boxShadow: isSelected ? '0 4px 12px rgba(140, 91, 48, 0.15)' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'monospace', fontSize: '13px', background: '#f5f3f0', padding: '2px 6px', borderRadius: '4px' }}>
+                    #{vehicle.carPlate}
+                  </span>
+                  <a 
+                    href={`https://wa.me/${cleanPhone}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ color: '#128c7e', display: 'flex', alignItems: 'center', textDecoration: 'none' }}
+                    title={`WhatsApp ${vehicle.name}`}
+                  >
+                    <MessageSquare size={14} />
+                  </a>
+                </div>
+
+                <div style={{ fontSize: '13.5px', fontWeight: '700', color: isSelected ? 'var(--primary)' : 'var(--text-dark)' }}>
+                  {vehicle.name}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                  <span>Maintenance:</span>
+                  <strong style={{ color: totalCarSpent > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>
+                    {totalCarSpent.toLocaleString()} AED
+                  </strong>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -342,7 +444,7 @@ export default function CarExpensesView({
         <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #ede6d9', padding: '16px 18px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              TOTAL FLEET SPEND
+              7 CARS TOTAL SPEND
             </span>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(140, 91, 48, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Wrench size={16} />
@@ -456,11 +558,11 @@ export default function CarExpensesView({
               <Car size={16} />
             </div>
           </div>
-          <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '8px' }}>
-            Plate #{stats.topCarPlate}
+          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '8px' }}>
+            #{stats.topCarPlate} ({stats.topCarDriver || 'Driver'})
           </div>
           <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '700', marginTop: '4px' }}>
-            {stats.topCarAmount.toLocaleString()} AED total cost
+            {stats.topCarAmount.toLocaleString()} AED total spent
           </div>
         </div>
 
@@ -493,7 +595,7 @@ export default function CarExpensesView({
           <input 
             type="text"
             className="form-control"
-            placeholder="Search by plate, workshop, invoice, notes..."
+            placeholder="Search by plate, driver, garage, invoice..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             style={{ paddingLeft: '36px' }}
@@ -519,13 +621,13 @@ export default function CarExpensesView({
           {/* Car Plate Filter */}
           <select 
             className="form-control"
-            value={carFilter}
-            onChange={(e) => setCarFilter(e.target.value)}
-            style={{ width: 'auto', minWidth: '140px' }}
+            value={selectedPlateFilter}
+            onChange={(e) => setSelectedPlateFilter(e.target.value)}
+            style={{ width: 'auto', minWidth: '170px' }}
           >
-            <option value="all">All Vehicles</option>
-            {Array.from(new Set(cars.map(c => c.plateNo).filter(Boolean))).map(plate => (
-              <option key={plate} value={plate}>Plate #{plate}</option>
+            <option value="all">All 7 Roar Vehicles</option>
+            {ROAR_FLEET_VEHICLES.map(v => (
+              <option key={v.carPlate} value={v.carPlate}>Plate #{v.carPlate} - {v.name}</option>
             ))}
           </select>
 
@@ -562,12 +664,12 @@ export default function CarExpensesView({
             </div>
           )}
 
-          {(searchTerm || categoryFilter !== 'all' || carFilter !== 'all' || dateFilter !== 'all') && (
+          {(searchTerm || categoryFilter !== 'all' || selectedPlateFilter !== 'all' || dateFilter !== 'all') && (
             <button 
               onClick={() => {
                 setSearchTerm('');
                 setCategoryFilter('all');
-                setCarFilter('all');
+                setSelectedPlateFilter('all');
                 setDateFilter('all');
               }}
               className="btn btn-secondary"
@@ -589,7 +691,7 @@ export default function CarExpensesView({
               <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>VEHICLE / PLATE</th>
               <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>EXPENSE CATEGORY</th>
               <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'right' }}>AMOUNT (AED)</th>
-              <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>DRIVER / ASSIGNED</th>
+              <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>ASSIGNED DRIVER</th>
               <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>WORKSHOP / VENDOR</th>
               <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>INVOICE / ODO</th>
               <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>STATUS</th>
@@ -601,8 +703,8 @@ export default function CarExpensesView({
               <tr>
                 <td colSpan="9" style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
                   <Wrench size={32} style={{ opacity: 0.3, margin: '0 auto 10px', display: 'block' }} />
-                  <p style={{ fontWeight: '600', fontSize: '14px' }}>No car expenses found matching criteria.</p>
-                  <p style={{ fontSize: '12px', marginTop: '4px' }}>Click "Log Car Expense" above to add a new maintenance entry.</p>
+                  <p style={{ fontWeight: '600', fontSize: '14px' }}>No car expenses found for the selected filter.</p>
+                  <p style={{ fontSize: '12px', marginTop: '4px' }}>Click "Log Car Expense" above to record a new maintenance record.</p>
                 </td>
               </tr>
             ) : (
@@ -649,9 +751,9 @@ export default function CarExpensesView({
                     {parseFloat(exp.amount || 0).toLocaleString()} AED
                   </td>
 
-                  {/* Driver / Assigned */}
-                  <td style={{ padding: '12px 16px', fontSize: '12.5px', fontWeight: '600' }}>
-                    {exp.driverName || 'N/A'}
+                  {/* Assigned Driver */}
+                  <td style={{ padding: '12px 16px', fontSize: '13px', fontWeight: '700', color: 'var(--text-dark)' }}>
+                    {exp.driverName || 'Roar Driver'}
                   </td>
 
                   {/* Workshop / Vendor */}
@@ -724,7 +826,7 @@ export default function CarExpensesView({
             
             <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '12px', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
-                {editingExpense ? 'Edit Car Expense Record' : 'Log New Car Expense'}
+                {editingExpense ? 'Edit Roar Car Expense' : 'Log Roar Car Expense'}
               </h3>
               <button onClick={() => setIsModalOpen(false)} className="modal-close">&times;</button>
             </div>
@@ -732,23 +834,20 @@ export default function CarExpensesView({
             <form onSubmit={handleSaveExpense}>
               <div className="form-grid-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                 
-                {/* Car Plate Selection */}
+                {/* 7 Roar Fleet Car Selection */}
                 <div className="form-group">
-                  <label>Vehicle Plate No *</label>
+                  <label>Roar Fleet Vehicle & Driver *</label>
                   <select 
                     className="form-control"
                     required
                     value={formData.plateNo}
                     onChange={(e) => handleCarSelectChange(e.target.value)}
                   >
-                    {cars.map(c => (
-                      <option key={c.id} value={c.plateNo}>
-                        Plate #{c.plateNo} - {c.brand} ({c.owner || 'Fleet'})
+                    {ROAR_FLEET_VEHICLES.map(v => (
+                      <option key={v.carPlate} value={v.carPlate}>
+                        Plate #{v.carPlate} — {v.name}
                       </option>
                     ))}
-                    {!cars.some(c => c.plateNo === formData.plateNo) && (
-                      <option value={formData.plateNo}>Plate #{formData.plateNo}</option>
-                    )}
                   </select>
                 </div>
 
@@ -794,15 +893,15 @@ export default function CarExpensesView({
                   />
                 </div>
 
-                {/* Driver / Requester */}
+                {/* Assigned Driver (Auto-filled) */}
                 <div className="form-group">
-                  <label>Driver / Requester</label>
+                  <label>Assigned Driver</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. Jaspreen"
+                    readOnly
                     value={formData.driverName}
-                    onChange={(e) => setFormData({ ...formData, driverName: e.target.value })}
+                    style={{ background: '#fdfbf7', fontWeight: '700', color: 'var(--text-dark)' }}
                   />
                 </div>
 
@@ -812,7 +911,7 @@ export default function CarExpensesView({
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. QuickFit Auto Services"
+                    placeholder="e.g. Tasjeel, QuickFit Auto..."
                     value={formData.workshopName}
                     onChange={(e) => setFormData({ ...formData, workshopName: e.target.value })}
                   />
@@ -824,7 +923,7 @@ export default function CarExpensesView({
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. INV-88219"
+                    placeholder="e.g. TSJ-88219"
                     value={formData.invoiceNo}
                     onChange={(e) => setFormData({ ...formData, invoiceNo: e.target.value })}
                   />
@@ -876,7 +975,7 @@ export default function CarExpensesView({
                   <textarea 
                     className="form-control" 
                     rows="2"
-                    placeholder="Provide details about replaced parts, guarantee, or inspection status..."
+                    placeholder="Provide details about replaced parts, warranty, or inspection outcome..."
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     style={{ resize: 'none' }}
