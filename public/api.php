@@ -137,6 +137,57 @@ $tables = [
         regDate VARCHAR(50) DEFAULT '',
         licenseNo VARCHAR(100) DEFAULT '',
         whatWeOffer TEXT DEFAULT NULL
+    )",
+    "company_documents" => "CREATE TABLE IF NOT EXISTS company_documents (
+        id VARCHAR(100) PRIMARY KEY,
+        name VARCHAR(255) DEFAULT '',
+        category VARCHAR(100) DEFAULT '',
+        expiryDate VARCHAR(50) DEFAULT '',
+        fileName VARCHAR(255) DEFAULT '',
+        fileType VARCHAR(100) DEFAULT '',
+        fileData LONGTEXT DEFAULT NULL,
+        notes TEXT DEFAULT NULL
+    )",
+    "car_expenses" => "CREATE TABLE IF NOT EXISTS car_expenses (
+        id VARCHAR(100) PRIMARY KEY,
+        carId VARCHAR(100) DEFAULT '',
+        plateNo VARCHAR(100) DEFAULT '',
+        category VARCHAR(100) DEFAULT '',
+        amount DECIMAL(10,2) DEFAULT 0.00,
+        date VARCHAR(50) DEFAULT '',
+        driverName VARCHAR(255) DEFAULT '',
+        workshopName VARCHAR(255) DEFAULT '',
+        invoiceNo VARCHAR(100) DEFAULT '',
+        odometer INT DEFAULT 0,
+        paymentMethod VARCHAR(100) DEFAULT 'Cash',
+        status VARCHAR(50) DEFAULT 'paid',
+        notes TEXT DEFAULT NULL
+    )",
+    "company_expenses" => "CREATE TABLE IF NOT EXISTS company_expenses (
+        id VARCHAR(100) PRIMARY KEY,
+        category VARCHAR(100) DEFAULT '',
+        title VARCHAR(255) DEFAULT '',
+        amount DECIMAL(10,2) DEFAULT 0.00,
+        date VARCHAR(50) DEFAULT '',
+        dueDate VARCHAR(50) DEFAULT '',
+        paymentMethod VARCHAR(100) DEFAULT 'Bank Transfer',
+        vendor VARCHAR(255) DEFAULT '',
+        invoiceNo VARCHAR(100) DEFAULT '',
+        status VARCHAR(50) DEFAULT 'paid',
+        notes TEXT DEFAULT NULL
+    )",
+    "company_sims" => "CREATE TABLE IF NOT EXISTS company_sims (
+        id VARCHAR(100) PRIMARY KEY,
+        phoneNumber VARCHAR(100) DEFAULT '',
+        provider VARCHAR(100) DEFAULT 'Du',
+        planName VARCHAR(100) DEFAULT '',
+        monthlyCost DECIMAL(10,2) DEFAULT 0.00,
+        assignedAgent VARCHAR(255) DEFAULT '',
+        agentRole VARCHAR(100) DEFAULT 'Inbound Sales & VIP Bookings',
+        simCardNumber VARCHAR(100) DEFAULT '',
+        status VARCHAR(50) DEFAULT 'active',
+        assignedDate VARCHAR(50) DEFAULT '',
+        notes TEXT DEFAULT NULL
     )"
 ];
 
@@ -289,6 +340,13 @@ if ($action === 'load') {
                 } else if ($table === 'coupons') {
                     $row['customPrice'] = (float)$row['customPrice'];
                     $row['isActive'] = (int)$row['isActive'];
+                } else if ($table === 'car_expenses') {
+                    $row['amount'] = (float)$row['amount'];
+                    $row['odometer'] = (int)($row['odometer'] ?? 0);
+                } else if ($table === 'company_expenses') {
+                    $row['amount'] = (float)$row['amount'];
+                } else if ($table === 'company_sims') {
+                    $row['monthlyCost'] = (float)$row['monthlyCost'];
                 }
                 $rows[] = $row;
             }

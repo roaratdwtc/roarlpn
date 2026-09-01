@@ -16,7 +16,9 @@ import {
   Settings,
   RefreshCw,
   Sparkles,
-  FileText
+  FileText,
+  Wrench,
+  Building2
 } from 'lucide-react';
 import DashboardView from './components/DashboardView';
 import BookingsView from './components/BookingsView';
@@ -30,8 +32,10 @@ import LoginView from './components/LoginView';
 import AdminAssistantView from './components/AdminAssistantView';
 import CompanyDetailsView from './components/CompanyDetailsView';
 import CompanyDocumentsView from './components/CompanyDocumentsView';
+import CarExpensesView from './components/CarExpensesView';
+import CompanyExpensesView from './components/CompanyExpensesView';
 // import MasterAdminView from './components/MasterAdminView';
-import { initialBookings, initialDrivers, initialExpenses, initialPartners, initialCars, initialPackages, initialCoupons } from './mockData';
+import { initialBookings, initialDrivers, initialExpenses, initialPartners, initialCars, initialPackages, initialCoupons, initialCarExpenses, initialCompanyExpenses, initialCompanySims } from './mockData';
 // Database configuration layer
 
 export default function App() {
@@ -41,7 +45,7 @@ export default function App() {
   const [profileTab, setProfileTab] = useState('adminInfo'); // 'adminInfo' or 'companyInfo'
 
   // Database version reset check
-  const DB_VERSION = 'v31.0';
+  const DB_VERSION = 'v32.0';
   useEffect(() => {
     localStorage.setItem('safari_db_version', DB_VERSION);
   }, []);
@@ -154,7 +158,32 @@ export default function App() {
     return getLocalStorageItemSafe('safari_coupons', initialCoupons);
   });
 
+  const [carExpenses, setCarExpenses] = useState(() => {
+    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
+    if (isNewVersion) {
+      localStorage.setItem('safari_car_expenses', JSON.stringify(initialCarExpenses));
+      return initialCarExpenses;
+    }
+    return getLocalStorageItemSafe('safari_car_expenses', initialCarExpenses);
+  });
 
+  const [companyExpenses, setCompanyExpenses] = useState(() => {
+    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
+    if (isNewVersion) {
+      localStorage.setItem('safari_company_expenses', JSON.stringify(initialCompanyExpenses));
+      return initialCompanyExpenses;
+    }
+    return getLocalStorageItemSafe('safari_company_expenses', initialCompanyExpenses);
+  });
+
+  const [companySims, setCompanySims] = useState(() => {
+    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
+    if (isNewVersion) {
+      localStorage.setItem('safari_company_sims', JSON.stringify(initialCompanySims));
+      return initialCompanySims;
+    }
+    return getLocalStorageItemSafe('safari_company_sims', initialCompanySims);
+  });
 
   const [customers, setCustomers] = useState(() => {
     return getLocalStorageItemSafe('safari_customers', []);
@@ -237,7 +266,7 @@ export default function App() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const result = await res.json();
         if (result.status === 'success' && result.data) {
-          const { bookings: bList, drivers: dList, expenses: eList, partners: pList, cars: cList, packages: pkgList, coupons: cpnList, customers: custList, settings: settingsList, company_details: compDetails, company_documents: docList } = result.data;
+          const { bookings: bList, drivers: dList, expenses: eList, partners: pList, cars: cList, packages: pkgList, coupons: cpnList, customers: custList, settings: settingsList, company_details: compDetails, company_documents: docList, car_expenses: ceList, company_expenses: compExpList, company_sims: simList } = result.data;
           
           if (bList && bList.length > 0) {
             let processedBList = bList;
@@ -398,6 +427,18 @@ export default function App() {
               console.warn("Failed to write loaded company documents to localStorage:", e);
             }
           }
+          if (ceList && ceList.length > 0) {
+            setCarExpenses(ceList);
+            localStorage.setItem('safari_car_expenses', JSON.stringify(ceList));
+          }
+          if (compExpList && compExpList.length > 0) {
+            setCompanyExpenses(compExpList);
+            localStorage.setItem('safari_company_expenses', JSON.stringify(compExpList));
+          }
+          if (simList && simList.length > 0) {
+            setCompanySims(simList);
+            localStorage.setItem('safari_company_sims', JSON.stringify(simList));
+          }
           
           setDbStatus('success');
         } else {
@@ -469,7 +510,19 @@ export default function App() {
     localStorage.setItem('safari_customers', JSON.stringify(customers));
   }, [customers]);
 
-   const bookingsRef = useRef(bookings);
+  useEffect(() => {
+    localStorage.setItem('safari_car_expenses', JSON.stringify(carExpenses));
+  }, [carExpenses]);
+
+  useEffect(() => {
+    localStorage.setItem('safari_company_expenses', JSON.stringify(companyExpenses));
+  }, [companyExpenses]);
+
+  useEffect(() => {
+    localStorage.setItem('safari_company_sims', JSON.stringify(companySims));
+  }, [companySims]);
+
+  const bookingsRef = useRef(bookings);
   const driversRef = useRef(drivers);
   const expensesRef = useRef(expenses);
   const partnersRef = useRef(partners);
@@ -479,6 +532,9 @@ export default function App() {
   const customersRef = useRef(customers);
   const settingsRef = useRef(settings);
   const companyDocumentsRef = useRef(companyDocuments);
+  const carExpensesRef = useRef(carExpenses);
+  const companyExpensesRef = useRef(companyExpenses);
+  const companySimsRef = useRef(companySims);
 
   useEffect(() => { bookingsRef.current = bookings; }, [bookings]);
   useEffect(() => { driversRef.current = drivers; }, [drivers]);
@@ -490,6 +546,9 @@ export default function App() {
   useEffect(() => { customersRef.current = customers; }, [customers]);
   useEffect(() => { settingsRef.current = settings; }, [settings]);
   useEffect(() => { companyDocumentsRef.current = companyDocuments; }, [companyDocuments]);
+  useEffect(() => { carExpensesRef.current = carExpenses; }, [carExpenses]);
+  useEffect(() => { companyExpensesRef.current = companyExpenses; }, [companyExpenses]);
+  useEffect(() => { companySimsRef.current = companySims; }, [companySims]);
 
   const getLatestStateRef = (colName) => {
     switch (colName) {
@@ -503,6 +562,9 @@ export default function App() {
       case 'customers': return customersRef;
       case 'settings': return settingsRef;
       case 'company_documents': return companyDocumentsRef;
+      case 'car_expenses': return carExpensesRef;
+      case 'company_expenses': return companyExpensesRef;
+      case 'company_sims': return companySimsRef;
       default: return null;
     }
   };
@@ -660,6 +722,9 @@ export default function App() {
   const setCouponsCustom = createFirestoreSync('coupons', coupons, setCoupons);
   const setCustomersCustom = createFirestoreSync('customers', customers, setCustomers);
   const setCompanyDocumentsCustom = createFirestoreSync('company_documents', companyDocuments, setCompanyDocuments);
+  const setCarExpensesCustom = createFirestoreSync('car_expenses', carExpenses, setCarExpenses);
+  const setCompanyExpensesCustom = createFirestoreSync('company_expenses', companyExpenses, setCompanyExpenses);
+  const setCompanySimsCustom = createFirestoreSync('company_sims', companySims, setCompanySims);
 
   // Tab Header Mapping
   const tabTitles = {
@@ -672,6 +737,8 @@ export default function App() {
     partners: 'Partners Setup & Statement Generator',
     carsFreelancers: 'Cars & Freelancer Profiles Manager',
     carFinance: 'Car Finance Ledger',
+    carExpenses: 'Car Expenses & Fleet Maintenance',
+    companyExpenses: 'Company Expenses & Sales SIMs',
     whatsappAgent: 'WhatsApp Agent & CRM Sandbox',
     adminAssistant: 'Admin AI Assistant Chat',
     companyDetails: 'Company Profile Setup',
@@ -960,6 +1027,22 @@ export default function App() {
           )}
           <li>
             <div 
+              onClick={() => handleTabChange('carExpenses')} 
+              className={`nav-item ${activeTab === 'carExpenses' ? 'active' : ''}`}
+            >
+              <Wrench /> Car Expenses
+            </div>
+          </li>
+          <li>
+            <div 
+              onClick={() => handleTabChange('companyExpenses')} 
+              className={`nav-item ${activeTab === 'companyExpenses' ? 'active' : ''}`}
+            >
+              <Building2 /> Company Expenses
+            </div>
+          </li>
+          <li>
+            <div 
               onClick={() => handleTabChange('companyDocuments')} 
               className={`nav-item ${activeTab === 'companyDocuments' ? 'active' : ''}`}
             >
@@ -1148,6 +1231,27 @@ export default function App() {
               setCars={setCarsCustom} 
               drivers={drivers}
               viewMode="ledger"
+            />
+          )}
+
+          {activeTab === 'carExpenses' && (
+            <CarExpensesView 
+              carExpenses={carExpenses} 
+              setCarExpenses={setCarExpensesCustom} 
+              cars={cars} 
+              drivers={drivers}
+              companyId={companyId}
+            />
+          )}
+
+          {activeTab === 'companyExpenses' && (
+            <CompanyExpensesView 
+              companyExpenses={companyExpenses} 
+              setCompanyExpenses={setCompanyExpensesCustom} 
+              companySims={companySims} 
+              setCompanySims={setCompanySimsCustom} 
+              companyDetails={companyDetails}
+              companyId={companyId}
             />
           )}
 
