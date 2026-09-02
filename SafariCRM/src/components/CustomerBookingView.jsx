@@ -344,6 +344,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
   // Price calculations
   let basePrice = 0;
   let carsNeeded = 1;
+  let rate = 0;
   if (selectedPkg) {
     const isEveningSafari = selectedPkg.category === 'Evening Desert Safari';
     const isMorningPrivate = selectedPkg.id === 'morning_private';
@@ -354,7 +355,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
         ? (parseFloat(selectedPkg.peakRate) || parseFloat(selectedPkg.rate) || 0)
         : (parseFloat(selectedPkg.rate) || 0));
 
-    let rate = defaultRate;
+    rate = defaultRate;
     if (activeCpn) {
       rate = parseFloat(activeCpn.customPrice) || 0;
     }

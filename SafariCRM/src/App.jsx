@@ -1301,10 +1301,16 @@ export default function App() {
           {activeTab === 'adminAssistant' && (
             <AdminAssistantView 
               bookings={bookings}
-              setBookings={setBookings}
+              setBookings={setBookingsCustom}
               drivers={drivers}
               coupons={coupons}
-              setCoupons={setCoupons}
+              setCoupons={setCouponsCustom}
+              cars={cars}
+              carDocuments={carDocuments}
+              packages={packages}
+              partners={partners}
+              carExpenses={carExpenses}
+              companyExpenses={companyExpenses}
             />
           )}
         </section>

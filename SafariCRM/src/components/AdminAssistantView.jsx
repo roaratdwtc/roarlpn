@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, RefreshCw, Compass, Bot, User, Sparkles } from "lucide-react";
 
-const ASSISTANT_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+const ASSISTANT_BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "";
 
 const SUGGESTIONS = [
   "Show today's stats summary",
+  "Are there any double-booked drivers?",
   "Assign drivers to pending bookings",
-  "Create coupon SUMMERSALE with 15% discount",
-  "Are there any double-booked drivers?"
+  "Check expiring vehicle documents",
+  "Show this month's revenue",
+  "Create coupon SUMMERSALE with 15% discount"
 ];
 
 export default function AdminAssistantView({
@@ -15,7 +17,13 @@ export default function AdminAssistantView({
   setBookings,
   drivers = [],
   coupons = [],
-  setCoupons
+  setCoupons,
+  cars = [],
+  carDocuments = [],
+  packages = [],
+  partners = [],
+  carExpenses = [],
+  companyExpenses = []
 }) {
   const [messages, setMessages] = useState([]);
   const [query, setQuery] = useState("");
@@ -30,8 +38,20 @@ export default function AdminAssistantView({
     const text = queryText.toLowerCase().trim();
     const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
-    // 1. Double booked drivers
-    if (text.includes("double") || text.includes("clash") || text.includes("conflict")) {
+    // 1. Greetings & Capabilities
+    if (
+      text === "hi" || 
+      text === "hello" || 
+      text === "hey" || 
+      text.includes("who are you") || 
+      text === "help" ||
+      text.includes("what can you do")
+    ) {
+      return `👋 **Hello! I am your Roar CRM Copilot.**\n\nI am connected directly to your live database:\n- 📋 **Bookings**: \`${bookings.length}\` total records\n- 🚗 **Drivers**: \`${drivers.length}\` active drivers\n- 🚙 **Fleet Cars**: \`${cars.length}\` registered vehicles\n- 📄 **Legal & Passing Vault**: \`${carDocuments.length}\` documents\n- 🏷️ **Coupons**: \`${coupons.length}\` promo codes\n\nHow can I help you right now? Try asking for **today's stats**, **driver assignment**, **expiring vehicle documents**, or **creating a promo code**!`;
+    }
+
+    // 2. Double booked drivers & conflicts
+    if (text.includes("double") || text.includes("clash") || text.includes("conflict") || text.includes("overlap")) {
       const driverDays = {};
       bookings.forEach(b => {
         if (b.driverId && b.status !== 'cancelled') {
@@ -54,10 +74,10 @@ export default function AdminAssistantView({
       });
 
       if (conflicts.length === 0) {
-        return "✅ **No driver conflicts found!** All active drivers are assigned to a maximum of one booking per day.";
+        return "✅ **No driver scheduling conflicts found!** All active drivers are assigned to a maximum of one tour per day.";
       }
 
-      let reply = "⚠️ **Driver Conflicts Detected:**\n\n";
+      let reply = "⚠️ **Driver Scheduling Conflicts Detected:**\n\n";
       conflicts.forEach(c => {
         reply += `- **${c.driverName}** is assigned to **${c.bookings.length} tours** on **${c.date.split('-').reverse().join('/')}**:\n`;
         c.bookings.forEach(b => {
@@ -67,7 +87,25 @@ export default function AdminAssistantView({
       return reply;
     }
 
-    // 2. Assign drivers
+    // 3. Unassigned bookings query
+    if (text.includes("unassigned") || text.includes("missing driver") || text.includes("who needs a driver")) {
+      const pendingBookings = bookings.filter(b => (!b.driverId || b.driverId === '') && b.status === 'confirmed');
+      if (pendingBookings.length === 0) {
+        return "✅ **All Confirmed Bookings Have Drivers!** There are currently no unassigned confirmed tours in the system.";
+      }
+
+      let reply = `📋 **Unassigned Confirmed Bookings (${pendingBookings.length}):**\n\n`;
+      pendingBookings.slice(0, 10).forEach(b => {
+        reply += `- **${b.customerName}** • ${b.packageName} (${b.date.split('-').reverse().join('/')}, ${b.time || '15:00'}) • ${b.pax} Pax\n`;
+      });
+      if (pendingBookings.length > 10) {
+        reply += `_...and ${pendingBookings.length - 10} more unassigned bookings._\n`;
+      }
+      reply += `\nType **"Assign drivers to pending bookings"** to automatically allocate drivers!`;
+      return reply;
+    }
+
+    // 4. Assign drivers auto-allocation
     if (text.includes("assign") || text.includes("auto-assign") || text.includes("allocate")) {
       const pendingBookings = bookings.filter(b => (!b.driverId || b.driverId === '') && b.status === 'confirmed');
       if (pendingBookings.length === 0) {
@@ -98,47 +136,96 @@ export default function AdminAssistantView({
       bookings.forEach(b => {
         if ((!b.driverId || b.driverId === '') && b.status === 'confirmed') {
           const assignedDriver = drivers[currentIdx % drivers.length];
-          reply += `- **${b.customerName}** (${b.packageName}) ➡️ assigned to **${assignedDriver.name}**\n`;
+          reply += `- **${b.customerName}** (${b.packageName}) ➡️ **${assignedDriver.name}**\n`;
           currentIdx++;
         }
       });
       return reply;
     }
 
-    // 3. Create coupon
-    if (text.includes("coupon") || text.includes("promo") || text.includes("discount")) {
-      const nameMatch = queryText.match(/coupon\s+([A-Za-z0-9_-]+)/i) || queryText.match(/code\s+([A-Za-z0-9_-]+)/i);
-      const discountMatch = queryText.match(/(\d+)\s*%/);
-      
-      const couponCode = nameMatch ? nameMatch[1].toUpperCase() : "PROMO" + Math.floor(1000 + Math.random() * 9000);
-      const discountVal = discountMatch ? parseInt(discountMatch[1]) : 10;
-
-      const newCoupon = {
-        id: "cpn_" + Math.random().toString(36).substr(2, 9),
-        code: couponCode,
-        discount: discountVal,
-        type: 'percentage',
-        status: 'active'
-      };
-
-      if (setCoupons) {
-        setCoupons([...coupons, newCoupon]);
+    // 5. Vehicle Documents & Legal Vault Auditing
+    if (
+      text.includes("document") || 
+      text.includes("mulkiya") || 
+      text.includes("insurance") || 
+      text.includes("passing") || 
+      text.includes("tracker") || 
+      text.includes("expir")
+    ) {
+      if (!carDocuments || carDocuments.length === 0) {
+        return "📄 **Vehicle Documents Vault**: No vehicle documents have been uploaded yet. You can upload Mulkiya, Insurance, and Passing certificates from the **Car Expenses > Vehicle Documents** tab.";
       }
 
-      return `✨ **Promo Coupon Created:**\n\n- **Code**: \`${couponCode}\`\n- **Value**: \`${discountVal}%\` discount\n- **Status**: Active\n\nThis coupon code is now ready for use on the client booking form!`;
+      const today = new Date();
+      let expiredList = [];
+      let expiringSoonList = [];
+
+      carDocuments.forEach(doc => {
+        if (!doc.expiryDate) return;
+        const expDate = new Date(doc.expiryDate);
+        const diffDays = Math.ceil((expDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) {
+          expiredList.push({ ...doc, diffDays: Math.abs(diffDays) });
+        } else if (diffDays <= 30) {
+          expiringSoonList.push({ ...doc, diffDays });
+        }
+      });
+
+      let reply = `📄 **Fleet Documents & Legal Compliance Audit:**\n\n`;
+      reply += `- **Total Stored Documents**: \`${carDocuments.length}\` files across fleet cars\n`;
+
+      if (expiredList.length > 0) {
+        reply += `\n🔴 **Expired Documents (${expiredList.length}):**\n`;
+        expiredList.forEach(d => {
+          reply += `  - **${d.carPlate}**: ${d.title} (${d.category}) — expired ${d.diffDays} day(s) ago (${d.expiryDate.split('-').reverse().join('/')})\n`;
+        });
+      } else {
+        reply += `- **Expired Documents**: None (All up to date!)\n`;
+      }
+
+      if (expiringSoonList.length > 0) {
+        reply += `\n⚠️ **Expiring within 30 Days (${expiringSoonList.length}):**\n`;
+        expiringSoonList.forEach(d => {
+          reply += `  - **${d.carPlate}**: ${d.title} (${d.category}) — expires in **${d.diffDays} days** (${d.expiryDate.split('-').reverse().join('/')})\n`;
+        });
+      } else {
+        reply += `- **Expiring Soon (<30d)**: None\n`;
+      }
+
+      return reply;
     }
 
-    // 4. Today's stats
-    if (text.includes("stat") || text.includes("summary") || text.includes("today") || text.includes("report")) {
+    // 6. Fleet Cars Summary
+    if (text.includes("car") || text.includes("fleet") || text.includes("vehicle")) {
+      const fleetPlates = Array.from(new Set([
+        ...cars.map(c => c.plateNo),
+        ...bookings.map(b => b.carPlate).filter(Boolean)
+      ]));
+
+      const totalCarExp = (carExpenses || []).reduce((s, e) => s + (parseFloat(e.amount) || 0), 0);
+
+      let reply = `🚗 **Fleet Vehicles Overview:**\n\n`;
+      reply += `- **Registered Fleet Vehicles**: \`${fleetPlates.length}\` cars\n`;
+      reply += `- **Plates**: ${fleetPlates.join(', ') || 'None'}\n`;
+      reply += `- **Total Maintenance Expenses Recorded**: \`${totalCarExp.toLocaleString()} AED\`\n`;
+      reply += `- **Documents Vault Files**: \`${(carDocuments || []).length}\` files stored\n\n`;
+      reply += `Ask **"Check expiring vehicle documents"** to inspect validity!`;
+      return reply;
+    }
+
+    // 7. Today's stats & summary
+    if (text.includes("today") || text.includes("daily") || text.includes("stat") || text.includes("summary")) {
       const todayBookings = bookings.filter(b => b.date === todayStr);
       const confirmedToday = todayBookings.filter(b => b.status === 'confirmed');
       const completedToday = todayBookings.filter(b => b.status === 'completed');
+      const pendingToday = todayBookings.filter(b => (!b.driverId || b.driverId === '') && b.status === 'confirmed');
       const revenueToday = todayBookings.reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0);
       
-      let reply = `📊 **Today's Operational Dashboard Summary (${todayStr.split('-').reverse().join('/')}):**\n\n`;
-      reply += `- **Total Bookings**: \`${todayBookings.length}\` tours logged today\n`;
+      let reply = `📊 **Today's Operational Summary (${todayStr.split('-').reverse().join('/')}):**\n\n`;
+      reply += `- **Total Bookings Today**: \`${todayBookings.length}\` tours\n`;
       reply += `- **Confirmed (Upcoming)**: \`${confirmedToday.length}\` slots\n`;
       reply += `- **Completed**: \`${completedToday.length}\` slots\n`;
+      reply += `- **Pending Driver Allocation**: \`${pendingToday.length}\` slots\n`;
       reply += `- **Gross Today Revenue**: \`${revenueToday.toLocaleString()} AED\`\n`;
       
       const driversAssigned = Array.from(new Set(
@@ -148,36 +235,122 @@ export default function AdminAssistantView({
         }).filter(Boolean)
       ));
 
-      reply += `- **Assigned Drivers**: ${driversAssigned.join(', ') || '_None_'}`;
+      reply += `- **Drivers Active Today**: ${driversAssigned.join(', ') || '_None_'}`;
       return reply;
     }
 
-    return `👋 **Hi! I am your Offline CRM Admin Assistant.**\n\nI couldn't reach the backend AI microservice (localhost:8000), but I have loaded the live CRM database in-memory to assist you! Try requesting any of these actions:\n\n1. 📊 "Show today's stats summary"\n2. 🚗 "Assign drivers to pending bookings"\n3. 🏷️ "Create coupon SUMMERSALE with 15% discount"\n4. ⚠️ "Are there any double-booked drivers?"`;
+    // 8. Monthly Stats & Revenue
+    if (text.includes("month") || text.includes("revenue") || text.includes("sales") || text.includes("turnover") || text.includes("profit") || text.includes("earnings")) {
+      const currentMonthPrefix = todayStr.substring(0, 7); // YYYY-MM
+      const monthBookings = bookings.filter(b => (b.date || '').startsWith(currentMonthPrefix));
+      const confirmedOrDone = monthBookings.filter(b => b.status === 'confirmed' || b.status === 'completed');
+      const monthRevenue = confirmedOrDone.reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0);
+      const totalCarExp = (carExpenses || []).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+      const totalCompanyExp = (companyExpenses || []).reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+      const totalExpenses = totalCarExp + totalCompanyExp;
+
+      let reply = `💰 **Financial & Performance Snapshot (Month ${currentMonthPrefix}):**\n\n`;
+      reply += `- **Total Bookings This Month**: \`${monthBookings.length}\` bookings\n`;
+      reply += `- **Confirmed / Completed Tours**: \`${confirmedOrDone.length}\`\n`;
+      reply += `- **Gross Monthly Revenue**: \`${monthRevenue.toLocaleString()} AED\`\n`;
+      reply += `- **Car Expenses Recorded**: \`${totalCarExp.toLocaleString()} AED\`\n`;
+      reply += `- **Company Expenses Recorded**: \`${totalCompanyExp.toLocaleString()} AED\`\n`;
+      reply += `- **Total Operating Expenses**: \`${totalExpenses.toLocaleString()} AED\`\n`;
+      reply += `- **Estimated Operating Balance**: \`${(monthRevenue - totalExpenses).toLocaleString()} AED\``;
+      return reply;
+    }
+
+    // 9. Create coupon
+    if (text.includes("coupon") || text.includes("promo") || text.includes("discount")) {
+      if (text.includes("create") || text.includes("add") || text.includes("new")) {
+        const nameMatch = queryText.match(/coupon\s+([A-Za-z0-9_-]+)/i) || queryText.match(/code\s+([A-Za-z0-9_-]+)/i);
+        const discountMatch = queryText.match(/(\d+)\s*%/);
+        
+        const couponCode = nameMatch ? nameMatch[1].toUpperCase() : "PROMO" + Math.floor(1000 + Math.random() * 9000);
+        const discountVal = discountMatch ? parseInt(discountMatch[1]) : 15;
+
+        const newCoupon = {
+          id: "cpn_" + Math.random().toString(36).substr(2, 9),
+          code: couponCode,
+          discount: discountVal,
+          type: 'percentage',
+          status: 'active'
+        };
+
+        if (setCoupons) {
+          setCoupons([...coupons, newCoupon]);
+        }
+
+        return `✨ **Promo Coupon Created Successfully:**\n\n- **Code**: \`${couponCode}\`\n- **Discount**: \`${discountVal}%\`\n- **Status**: Active\n\nThis coupon code is now ready for use on the client booking form!`;
+      }
+
+      // List existing coupons
+      if (coupons.length === 0) {
+        return "🏷️ **Active Coupons**: No discount coupons are currently configured. Try asking **\"Create coupon SUMMERSALE with 15% discount\"**!";
+      }
+
+      let reply = `🏷️ **Active Discount Coupons (${coupons.length}):**\n\n`;
+      coupons.forEach(c => {
+        reply += `- **${c.code}**: ${c.discount ? `${c.discount}% OFF` : (c.customPrice ? `AED ${c.customPrice} Fixed Rate` : 'Discount')} (${c.status || 'Active'})\n`;
+      });
+      return reply;
+    }
+
+    // 10. Search customer or booking
+    if (text.startsWith("find ") || text.startsWith("search ") || text.includes("customer ") || text.includes("booking for ")) {
+      const term = text.replace(/^(find|search|customer|booking for)\s+/i, '').trim();
+      if (term.length >= 2) {
+        const matches = bookings.filter(b => 
+          (b.customerName || '').toLowerCase().includes(term) ||
+          (b.phone || '').includes(term) ||
+          (b.id || '').toLowerCase().includes(term)
+        );
+
+        if (matches.length > 0) {
+          let reply = `🔍 **Found ${matches.length} Matching Booking(s) for "${term}":**\n\n`;
+          matches.slice(0, 5).forEach(b => {
+            reply += `- **#${b.id}** • **${b.customerName}** • ${b.packageName} (${b.date.split('-').reverse().join('/')}) • Status: **${b.status}** • AED ${b.price}\n`;
+          });
+          return reply;
+        } else {
+          return `🔍 No bookings found matching "${term}". Try searching with a different name or phone number.`;
+        }
+      }
+    }
+
+    // 11. Fallback: Clean, helpful, professional Copilot assistance
+    return `🤖 **Roar CRM Smart Copilot**\n\nI couldn't find a direct match for that inquiry. Here are common operations I can perform immediately using your live CRM data:\n\n1. 📊 **"Show today's stats summary"** — Daily operational metrics & revenue\n2. 🚗 **"Assign drivers to pending bookings"** — Automatic round-robin allocation\n3. ⚠️ **"Are there any double-booked drivers?"** — Check scheduling overlaps\n4. 📄 **"Check expiring vehicle documents"** — Mulkiya, Insurance & Passing audits\n5. 💰 **"Show this month's revenue"** — Monthly turnover and bookings totals\n6. 🏷️ **"Create coupon SUMMERSALE with 15% discount"** — Generate new promo code`;
   };
 
   const performChatFetch = async (currentHistory, queryText) => {
     setLoading(true);
     try {
-      const response = await fetch(`${ASSISTANT_BACKEND_URL}/api/admin/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: currentHistory.slice(0, -1),
-          query: queryText
-        })
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+      if (ASSISTANT_BACKEND_URL) {
+        const response = await fetch(`${ASSISTANT_BACKEND_URL}/api/admin/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: currentHistory.slice(0, -1),
+            query: queryText
+          })
+        });
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.reply) {
+            setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+            setLoading(false);
+            return;
+          }
+        }
       }
-      const data = await response.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
     } catch (err) {
-      console.warn("AI Backend unavailable, executing query via offline CRM logic:", err);
-      const offlineReply = handleLocalAssistant(queryText);
-      setMessages((prev) => [...prev, { role: "assistant", content: offlineReply }]);
-    } finally {
-      setLoading(false);
+      console.warn("External AI endpoint unreachable; executing via native CRM Copilot logic:", err);
     }
+
+    // Native in-memory CRM Copilot
+    const copilotReply = handleLocalAssistant(queryText);
+    setMessages((prev) => [...prev, { role: "assistant", content: copilotReply }]);
+    setLoading(false);
   };
 
   const sendQuery = async (queryText) => {
