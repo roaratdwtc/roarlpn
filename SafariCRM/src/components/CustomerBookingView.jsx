@@ -244,14 +244,14 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       const offpeakRate = parseFloat(selectedPkgObj.offpeakRate) || parseFloat(selectedPkgObj.rate) || 0;
       return {
         status: 'valid',
-        message: `✓ Summer End Sale Discount Applied: AED ${offpeakRate} (${matchesPkg.code})`,
+        message: '✓ Summer End Sale Discount Applied',
         coupon: { ...matchesPkg, customPrice: offpeakRate }
       };
     }
 
     return { 
       status: 'valid', 
-      message: `✓ Summer End Sale Discount Applied: AED ${matchesPkg.customPrice} (${matchesPkg.code})`, 
+      message: '✓ Summer End Sale Discount Applied', 
       coupon: matchesPkg 
     };
   };
@@ -591,16 +591,18 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
         <div className="booking-section-3col">
           
           {/* COLUMN 1: Featured Image Showcase */}
-          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", gap: "12px", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", borderBottom: "1.5px solid #ede6d9", paddingBottom: "6px" }}>
-              <div style={{ fontSize: "14px", fontWeight: "900", color: "#543c2b" }}>Featured Tour Package</div>
-            </div>
-            <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid #ede6d9" }}>
-              <img 
-                src={getFeaturedImage(formData.categoryKey)} 
-                alt={formData.categoryKey} 
-                style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }} 
-              />
+          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", gap: "12px", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", height: "100%", boxSizing: "border-box", justifyContent: "space-between" }}>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", borderBottom: "1.5px solid #ede6d9", paddingBottom: "6px", marginBottom: "12px" }}>
+                <div style={{ fontSize: "14px", fontWeight: "900", color: "#543c2b" }}>Featured Tour Package</div>
+              </div>
+              <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid #ede6d9" }}>
+                <img 
+                  src={getFeaturedImage(formData.categoryKey)} 
+                  alt={formData.categoryKey} 
+                  style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }} 
+                />
+              </div>
             </div>
             <div style={{ fontSize: "12px", color: "#8c7361", lineHeight: "1.4" }}>
               <p style={{ margin: "0 0 8px 0" }}>
@@ -624,36 +626,13 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
           </div>
 
           {/* COLUMN 2: Booking Book (Form) */}
-          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px" }}>
+          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", height: "100%", boxSizing: "border-box", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px", borderBottom: "1.5px solid #ede6d9", paddingBottom: "6px" }}>
               <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: BRAND, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "950", fontSize: "11px" }}>1</div>
               <div style={{ fontSize: "13.5px", fontWeight: "900", color: "#543c2b" }}>Tour Details</div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
-              {autoApplyOffpeakSetting && (
-                <div style={{
-                  background: "rgba(5, 150, 105, 0.08)",
-                  border: "1.2px solid rgba(5, 150, 105, 0.25)",
-                  borderRadius: "10px",
-                  padding: "9px 12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  color: "#047857",
-                  marginBottom: "4px"
-                }}>
-                  <Percent size={16} style={{ flexShrink: 0 }} />
-                  <div>
-                    <div style={{ fontSize: "11.5px", fontWeight: "800" }}>
-                      🎉 Summer End Sale Discount Applied (Coupon: {couponCode || offpeakCouponCodeSetting})
-                    </div>
-                    <div style={{ fontSize: "10.5px", opacity: 0.9 }}>
-                      Summer End Sale discount active on all packages with coupon <strong>{couponCode || offpeakCouponCodeSetting}</strong>.
-                    </div>
-                  </div>
-                </div>
-              )}
 
               <div>
                 <input style={{ ...inp, borderColor: formErrors.customerName ? "#ef4444" : "#ede6d9" }} placeholder="Full Name *" value={formData.customerName} onChange={e => { setFormData({ ...formData, customerName: e.target.value }); setFormErrors(prev => ({ ...prev, customerName: null })); }} required />
@@ -800,7 +779,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
           </div>
 
           {/* COLUMN 3: Add-ons, Coupons, and Price Calculator */}
-          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px" }}>
+          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", height: "100%", boxSizing: "border-box", justifyContent: "space-between" }}>
             {/* Add-ons */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", borderBottom: "1.5px solid #ede6d9", paddingBottom: "6px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -902,13 +881,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
                 <div style={{ fontSize: "10px", fontWeight: "800", color: "#8c7361", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "2px" }}>Package Choice</div>
                 <div style={{ fontSize: "11.5px", fontWeight: "800", color: "#543c2b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{formData.categoryKey}</div>
                 <div style={{ fontSize: "11px", color: BRAND, fontWeight: "700", marginTop: "1px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {selectedPkg ? (
-                    activeCpn 
-                      ? `${getCleanPackageName(selectedPkg.name)} (Summer End Sale Discount Applied: ${rate} AED - Code: ${activeCpn.code})` 
-                      : (autoApplyOffpeakSetting
-                        ? `${getCleanPackageName(selectedPkg.name)} (Summer End Sale Discount Applied: ${rate} AED - Code: ${offpeakCouponCodeSetting})`
-                        : getCleanPackageName(selectedPkg.name))
-                  ) : "—"}
+                  {selectedPkg ? getCleanPackageName(selectedPkg.name) : "—"}
                 </div>
               </div>
 
@@ -1066,7 +1039,15 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
           display: grid;
           grid-template-columns: 1fr 1.15fr 1.15fr;
           gap: 16px;
-          align-items: start;
+          align-items: stretch;
+        }
+
+        .booking-section-3col > .glass-card {
+          height: 100% !important;
+          min-height: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          box-sizing: border-box !important;
         }
 
         .addons-grid-layout {
