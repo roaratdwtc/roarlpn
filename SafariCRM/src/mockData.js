@@ -3278,3 +3278,290 @@ export const initialCompanySims = [
     notes: "Emergency standby line for temporary staff / seasonal peak drivers"
   }
 ];
+
+// Helper sample base64 generator for official vehicle documents
+const generateSampleDocData = (title, plate, category, expiry) => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="700" height="480" viewBox="0 0 700 480">
+    <rect width="700" height="480" rx="16" fill="#fdfbf7" stroke="#ede6d9" stroke-width="4"/>
+    <rect x="24" y="24" width="652" height="70" rx="10" fill="#8c5b30"/>
+    <text x="50" y="52" fill="#ffffff" font-family="sans-serif" font-size="20" font-weight="bold">ROAR ADVENTURE TOURISM LLC</text>
+    <text x="50" y="76" fill="#f5ede4" font-family="sans-serif" font-size="13">OFFICIAL FLEET DOCUMENT • DUBAI, UAE</text>
+    <text x="640" y="65" fill="#ffffff" font-family="monospace" font-size="18" font-weight="bold" text-anchor="end">${plate}</text>
+    
+    <rect x="40" y="120" width="620" height="40" rx="6" fill="#ede6d9"/>
+    <text x="60" y="146" fill="#543c2b" font-family="sans-serif" font-size="16" font-weight="bold">${title.toUpperCase()}</text>
+    <text x="630" y="146" fill="#8c5b30" font-family="sans-serif" font-size="13" font-weight="bold" text-anchor="end">${category.toUpperCase()}</text>
+    
+    <rect x="40" y="180" width="295" height="110" rx="8" fill="#ffffff" stroke="#ede6d9" stroke-width="1.5"/>
+    <text x="60" y="210" fill="#6b7280" font-family="sans-serif" font-size="11" font-weight="bold">VEHICLE IDENTIFICATION</text>
+    <text x="60" y="238" fill="#111827" font-family="monospace" font-size="18" font-weight="bold">PLATE: ${plate}</text>
+    <text x="60" y="265" fill="#4b5563" font-family="sans-serif" font-size="12">Fleet Code: ROAR-DESERT-4X4</text>
+    
+    <rect x="365" y="180" width="295" height="110" rx="8" fill="#ffffff" stroke="#ede6d9" stroke-width="1.5"/>
+    <text x="385" y="210" fill="#6b7280" font-family="sans-serif" font-size="11" font-weight="bold">VALIDITY & EXPIRATION</text>
+    <text x="385" y="238" fill="#047857" font-family="sans-serif" font-size="16" font-weight="bold">EXPIRY: ${expiry || 'PERMANENT'}</text>
+    <text x="385" y="265" fill="#4b5563" font-family="sans-serif" font-size="12">Status: Officially Verified</text>
+    
+    <rect x="40" y="310" width="620" height="90" rx="8" fill="#ffffff" stroke="#ede6d9" stroke-width="1.5"/>
+    <text x="60" y="338" fill="#6b7280" font-family="sans-serif" font-size="11" font-weight="bold">DOCUMENT DETAILS & REGISTRATION</text>
+    <text x="60" y="365" fill="#374151" font-family="sans-serif" font-size="13">Digital electronic record stored securely in Roar Tourism CRM Vault.</text>
+    <text x="60" y="385" fill="#8c5b30" font-family="sans-serif" font-size="12" font-weight="bold">Verified by Operations Dispatch • Dubai Tourism Authority Compliance</text>
+    
+    <text x="50" y="445" fill="#9ca3af" font-family="sans-serif" font-size="11">Generated electronically by Roar Tourism ERP Vault. Valid without physical stamp.</text>
+  </svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
+
+export const initialCarDocuments = [
+  // 1. Car #FF79157
+  {
+    id: "cardoc-1",
+    carPlate: "FF79157",
+    title: "Mulkiya Vehicle Registration 2026-2027",
+    category: "Mulkiya",
+    issueDate: "2026-01-15",
+    expiryDate: "2027-01-15",
+    fileName: "Mulkiya_FF79157_2026.svg",
+    fileType: "image/svg+xml",
+    fileSize: "185 KB",
+    fileData: generateSampleDocData("Mulkiya Vehicle Registration Card", "FF79157", "Mulkiya", "15/01/2027"),
+    notes: "RTA Dubai electronic vehicle license card (Gold Class Safari 4x4)",
+    uploadedAt: "2026-01-16"
+  },
+  {
+    id: "cardoc-2",
+    carPlate: "FF79157",
+    title: "Orient Comprehensive Motor Insurance Policy",
+    category: "Insurance",
+    issueDate: "2026-01-15",
+    expiryDate: "2027-01-15",
+    fileName: "Insurance_Policy_FF79157.svg",
+    fileType: "image/svg+xml",
+    fileSize: "240 KB",
+    fileData: generateSampleDocData("Orient Comprehensive Motor Insurance", "FF79157", "Insurance", "15/01/2027"),
+    notes: "Comprehensive safari commercial coverage with roadside assist & off-road recovery",
+    uploadedAt: "2026-01-16"
+  },
+  {
+    id: "cardoc-3",
+    carPlate: "FF79157",
+    title: "RTA Technical Inspection Passing Certificate",
+    category: "RTA Passing",
+    issueDate: "2026-01-10",
+    expiryDate: "2027-01-10",
+    fileName: "RTA_Passing_FF79157.svg",
+    fileType: "image/svg+xml",
+    fileSize: "160 KB",
+    fileData: generateSampleDocData("RTA Technical Inspection Certificate", "FF79157", "RTA Passing", "10/01/2027"),
+    notes: "Tasjeel Al Qusais passed with zero minor defects",
+    uploadedAt: "2026-01-11"
+  },
+  {
+    id: "cardoc-4",
+    carPlate: "FF79157",
+    title: "GPS Security & Dubai Police Tracker Passing",
+    category: "Tracker Passing",
+    issueDate: "2026-01-08",
+    expiryDate: "2027-01-08",
+    fileName: "Tracker_Passing_FF79157.svg",
+    fileType: "image/svg+xml",
+    fileSize: "175 KB",
+    fileData: generateSampleDocData("GPS Security Tracker Passing Certificate", "FF79157", "Tracker Passing", "08/01/2027"),
+    notes: "Connected to SecurePath Dubai police tracking gateway",
+    uploadedAt: "2026-01-09"
+  },
+
+  // 2. Car #DD21596
+  {
+    id: "cardoc-5",
+    carPlate: "DD21596",
+    title: "Mulkiya Vehicle Registration (Expiring Soon)",
+    category: "Mulkiya",
+    issueDate: "2025-09-28",
+    expiryDate: "2026-09-28",
+    fileName: "Mulkiya_DD21596_2025.svg",
+    fileType: "image/svg+xml",
+    fileSize: "190 KB",
+    fileData: generateSampleDocData("Mulkiya Vehicle Registration Card", "DD21596", "Mulkiya", "28/09/2026"),
+    notes: "Renewal due within 26 days. RTA passing required before renewal.",
+    uploadedAt: "2025-09-29"
+  },
+  {
+    id: "cardoc-6",
+    carPlate: "DD21596",
+    title: "Oman Insurance Commercial Policy",
+    category: "Insurance",
+    issueDate: "2025-10-05",
+    expiryDate: "2026-10-05",
+    fileName: "Insurance_DD21596.svg",
+    fileType: "image/svg+xml",
+    fileSize: "210 KB",
+    fileData: generateSampleDocData("Oman Insurance Commercial Motor Policy", "DD21596", "Insurance", "05/10/2026"),
+    notes: "Commercial passenger liability included for desert safari operations",
+    uploadedAt: "2025-10-06"
+  },
+  {
+    id: "cardoc-7",
+    carPlate: "DD21596",
+    title: "RTA Technical Inspection Passing Certificate",
+    category: "RTA Passing",
+    issueDate: "2025-09-20",
+    expiryDate: "2026-09-20",
+    fileName: "RTA_Passing_DD21596.svg",
+    fileType: "image/svg+xml",
+    fileSize: "155 KB",
+    fileData: generateSampleDocData("RTA Technical Inspection Certificate", "DD21596", "RTA Passing", "20/09/2026"),
+    notes: "Al Mutakamela testing center passing report",
+    uploadedAt: "2025-09-21"
+  },
+
+  // 3. Car #G25801
+  {
+    id: "cardoc-8",
+    carPlate: "G25801",
+    title: "Mulkiya Vehicle Registration Card 2026",
+    category: "Mulkiya",
+    issueDate: "2026-03-10",
+    expiryDate: "2027-03-10",
+    fileName: "Mulkiya_G25801.svg",
+    fileType: "image/svg+xml",
+    fileSize: "180 KB",
+    fileData: generateSampleDocData("Mulkiya Vehicle Registration Card", "G25801", "Mulkiya", "10/03/2027"),
+    notes: "Official Dubai commercial vehicle registration card",
+    uploadedAt: "2026-03-11"
+  },
+  {
+    id: "cardoc-9",
+    carPlate: "G25801",
+    title: "SecurePath GPS Tracker Annual Certificate",
+    category: "Tracker Passing",
+    issueDate: "2026-03-05",
+    expiryDate: "2027-03-05",
+    fileName: "Tracker_G25801.svg",
+    fileType: "image/svg+xml",
+    fileSize: "165 KB",
+    fileData: generateSampleDocData("SecurePath GPS Tracker Passing Certificate", "G25801", "Tracker Passing", "05/03/2027"),
+    notes: "SIRA & Dubai Police compliance tracker certificate",
+    uploadedAt: "2026-03-06"
+  },
+
+  // 4. Car #D16197
+  {
+    id: "cardoc-10",
+    carPlate: "D16197",
+    title: "Dubai Police Accident Report #AR-2026-904",
+    category: "Accident Report",
+    issueDate: "2026-08-24",
+    expiryDate: "",
+    fileName: "Accident_Report_D16197.svg",
+    fileType: "image/svg+xml",
+    fileSize: "220 KB",
+    fileData: generateSampleDocData("Dubai Police Official Accident Report #AR-904", "D16197", "Accident Report", "N/A - CLAIM FILED"),
+    notes: "Desert dune bumper dent claim filed. Repaired at Al Quoz Precision Workshop (950 AED).",
+    uploadedAt: "2026-08-24"
+  },
+  {
+    id: "cardoc-11",
+    carPlate: "D16197",
+    title: "Mulkiya Vehicle Registration Card 2026",
+    category: "Mulkiya",
+    issueDate: "2026-04-12",
+    expiryDate: "2027-04-12",
+    fileName: "Mulkiya_D16197.svg",
+    fileType: "image/svg+xml",
+    fileSize: "185 KB",
+    fileData: generateSampleDocData("Mulkiya Vehicle Registration Card", "D16197", "Mulkiya", "12/04/2027"),
+    notes: "Commercial license valid until April 2027",
+    uploadedAt: "2026-04-13"
+  },
+
+  // 5. Car #I49209
+  {
+    id: "cardoc-12",
+    carPlate: "I49209",
+    title: "Mulkiya Vehicle Registration Card",
+    category: "Mulkiya",
+    issueDate: "2026-05-18",
+    expiryDate: "2027-05-18",
+    fileName: "Mulkiya_I49209.svg",
+    fileType: "image/svg+xml",
+    fileSize: "180 KB",
+    fileData: generateSampleDocData("Mulkiya Vehicle Registration Card", "I49209", "Mulkiya", "18/05/2027"),
+    notes: "Active Land Cruiser commercial license",
+    uploadedAt: "2026-05-19"
+  },
+  {
+    id: "cardoc-13",
+    carPlate: "I49209",
+    title: "Commercial Motor Insurance Certificate",
+    category: "Insurance",
+    issueDate: "2026-05-20",
+    expiryDate: "2027-05-20",
+    fileName: "Insurance_I49209.svg",
+    fileType: "image/svg+xml",
+    fileSize: "230 KB",
+    fileData: generateSampleDocData("Commercial Motor Insurance Certificate", "I49209", "Insurance", "20/05/2027"),
+    notes: "Full passenger & vehicle comprehensive motor insurance policy (2,450 AED)",
+    uploadedAt: "2026-05-21"
+  },
+
+  // 6. Car #BB23370
+  {
+    id: "cardoc-14",
+    carPlate: "BB23370",
+    title: "Mulkiya Vehicle Registration Card",
+    category: "Mulkiya",
+    issueDate: "2026-06-01",
+    expiryDate: "2027-06-01",
+    fileName: "Mulkiya_BB23370.svg",
+    fileType: "image/svg+xml",
+    fileSize: "175 KB",
+    fileData: generateSampleDocData("Mulkiya Vehicle Registration Card", "BB23370", "Mulkiya", "01/06/2027"),
+    notes: "RTA Dubai electronic vehicle license card",
+    uploadedAt: "2026-06-02"
+  },
+  {
+    id: "cardoc-15",
+    carPlate: "BB23370",
+    title: "GPS Security & SIRA Tracker Passing",
+    category: "Tracker Passing",
+    issueDate: "2026-05-28",
+    expiryDate: "2027-05-28",
+    fileName: "Tracker_BB23370.svg",
+    fileType: "image/svg+xml",
+    fileSize: "170 KB",
+    fileData: generateSampleDocData("GPS Security Tracker Passing Certificate", "BB23370", "Tracker Passing", "28/05/2027"),
+    notes: "SecurePath operational certificate on file",
+    uploadedAt: "2026-05-29"
+  },
+
+  // 7. Car #DD50781
+  {
+    id: "cardoc-16",
+    carPlate: "DD50781",
+    title: "Mulkiya Vehicle Registration Card",
+    category: "Mulkiya",
+    issueDate: "2026-07-14",
+    expiryDate: "2027-07-14",
+    fileName: "Mulkiya_DD50781.svg",
+    fileType: "image/svg+xml",
+    fileSize: "185 KB",
+    fileData: generateSampleDocData("Mulkiya Vehicle Registration Card", "DD50781", "Mulkiya", "14/07/2027"),
+    notes: "RTA Dubai electronic commercial registration",
+    uploadedAt: "2026-07-15"
+  },
+  {
+    id: "cardoc-17",
+    carPlate: "DD50781",
+    title: "Motor Fleet Comprehensive Policy",
+    category: "Insurance",
+    issueDate: "2026-07-15",
+    expiryDate: "2027-07-15",
+    fileName: "Insurance_DD50781.svg",
+    fileType: "image/svg+xml",
+    fileSize: "225 KB",
+    fileData: generateSampleDocData("Motor Fleet Comprehensive Insurance Policy", "DD50781", "Insurance", "15/07/2027"),
+    notes: "Comprehensive tourist safari coverage",
+    uploadedAt: "2026-07-16"
+  }
+];

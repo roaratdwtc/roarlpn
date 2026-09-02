@@ -35,7 +35,7 @@ import CompanyDocumentsView from './components/CompanyDocumentsView';
 import CarExpensesView from './components/CarExpensesView';
 import CompanyExpensesView from './components/CompanyExpensesView';
 // import MasterAdminView from './components/MasterAdminView';
-import { initialBookings, initialDrivers, initialExpenses, initialPartners, initialCars, initialPackages, initialCoupons, initialCarExpenses, initialCompanyExpenses, initialCompanySims } from './mockData';
+import { initialBookings, initialDrivers, initialExpenses, initialPartners, initialCars, initialPackages, initialCoupons, initialCarExpenses, initialCompanyExpenses, initialCompanySims, initialCarDocuments } from './mockData';
 // Database configuration layer
 
 export default function App() {
@@ -45,7 +45,7 @@ export default function App() {
   const [profileTab, setProfileTab] = useState('adminInfo'); // 'adminInfo' or 'companyInfo'
 
   // Database version reset check
-  const DB_VERSION = 'v38.0';
+  const DB_VERSION = 'v39.0';
   useEffect(() => {
     localStorage.setItem('safari_db_version', DB_VERSION);
   }, []);
@@ -215,6 +215,32 @@ export default function App() {
       console.warn("Failed to write company documents metadata to localStorage:", e);
     }
   }, [companyDocuments]);
+
+  const [carDocuments, setCarDocuments] = useState(() => {
+    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
+    if (isNewVersion) {
+      localStorage.setItem('safari_car_documents', JSON.stringify(initialCarDocuments));
+      return initialCarDocuments;
+    }
+    return getLocalStorageItemSafe('safari_car_documents', initialCarDocuments);
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('safari_car_documents', JSON.stringify(carDocuments));
+    } catch (e) {
+      console.warn("Failed to write car documents to localStorage:", e);
+    }
+  }, [carDocuments]);
+
+  const setCarDocumentsCustom = (newDocs) => {
+    setCarDocuments(newDocs);
+    try {
+      localStorage.setItem('safari_car_documents', JSON.stringify(newDocs));
+    } catch (e) {
+      console.warn("Failed to write car documents to localStorage:", e);
+    }
+  };
 
   const [companyDetails, setCompanyDetails] = useState(() => {
     return getLocalStorageItemSafe('safari_company_details', {
@@ -1222,6 +1248,9 @@ export default function App() {
               setCars={setCarsCustom} 
               drivers={drivers}
               viewMode="registry"
+              carDocuments={carDocuments}
+              setCarDocuments={setCarDocumentsCustom}
+              setActiveTab={setActiveTab}
             />
           )}
 
@@ -1231,6 +1260,9 @@ export default function App() {
               setCars={setCarsCustom} 
               drivers={drivers}
               viewMode="ledger"
+              carDocuments={carDocuments}
+              setCarDocuments={setCarDocumentsCustom}
+              setActiveTab={setActiveTab}
             />
           )}
 
@@ -1241,6 +1273,8 @@ export default function App() {
               cars={cars} 
               drivers={drivers}
               companyId={companyId}
+              carDocuments={carDocuments}
+              setCarDocuments={setCarDocumentsCustom}
             />
           )}
 

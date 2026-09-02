@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Landmark, Receipt, Percent, Plus, Trash2, Edit2, Clipboard, DollarSign, Calendar, Search, Filter, Printer, Copy } from 'lucide-react';
+import { Car, Landmark, Receipt, Percent, Plus, Trash2, Edit2, Clipboard, DollarSign, Calendar, Search, Filter, Printer, Copy, FileText } from 'lucide-react';
 
 const freelancerWhatsAppMap = {
   'Jaspreen': '971551356738',
@@ -14,7 +14,7 @@ const freelancerWhatsAppMap = {
   'M. Aslam': '971547535622'
 };
 
-export default function CarFinanceView({ cars, setCars, drivers = [], viewMode = 'registry' }) {
+export default function CarFinanceView({ cars, setCars, drivers = [], viewMode = 'registry', carDocuments = [], setActiveTab }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterBank, setFilterBank] = useState('all');
   const [selectedCarId, setSelectedCarId] = useState(cars[0]?.id || null);
@@ -722,7 +722,17 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
                         {c.currentValue > 0 ? c.currentValue.toLocaleString() : '—'}
                       </td>
                       <td style={{ padding: '14px 10px', textAlign: 'center' }}>
-                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center' }}>
+                          <button 
+                            onClick={() => {
+                              if (setActiveTab) setActiveTab('carExpenses');
+                            }}
+                            className="btn btn-secondary"
+                            style={{ padding: '4px 8px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#8c5b30', borderColor: '#ede6d9' }}
+                            title={`View Official Documents Vault for ${c.plateNo}`}
+                          >
+                            <FileText size={12} /> Docs ({(carDocuments || []).filter(d => d.carPlate === c.plateNo).length})
+                          </button>
                           <button 
                             onClick={() => handleCloneCar(c)}
                             className="btn btn-secondary"

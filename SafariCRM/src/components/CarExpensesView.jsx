@@ -20,7 +20,18 @@ import {
   Clock,
   Sparkles,
   Layers,
-  X
+  X,
+  Share2,
+  Clipboard,
+  Check,
+  Eye,
+  UploadCloud,
+  FileCheck,
+  Folder,
+  Shield,
+  Radio,
+  FileUp,
+  FileSpreadsheet
 } from 'lucide-react';
 
 // The 7 Official Roar Company Fleet Vehicles (Plates only, no driver details)
@@ -46,6 +57,15 @@ export const DEFAULT_EXPENSE_CATEGORIES = [
   'Miscellaneous Car Expenses'
 ];
 
+export const CAR_DOCUMENT_CATEGORIES = [
+  'Mulkiya',
+  'Insurance Policy',
+  'RTA Passing',
+  'Tracker Passing',
+  'Accident Report',
+  'Other Document'
+];
+
 const PAYMENT_METHODS = [
   'Cash',
   'Card',
@@ -57,7 +77,11 @@ const PAYMENT_METHODS = [
 export default function CarExpensesView({ 
   carExpenses = [], 
   setCarExpenses, 
-  companyId = 'roar'
+  cars = [],
+  drivers = [],
+  companyId = 'roar',
+  carDocuments = [],
+  setCarDocuments
 }) {
   // Category management (dynamic - allow adding more types later)
   const [categories, setCategories] = useState(() => {
@@ -153,6 +177,31 @@ export default function CarExpensesView({
 
   // Edit Card Labels Modal State
   const [isEditCardLabelsOpen, setIsEditCardLabelsOpen] = useState(false);
+
+  // Sub-Tab State: 'expenses' or 'documents'
+  const [activeSubTab, setActiveSubTab] = useState('expenses');
+
+  // Documents State & Filters
+  const [docSearchTerm, setDocSearchTerm] = useState('');
+  const [docCategoryFilter, setDocCategoryFilter] = useState('all');
+  const [docStatusFilter, setDocStatusFilter] = useState('all'); // all, valid, expiring, expired
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false);
+  const [editingDoc, setEditingDoc] = useState(null);
+  const [previewingDoc, setPreviewingDoc] = useState(null);
+  const [copiedDocId, setCopiedDocId] = useState(null);
+
+  const [docFormData, setDocFormData] = useState({
+    carPlate: fleetPlates[0] || 'FF79157',
+    title: '',
+    category: 'Mulkiya',
+    issueDate: '',
+    expiryDate: '',
+    fileName: '',
+    fileType: '',
+    fileSize: '',
+    fileData: '',
+    notes: ''
+  });
 
   // Report Modal State
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -467,6 +516,264 @@ export default function CarExpensesView({
     }
   };
 
+  const getDocExpiryInfo = (expiryDate) => {
+    if (!expiryDate) {
+      return { status: 'valid', label: 'Permanent / No Expiry', daysRemaining: null, color: '#047857', bg: 'rgba(4, 120, 87, 0.12)', border: 'rgba(4, 120, 87, 0.25)' };
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const exp = new Date(expiryDate);
+    exp.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+      return { 
+        status: 'expired', 
+        label: `Expired (${Math.abs(diffDays)}d ago)`, 
+        daysRemaining: diffDays, 
+        color: '#b91c1c', 
+        bg: 'rgba(185, 28, 28, 0.12)', 
+        border: 'rgba(185, 28, 28, 0.25)' 
+      };
+    } else if (diffDays <= 30) {
+      return { 
+        status: 'expiring', 
+        label: `Expiring in ${diffDays}d`, 
+        daysRemaining: diffDays, 
+        color: '#b45309', 
+        bg: 'rgba(217, 119, 6, 0.12)', 
+        border: 'rgba(217, 119, 6, 0.25)' 
+      };
+    } else {
+      return { 
+        status: 'valid', 
+        label: `Valid (${diffDays}d left)`, 
+        daysRemaining: diffDays, 
+        color: '#047857', 
+        bg: 'rgba(4, 120, 87, 0.12)', 
+        border: 'rgba(4, 120, 87, 0.25)' 
+      };
+    }
+  };
+
+  const getDocCategoryStyle = (category) => {
+    switch (category) {
+      case 'Mulkiya':
+        return { background: 'rgba(5, 150, 105, 0.12)', color: '#047857', border: '1px solid rgba(5, 150, 105, 0.25)' };
+      case 'Insurance':
+      case 'Insurance Policy':
+        return { background: 'rgba(59, 130, 246, 0.12)', color: '#1d4ed8', border: '1px solid rgba(59, 130, 246, 0.25)' };
+      case 'RTA Passing':
+        return { background: 'rgba(140, 91, 48, 0.12)', color: '#8c5b30', border: '1px solid rgba(140, 91, 48, 0.25)' };
+      case 'Tracker Passing':
+        return { background: 'rgba(124, 58, 237, 0.12)', color: '#6d28d9', border: '1px solid rgba(124, 58, 237, 0.25)' };
+      case 'Accident Report':
+        return { background: 'rgba(225, 29, 72, 0.12)', color: '#be123c', border: '1px solid rgba(225, 29, 72, 0.25)' };
+      default:
+        return { background: 'rgba(107, 114, 128, 0.12)', color: '#374151', border: '1px solid rgba(107, 114, 128, 0.25)' };
+    }
+  };
+
+  const filteredCarDocuments = useMemo(() => {
+    return (carDocuments || []).filter(doc => {
+      const plateMatch = selectedPlateFilter === 'all' || doc.carPlate === selectedPlateFilter;
+      const categoryMatch = docCategoryFilter === 'all' || doc.category === docCategoryFilter;
+      
+      let statusMatch = true;
+      if (docStatusFilter !== 'all') {
+        const info = getDocExpiryInfo(doc.expiryDate);
+        statusMatch = info.status === docStatusFilter;
+      }
+
+      const searchMatch = !docSearchTerm ||
+        (doc.carPlate || '').toLowerCase().includes(docSearchTerm.toLowerCase()) ||
+        (doc.title || '').toLowerCase().includes(docSearchTerm.toLowerCase()) ||
+        (doc.category || '').toLowerCase().includes(docSearchTerm.toLowerCase()) ||
+        (doc.fileName || '').toLowerCase().includes(docSearchTerm.toLowerCase()) ||
+        (doc.notes || '').toLowerCase().includes(docSearchTerm.toLowerCase());
+
+      return plateMatch && categoryMatch && statusMatch && searchMatch;
+    });
+  }, [carDocuments, selectedPlateFilter, docCategoryFilter, docStatusFilter, docSearchTerm]);
+
+  const docStats = useMemo(() => {
+    const scopedDocs = (carDocuments || []).filter(doc => selectedPlateFilter === 'all' || doc.carPlate === selectedPlateFilter);
+    const totalDocs = scopedDocs.length;
+    const mulkiyaCount = scopedDocs.filter(d => d.category === 'Mulkiya').length;
+    const insuranceCount = scopedDocs.filter(d => d.category === 'Insurance' || d.category === 'Insurance Policy').length;
+    const rtaCount = scopedDocs.filter(d => d.category === 'RTA Passing').length;
+    const trackerCount = scopedDocs.filter(d => d.category === 'Tracker Passing').length;
+    const accidentCount = scopedDocs.filter(d => d.category === 'Accident Report').length;
+    
+    let expiringCount = 0;
+    let expiredCount = 0;
+    scopedDocs.forEach(d => {
+      const info = getDocExpiryInfo(d.expiryDate);
+      if (info.status === 'expiring') expiringCount++;
+      if (info.status === 'expired') expiredCount++;
+    });
+
+    return {
+      totalDocs,
+      mulkiyaCount,
+      insuranceCount,
+      rtaCount,
+      trackerCount,
+      accidentCount,
+      expiringCount,
+      expiredCount
+    };
+  }, [carDocuments, selectedPlateFilter]);
+
+  const handleDocFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      alert('File size exceeds 8MB limit. Please upload a compressed PDF or image.');
+      return;
+    }
+
+    const fileSizeFormatted = file.size > 1024 * 1024
+      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+      : `${Math.round(file.size / 1024)} KB`;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setDocFormData(prev => ({
+        ...prev,
+        fileName: file.name,
+        fileType: file.type || 'application/octet-stream',
+        fileSize: fileSizeFormatted,
+        fileData: event.target.result,
+        title: prev.title || file.name.replace(/\.[^/.]+$/, "")
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDownloadDoc = (doc) => {
+    if (!doc.fileData) {
+      alert('No file attachment available to download.');
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = doc.fileData;
+    link.download = doc.fileName || `${doc.carPlate}_${doc.category}_Document.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleWhatsAppShareDoc = (doc) => {
+    const text = `🚗 *ROAR ADVENTURE TOURISM LLC*\n*VEHICLE OFFICIAL COMPLIANCE RECORD*\n──────────────────────────────\n• *Vehicle Plate:* ${doc.carPlate} ${carLabels[doc.carPlate] ? `(${carLabels[doc.carPlate]})` : ''}\n• *Document Title:* ${doc.title}\n• *Category:* ${doc.category}\n• *Issue Date:* ${doc.issueDate || 'N/A'}\n• *Expiry Date:* ${doc.expiryDate || 'Permanent / No Expiry'}\n• *File Name:* ${doc.fileName} (${doc.fileSize || 'Attached'})\n• *Notes:* ${doc.notes || 'Official corporate record.'}\n──────────────────────────────\n_Generated electronically via Roar CRM Vehicle Vault._`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleCopyDocDetails = (doc) => {
+    const text = `Vehicle: ${doc.carPlate} | Title: ${doc.title} | Category: ${doc.category} | Expiry: ${doc.expiryDate || 'N/A'} | Notes: ${doc.notes || ''}`;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedDocId(doc.id);
+      setTimeout(() => setCopiedDocId(null), 2000);
+    }).catch(err => {
+      alert('Failed to copy document details: ' + err);
+    });
+  };
+
+  const handleOpenAddDoc = (plate = null) => {
+    setEditingDoc(null);
+    const targetPlate = plate || (selectedPlateFilter !== 'all' ? selectedPlateFilter : fleetPlates[0] || 'FF79157');
+    setDocFormData({
+      carPlate: targetPlate,
+      title: '',
+      category: 'Mulkiya',
+      issueDate: todayStr,
+      expiryDate: '',
+      fileName: '',
+      fileType: '',
+      fileSize: '',
+      fileData: '',
+      notes: ''
+    });
+    setIsDocModalOpen(true);
+  };
+
+  const handleOpenEditDoc = (doc) => {
+    setEditingDoc(doc);
+    setDocFormData({
+      carPlate: doc.carPlate || fleetPlates[0] || 'FF79157',
+      title: doc.title || '',
+      category: doc.category || 'Mulkiya',
+      issueDate: doc.issueDate || '',
+      expiryDate: doc.expiryDate || '',
+      fileName: doc.fileName || '',
+      fileType: doc.fileType || '',
+      fileSize: doc.fileSize || '',
+      fileData: doc.fileData || '',
+      notes: doc.notes || ''
+    });
+    setIsDocModalOpen(true);
+  };
+
+  const handleSaveDoc = (e) => {
+    e.preventDefault();
+    if (!docFormData.title.trim()) {
+      alert('Please enter a document title.');
+      return;
+    }
+    if (!docFormData.fileData) {
+      alert('Please select or upload a document file (Mulkiya scan, Insurance policy, Passing certificate, or Accident report).');
+      return;
+    }
+
+    const payload = {
+      ...docFormData,
+      id: editingDoc ? editingDoc.id : `cardoc-${Date.now()}`,
+      uploadedAt: editingDoc?.uploadedAt || todayStr
+    };
+
+    let updatedDocs;
+    if (editingDoc) {
+      updatedDocs = (carDocuments || []).map(d => d.id === editingDoc.id ? payload : d);
+    } else {
+      updatedDocs = [payload, ...(carDocuments || [])];
+    }
+
+    if (setCarDocuments) {
+      setCarDocuments(updatedDocs);
+    }
+
+    try {
+      fetch(`api.php?action=save&table=car_documents&company_id=${companyId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(err => console.warn('MySQL car_documents save error:', err));
+    } catch (err) {
+      console.warn('Network error saving car document:', err);
+    }
+
+    setIsDocModalOpen(false);
+  };
+
+  const handleDeleteDoc = (id, title) => {
+    if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return;
+    const updated = (carDocuments || []).filter(d => d.id !== id);
+    if (setCarDocuments) {
+      setCarDocuments(updated);
+    }
+
+    try {
+      fetch(`api.php?action=delete&table=car_documents&company_id=${companyId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      }).catch(err => console.warn('MySQL car_documents delete error:', err));
+    } catch (err) {
+      console.warn('Network error deleting car document:', err);
+    }
+  };
+
   return (
     <div className="view-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
@@ -475,7 +782,7 @@ export default function CarExpensesView({
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <h2 style={{ fontSize: '20px', fontWeight: '800', fontFamily: 'var(--font-heading)', color: 'var(--text-dark)' }}>
-              Fleet Car Expenses
+              Fleet Vehicles & Official Vault
             </h2>
             <span 
               className="badge" 
@@ -485,13 +792,13 @@ export default function CarExpensesView({
             </span>
           </div>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Vehicle maintenance records by number plate.
+            Vehicle maintenance records, Mulkiya, Insurance, Passing & Accident reports by number plate.
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           
-          {/* Add New Car Button (Per Image 1) */}
+          {/* Add New Car Button */}
           <button 
             onClick={() => { setNewPlateNumber(''); setNewPlateLabel(''); setIsAddPlateOpen(true); }}
             className="btn btn-secondary" 
@@ -501,7 +808,7 @@ export default function CarExpensesView({
             <Plus size={14} /> Add New Car
           </button>
 
-          {/* Car Number Plate Dropdown (Per Image 1) */}
+          {/* Car Number Plate Dropdown (No # symbol per user directive) */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <select 
               value={selectedPlateFilter}
@@ -518,12 +825,12 @@ export default function CarExpensesView({
                 height: '36px',
                 padding: '4px 10px'
               }}
-              title="Filter expenses by car number plate"
+              title="Filter fleet records by car number plate"
             >
               <option value="all">🚗 All Fleet Cars ({fleetPlates.length} Cars)</option>
               {fleetPlates.map(plate => (
                 <option key={plate} value={plate}>
-                  #{plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''} ({(carExpensesMap[plate] || 0).toLocaleString()} AED)
+                  {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''} ({(carExpensesMap[plate] || 0).toLocaleString()} AED)
                 </option>
               ))}
             </select>
@@ -545,41 +852,111 @@ export default function CarExpensesView({
             )}
           </div>
 
-          <button 
-            onClick={() => setIsEditCardLabelsOpen(true)}
-            className="btn btn-secondary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '7px 11px', height: '36px' }}
-            title="Customize the 8 card header label texts"
-          >
-            <Layers size={14} /> Edit Card Labels
-          </button>
+          {activeSubTab === 'expenses' ? (
+            <>
+              <button 
+                onClick={() => setIsEditCardLabelsOpen(true)}
+                className="btn btn-secondary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '7px 11px', height: '36px' }}
+                title="Customize the 8 card header label texts"
+              >
+                <Layers size={14} /> Edit Card Labels
+              </button>
 
-          <button 
-            onClick={handleOpenReport}
-            className="btn btn-secondary" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
-          >
-            <Printer size={14} /> Print Report
-          </button>
+              <button 
+                onClick={handleOpenReport}
+                className="btn btn-secondary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
+              >
+                <Printer size={14} /> Print Report
+              </button>
 
-          <button 
-            onClick={() => setIsAddCategoryOpen(true)}
-            className="btn btn-secondary" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
-          >
-            <Plus size={14} /> Add Type
-          </button>
+              <button 
+                onClick={() => setIsAddCategoryOpen(true)}
+                className="btn btn-secondary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
+              >
+                <Plus size={14} /> Add Type
+              </button>
 
-          <button 
-            onClick={() => handleOpenAddModal()}
-            className="btn btn-primary" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 14px', height: '36px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
-          >
-            <Plus size={14} /> Log Expense
-          </button>
+              <button 
+                onClick={() => handleOpenAddModal()}
+                className="btn btn-primary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 14px', height: '36px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
+              >
+                <Plus size={14} /> Log Expense
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={() => window.print()}
+                className="btn btn-secondary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
+                title="Print vehicle documents compliance sheet"
+              >
+                <Printer size={14} /> Print Vault
+              </button>
+
+              <button 
+                onClick={() => handleOpenAddDoc(selectedPlateFilter !== 'all' ? selectedPlateFilter : null)}
+                className="btn btn-primary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 14px', height: '36px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
+              >
+                <UploadCloud size={14} /> Upload Document
+              </button>
+            </>
+          )}
         </div>
       </div>
 
+      {/* Sub-Tab Navigation Bar: Expenses vs Documents */}
+      <div style={{ display: 'flex', gap: '6px', borderBottom: '1.5px solid #ede6d9', paddingBottom: '2px' }}>
+        <button
+          onClick={() => setActiveSubTab('expenses')}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: '800',
+            cursor: 'pointer',
+            color: activeSubTab === 'expenses' ? 'var(--primary)' : 'var(--text-muted)',
+            borderBottom: activeSubTab === 'expenses' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
+            marginBottom: '-2px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s'
+          }}
+        >
+          <Wrench size={15} /> Fleet Expenses & Maintenance ({filteredExpenses.length})
+        </button>
+
+        <button
+          onClick={() => setActiveSubTab('documents')}
+          style={{
+            background: 'none',
+            border: 'none',
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: '800',
+            cursor: 'pointer',
+            color: activeSubTab === 'documents' ? 'var(--primary)' : 'var(--text-muted)',
+            borderBottom: activeSubTab === 'documents' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
+            marginBottom: '-2px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'all 0.15s'
+          }}
+        >
+          <FileText size={15} /> Vehicle Documents & Legal Vault ({(carDocuments || []).length})
+        </button>
+      </div>
+
+      {activeSubTab === 'expenses' ? (
+        <>
       {/* 1-Row Unified Filter and Search Bar (Moved UP per user request) */}
       <div className="card" style={{ padding: '12px 14px', marginBottom: '14px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px' }}>
         
@@ -610,7 +987,7 @@ export default function CarExpensesView({
             <option value="all">🚗 All Fleet Cars ({fleetPlates.length})</option>
             {fleetPlates.map(plate => (
               <option key={plate} value={plate}>
-                #{plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
+                {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
               </option>
             ))}
           </select>
@@ -866,7 +1243,7 @@ export default function CarExpensesView({
             <Car size={14} style={{ color: 'var(--primary)' }} />
           </div>
           <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px', fontFamily: 'monospace' }}>
-            #{selectedPlateFilter !== 'all' ? selectedPlateFilter : stats.topCarPlate}
+            {selectedPlateFilter !== 'all' ? selectedPlateFilter : stats.topCarPlate}
           </div>
           <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '700', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {selectedPlateFilter !== 'all' 
@@ -890,7 +1267,7 @@ export default function CarExpensesView({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {selectedPlateFilter !== 'all' ? `THIS MONTH (#${selectedPlateFilter})` : cardLabels.thisMonth}
+              {selectedPlateFilter !== 'all' ? `THIS MONTH (${selectedPlateFilter})` : cardLabels.thisMonth}
             </span>
             <Clock size={14} style={{ color: '#047857' }} />
           </div>
@@ -940,7 +1317,7 @@ export default function CarExpensesView({
                   {/* Plate */}
                   <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                     <span style={{ fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'monospace', fontSize: '12.5px', background: '#f5f3f0', padding: '2px 6px', borderRadius: '4px' }}>
-                      #{exp.plateNo}
+                      {exp.plateNo}
                     </span>
                   </td>
 
@@ -1021,6 +1398,551 @@ export default function CarExpensesView({
           </tbody>
         </table>
       </div>
+      </>
+      ) : (
+        <>
+          {/* Selected Car Scope Banner (When a specific car is selected) */}
+          {selectedPlateFilter !== 'all' && (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: 'rgba(140, 91, 48, 0.05)',
+              border: '1.5px solid rgba(140, 91, 48, 0.18)',
+              borderRadius: '10px',
+              padding: '12px 16px',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '8px', background: '#8c5b30', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff', fontSize: '18px' }}>
+                  🚗
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#543c2b', fontFamily: 'monospace' }}>
+                      Plate {selectedPlateFilter}
+                    </span>
+                    <span className="badge" style={{ background: '#ede6d9', color: '#8c5b30', fontWeight: '700', fontSize: '11px', padding: '2px 8px' }}>
+                      {carLabels[selectedPlateFilter] || 'Fleet Car'}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+                    Showing official Mulkiya, Insurance, Passing & Accident files for vehicle {selectedPlateFilter} ({filteredCarDocuments.length} files).
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  onClick={() => handleOpenAddDoc(selectedPlateFilter)}
+                  className="btn btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 13px', height: '34px', boxShadow: '0 3px 8px rgba(140, 91, 48, 0.25)' }}
+                >
+                  <UploadCloud size={14} /> Upload Doc for {selectedPlateFilter}
+                </button>
+                <button
+                  onClick={() => setSelectedPlateFilter('all')}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '11.5px', padding: '6px 10px', height: '34px' }}
+                >
+                  View All Fleet
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 1-Row Unified Search and Filters Bar for Documents */}
+          <div className="card" style={{ padding: '12px 14px', marginBottom: '2px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px' }}>
+            {/* Search Input */}
+            <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '180px' }}>
+              <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                type="text"
+                className="form-control"
+                placeholder="Search plate, document title, notes..."
+                value={docSearchTerm}
+                onChange={(e) => setDocSearchTerm(e.target.value)}
+                style={{ paddingLeft: '32px', fontSize: '12.5px', height: '36px' }}
+              />
+            </div>
+
+            {/* Middle & Right Filters in 1 Row */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+              {/* Car Plate Filter */}
+              <select 
+                className="form-control"
+                value={selectedPlateFilter}
+                onChange={(e) => setSelectedPlateFilter(e.target.value)}
+                style={{ width: 'auto', minWidth: '140px', fontSize: '12px', fontWeight: '700', color: selectedPlateFilter !== 'all' ? '#8c5b30' : 'var(--text-dark)', height: '36px' }}
+                title="Filter by car plate"
+              >
+                <option value="all">🚗 All Fleet Cars ({fleetPlates.length})</option>
+                {fleetPlates.map(plate => (
+                  <option key={plate} value={plate}>
+                    {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
+                  </option>
+                ))}
+              </select>
+
+              {/* Category Filter */}
+              <select 
+                className="form-control"
+                value={docCategoryFilter}
+                onChange={(e) => setDocCategoryFilter(e.target.value)}
+                style={{ width: 'auto', minWidth: '140px', fontSize: '12px', fontWeight: '700', color: docCategoryFilter !== 'all' ? '#8c5b30' : 'var(--text-dark)', height: '36px' }}
+              >
+                <option value="all">All Document Types</option>
+                {CAR_DOCUMENT_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+
+              {/* Expiry Status Filter */}
+              <select 
+                className="form-control"
+                value={docStatusFilter}
+                onChange={(e) => setDocStatusFilter(e.target.value)}
+                style={{ width: 'auto', minWidth: '120px', fontSize: '12px', height: '36px' }}
+              >
+                <option value="all">All Statuses</option>
+                <option value="valid">Valid</option>
+                <option value="expiring">Expiring Soon (30d)</option>
+                <option value="expired">Expired</option>
+              </select>
+
+              {(docSearchTerm || docCategoryFilter !== 'all' || docStatusFilter !== 'all' || selectedPlateFilter !== 'all') && (
+                <button 
+                  onClick={() => {
+                    setDocSearchTerm('');
+                    setDocCategoryFilter('all');
+                    setDocStatusFilter('all');
+                    setSelectedPlateFilter('all');
+                  }}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '11.5px', padding: '6px 12px', height: '36px' }}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* 8 Document KPI Cards Grid (Clickable Category & Status Filters, 2 per row on mobile) */}
+          <div className="stats-grid" style={{ marginBottom: '8px' }}>
+            {/* 1. Total Documents */}
+            <div 
+              onClick={() => { setDocCategoryFilter('all'); setDocStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: docCategoryFilter === 'all' && docStatusFilter === 'all' ? 'rgba(140, 91, 48, 0.08)' : '#ffffff', 
+                border: docCategoryFilter === 'all' && docStatusFilter === 'all' ? '2px solid var(--primary)' : '1px solid #ede6d9', 
+                padding: '12px 14px', 
+                cursor: 'pointer', 
+                transition: 'all 0.15s ease' 
+              }}
+              title="Click to view all documents"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  TOTAL DOCUMENTS
+                </span>
+                <FileText size={14} style={{ color: 'var(--primary)' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>
+                {docStats.totalDocs} <span style={{ fontSize: '11px', fontWeight: '600' }}>Files</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {selectedPlateFilter !== 'all' ? `Plate ${selectedPlateFilter}` : 'Across 7 Fleet Cars'}
+              </div>
+            </div>
+
+            {/* 2. Mulkiya Registration */}
+            <div 
+              onClick={() => { setDocCategoryFilter('Mulkiya'); setDocStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: docCategoryFilter === 'Mulkiya' ? 'rgba(5, 150, 105, 0.08)' : '#ffffff', 
+                border: docCategoryFilter === 'Mulkiya' ? '2px solid #047857' : '1px solid #ede6d9', 
+                padding: '12px 14px', 
+                cursor: 'pointer', 
+                transition: 'all 0.15s ease' 
+              }}
+              title="Click to filter Mulkiya cards"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  MULKIYA CARDS
+                </span>
+                <FileCheck size={14} style={{ color: '#047857' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#047857', marginTop: '4px' }}>
+                {docStats.mulkiyaCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Cards</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                RTA Vehicle Licenses
+              </div>
+            </div>
+
+            {/* 3. Insurance Policies */}
+            <div 
+              onClick={() => { setDocCategoryFilter('Insurance'); setDocStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: docCategoryFilter === 'Insurance' ? 'rgba(59, 130, 246, 0.08)' : '#ffffff', 
+                border: docCategoryFilter === 'Insurance' ? '2px solid #1d4ed8' : '1px solid #ede6d9', 
+                padding: '12px 14px', 
+                cursor: 'pointer', 
+                transition: 'all 0.15s ease' 
+              }}
+              title="Click to filter insurance certificates"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  INSURANCE POLICIES
+                </span>
+                <Shield size={14} style={{ color: '#1d4ed8' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#1d4ed8', marginTop: '4px' }}>
+                {docStats.insuranceCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Policies</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Commercial Fleet Coverage
+              </div>
+            </div>
+
+            {/* 4. RTA Passing */}
+            <div 
+              onClick={() => { setDocCategoryFilter('RTA Passing'); setDocStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: docCategoryFilter === 'RTA Passing' ? 'rgba(140, 91, 48, 0.08)' : '#ffffff', 
+                border: docCategoryFilter === 'RTA Passing' ? '2px solid #8c5b30' : '1px solid #ede6d9', 
+                padding: '12px 14px', 
+                cursor: 'pointer', 
+                transition: 'all 0.15s ease' 
+              }}
+              title="Click to filter RTA passing certificates"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  RTA PASSING
+                </span>
+                <CheckCircle2 size={14} style={{ color: '#8c5b30' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#8c5b30', marginTop: '4px' }}>
+                {docStats.rtaCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Certificates</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Technical Inspection Reports
+              </div>
+            </div>
+
+            {/* 5. Tracker Passing */}
+            <div 
+              onClick={() => { setDocCategoryFilter('Tracker Passing'); setDocStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: docCategoryFilter === 'Tracker Passing' ? 'rgba(124, 58, 237, 0.08)' : '#ffffff', 
+                border: docCategoryFilter === 'Tracker Passing' ? '2px solid #6d28d9' : '1px solid #ede6d9', 
+                padding: '12px 14px', 
+                cursor: 'pointer', 
+                transition: 'all 0.15s ease' 
+              }}
+              title="Click to filter tracker compliance"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  TRACKER PASSING
+                </span>
+                <Radio size={14} style={{ color: '#6d28d9' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#6d28d9', marginTop: '4px' }}>
+                {docStats.trackerCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Certificates</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                GPS & SIRA Security Gate
+              </div>
+            </div>
+
+            {/* 6. Accident Reports */}
+            <div 
+              onClick={() => { setDocCategoryFilter('Accident Report'); setDocStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: docCategoryFilter === 'Accident Report' ? 'rgba(225, 29, 72, 0.08)' : '#ffffff', 
+                border: docCategoryFilter === 'Accident Report' ? '2px solid #be123c' : '1px solid #ede6d9', 
+                padding: '12px 14px', 
+                cursor: 'pointer', 
+                transition: 'all 0.15s ease' 
+              }}
+              title="Click to filter accident reports"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  ACCIDENT REPORTS
+                </span>
+                <AlertCircle size={14} style={{ color: '#be123c' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#be123c', marginTop: '4px' }}>
+                {docStats.accidentCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Reports</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Police & Damage Claims
+              </div>
+            </div>
+
+            {/* 7. Expiring Soon */}
+            <div 
+              onClick={() => { setDocStatusFilter('expiring'); setDocCategoryFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: docStatusFilter === 'expiring' ? 'rgba(217, 119, 6, 0.08)' : '#ffffff', 
+                border: docStatusFilter === 'expiring' ? '2px solid #b45309' : '1px solid #ede6d9', 
+                padding: '12px 14px', 
+                cursor: 'pointer', 
+                transition: 'all 0.15s ease' 
+              }}
+              title="Click to view documents expiring in 30 days"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  EXPIRING SOON
+                </span>
+                <Clock size={14} style={{ color: '#b45309' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#b45309', marginTop: '4px' }}>
+                {docStats.expiringCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Alerts</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Renew within 30 Days
+              </div>
+            </div>
+
+            {/* 8. Expired / Overdue */}
+            <div 
+              onClick={() => { setDocStatusFilter('expired'); setDocCategoryFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: docStatusFilter === 'expired' ? 'rgba(185, 28, 28, 0.08)' : '#ffffff', 
+                border: docStatusFilter === 'expired' ? '2px solid #b91c1c' : '1px solid #ede6d9', 
+                padding: '12px 14px', 
+                cursor: 'pointer', 
+                transition: 'all 0.15s ease' 
+              }}
+              title="Click to view expired documents"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  EXPIRED / RENEW
+                </span>
+                <AlertCircle size={14} style={{ color: '#b91c1c' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#b91c1c', marginTop: '4px' }}>
+                {docStats.expiredCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Overdue</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Immediate Renewal Needed
+              </div>
+            </div>
+          </div>
+
+          {/* Document Cards Grid */}
+          {filteredCarDocuments.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: '48px 20px', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '12px' }}>
+              <FileText size={36} style={{ opacity: 0.3, margin: '0 auto 12px', display: 'block', color: 'var(--primary)' }} />
+              <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)' }}>No vehicle documents found</h3>
+              <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '420px', margin: '4px auto 16px' }}>
+                {selectedPlateFilter !== 'all' 
+                  ? `No Mulkiya, Insurance, or Passing documents found for car ${selectedPlateFilter}.`
+                  : 'No vehicle records matched your search filter criteria.'}
+              </p>
+              <button 
+                onClick={() => handleOpenAddDoc(selectedPlateFilter !== 'all' ? selectedPlateFilter : null)}
+                className="btn btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', margin: '0 auto', fontSize: '12px' }}
+              >
+                <UploadCloud size={14} /> Upload First Document
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '14px' }}>
+              {filteredCarDocuments.map(doc => {
+                const expiryInfo = getDocExpiryInfo(doc.expiryDate);
+                const isCopied = copiedDocId === doc.id;
+
+                return (
+                  <div 
+                    key={doc.id}
+                    className="card"
+                    style={{
+                      background: '#ffffff',
+                      border: '1.5px solid #ede6d9',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: '12px',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {/* Top Row: Plate + Category + Expiry Status */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ 
+                            background: '#ede6d9', 
+                            color: '#543c2b', 
+                            fontWeight: '800', 
+                            fontFamily: 'monospace', 
+                            fontSize: '12px', 
+                            padding: '3px 7px', 
+                            borderRadius: '5px' 
+                          }}>
+                            {doc.carPlate}
+                          </span>
+                          <span 
+                            className="badge" 
+                            style={{ 
+                              ...getDocCategoryStyle(doc.category), 
+                              fontWeight: '700', 
+                              fontSize: '10.5px', 
+                              padding: '3px 7px', 
+                              borderRadius: '5px' 
+                            }}
+                          >
+                            {doc.category}
+                          </span>
+                        </div>
+
+                        <span 
+                          className="badge"
+                          style={{ 
+                            background: expiryInfo.bg, 
+                            color: expiryInfo.color, 
+                            border: `1px solid ${expiryInfo.border}`, 
+                            fontSize: '10.5px', 
+                            fontWeight: '700',
+                            padding: '3px 7px',
+                            borderRadius: '5px'
+                          }}
+                        >
+                          {expiryInfo.label}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <h4 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px', lineHeight: '1.3' }}>
+                        {doc.title}
+                      </h4>
+
+                      {/* Car Nickname */}
+                      <div style={{ fontSize: '11px', color: '#8c5b30', fontWeight: '600', marginBottom: '8px' }}>
+                        {carLabels[doc.carPlate] || 'Roar Fleet Vehicle'}
+                      </div>
+
+                      {/* Notes / Description */}
+                      <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: '1.4', marginBottom: '10px', minHeight: '32px' }}>
+                        {doc.notes || 'Official electronic vehicle compliance file.'}
+                      </p>
+
+                      {/* Dates & File Info */}
+                      <div style={{ 
+                        background: '#fdfbf7', 
+                        border: '1px solid #ede6d9', 
+                        borderRadius: '8px', 
+                        padding: '8px 10px', 
+                        fontSize: '11px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '4px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Issue Date:</span>
+                          <span style={{ fontWeight: '600', color: 'var(--text-dark)' }}>{doc.issueDate ? doc.issueDate.split('-').reverse().join('/') : '—'}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>Expiry Date:</span>
+                          <span style={{ fontWeight: '700', color: expiryInfo.color }}>
+                            {doc.expiryDate ? doc.expiryDate.split('-').reverse().join('/') : 'Permanent / No Expiry'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #ede6d9', paddingTop: '4px', marginTop: '2px' }}>
+                          <span style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <FileText size={11} /> File:
+                          </span>
+                          <span style={{ fontWeight: '600', color: 'var(--primary)', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={doc.fileName}>
+                            {doc.fileName || 'Attached document'} {doc.fileSize ? `(${doc.fileSize})` : ''}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Row: Actions */}
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #ede6d9', paddingTop: '10px' }}>
+                      <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                        <button
+                          onClick={() => setPreviewingDoc(doc)}
+                          className="btn btn-secondary"
+                          style={{ fontSize: '11px', padding: '5px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', height: '30px' }}
+                          title="Preview document in browser"
+                        >
+                          <Eye size={12} /> View
+                        </button>
+                        <button
+                          onClick={() => handleDownloadDoc(doc)}
+                          className="btn btn-secondary"
+                          style={{ fontSize: '11px', padding: '5px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', height: '30px' }}
+                          title="Download document file"
+                        >
+                          <Download size={12} /> Download
+                        </button>
+                        <button
+                          onClick={() => handleWhatsAppShareDoc(doc)}
+                          className="btn btn-secondary"
+                          style={{ fontSize: '11px', padding: '5px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#047857', height: '30px' }}
+                          title="Share formatted details via WhatsApp"
+                        >
+                          <Share2 size={12} /> Share
+                        </button>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                        <button
+                          onClick={() => handleCopyDocDetails(doc)}
+                          className="btn btn-secondary"
+                          style={{ padding: '5px 7px', height: '30px' }}
+                          title="Copy details to clipboard"
+                        >
+                          {isCopied ? <Check size={12} style={{ color: '#047857' }} /> : <Clipboard size={12} />}
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditDoc(doc)}
+                          className="btn btn-secondary"
+                          style={{ padding: '5px 7px', height: '30px' }}
+                          title="Edit document details or replace file"
+                        >
+                          <Edit2 size={12} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDoc(doc.id, doc.title)}
+                          className="btn btn-secondary"
+                          style={{ padding: '5px 7px', height: '30px', color: '#b91c1c' }}
+                          title="Delete document"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
 
       {/* Add / Edit Expense Modal (No driver fields, purely vehicle & maintenance) */}
       {isModalOpen && (
@@ -1047,7 +1969,7 @@ export default function CarExpensesView({
                     onChange={(e) => handleCarSelectChange(e.target.value)}
                   >
                     {fleetPlates.map(plate => (
-                      <option key={plate} value={plate}>Plate #{plate}</option>
+                      <option key={plate} value={plate}>Plate {plate}</option>
                     ))}
                     <option value="__add_new__">+ Add New Plate...</option>
                   </select>
@@ -1264,10 +2186,10 @@ export default function CarExpensesView({
             <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #ede6d9', paddingBottom: '14px', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
-                  {selectedPlateFilter === 'all' ? 'Fleet Maintenance & Expense Report' : `Vehicle Report: Car #${selectedPlateFilter}`}
+                  {selectedPlateFilter === 'all' ? 'Fleet Maintenance & Expense Report' : `Vehicle Report: Car ${selectedPlateFilter}`}
                 </h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Scope: {selectedPlateFilter === 'all' ? 'Entire Fleet (All Cars)' : `Car #${selectedPlateFilter} ${carLabels[selectedPlateFilter] ? `(${carLabels[selectedPlateFilter]})` : ''}`} | {dateFilter === 'this_month' ? 'This Month' : (dateFilter === 'last_month' ? 'Last Month' : 'All Time')}
+                  Scope: {selectedPlateFilter === 'all' ? 'Entire Fleet (All Cars)' : `Car ${selectedPlateFilter} ${carLabels[selectedPlateFilter] ? `(${carLabels[selectedPlateFilter]})` : ''}`} | {dateFilter === 'this_month' ? 'This Month' : (dateFilter === 'last_month' ? 'Last Month' : 'All Time')}
                 </span>
               </div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -1280,7 +2202,7 @@ export default function CarExpensesView({
                 >
                   <option value="all">🚗 Entire Fleet ({fleetPlates.length} Cars)</option>
                   {fleetPlates.map(p => (
-                    <option key={p} value={p}>#{p} {carLabels[p] ? `- ${carLabels[p]}` : ''}</option>
+                    <option key={p} value={p}>{p} {carLabels[p] ? `- ${carLabels[p]}` : ''}</option>
                   ))}
                 </select>
 
@@ -1391,7 +2313,7 @@ export default function CarExpensesView({
                         return (
                           <tr key={plate} style={{ borderBottom: '1px solid #f3f4f6' }}>
                             <td style={{ padding: '8px 10px', fontWeight: '800', fontFamily: 'monospace' }}>
-                              #{plate} {carLabels[plate] ? <span style={{ color: '#8c5b30', fontWeight: '600' }}>({carLabels[plate]})</span> : ''}
+                              {plate} {carLabels[plate] ? <span style={{ color: '#8c5b30', fontWeight: '600' }}>({carLabels[plate]})</span> : ''}
                             </td>
                             <td style={{ padding: '8px 10px', textAlign: 'center' }}>{carItems.length}</td>
                             <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: carTotal > 0 ? '#8c5b30' : '#9ca3af' }}>
@@ -1429,7 +2351,7 @@ export default function CarExpensesView({
                     {filteredExpenses.map(item => (
                       <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                         <td style={{ padding: '7px 10px' }}>{(item.date || '').split('-').reverse().join('/')}</td>
-                        <td style={{ padding: '7px 10px', fontWeight: '800', fontFamily: 'monospace' }}>#{item.plateNo}</td>
+                        <td style={{ padding: '7px 10px', fontWeight: '800', fontFamily: 'monospace' }}>{item.plateNo}</td>
                         <td style={{ padding: '7px 10px' }}>
                           <span style={{ fontWeight: '700' }}>{item.category}</span>
                         </td>
@@ -1446,7 +2368,7 @@ export default function CarExpensesView({
                   </tbody>
                   <tfoot>
                     <tr style={{ background: '#fdfbf7', borderTop: '2px solid #8c5b30', fontWeight: '800' }}>
-                      <td colSpan="3" style={{ padding: '10px', textAlign: 'right' }}>TOTAL FLEET EXPENSE:</td>
+                      <td colSpan="3" style={{ padding: '10px', textAlign: 'right', textTransform: 'uppercase', color: '#543c2b' }}>Total Expenditures:</td>
                       <td style={{ padding: '10px', textAlign: 'right', color: '#8c5b30', fontSize: '13px' }}>
                         {stats.totalFleetExpense.toLocaleString()} AED
                       </td>
@@ -1477,7 +2399,7 @@ export default function CarExpensesView({
           <div className="modal-content" style={{ maxWidth: '420px', borderRadius: '14px', padding: '20px', background: '#ffffff', border: '1.5px solid #ede6d9' }}>
             <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
               <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
-                Customize Car Label: #{editingPlateForLabel}
+                Customize Car Label: {editingPlateForLabel}
               </h3>
               <button onClick={() => setIsEditCarLabelOpen(false)} className="modal-close">&times;</button>
             </div>
@@ -1616,6 +2538,270 @@ export default function CarExpensesView({
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Upload & Edit Vehicle Document Modal */}
+      {isDocModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 2100 }}>
+          <div className="modal-content" style={{ maxWidth: '560px', borderRadius: '14px', padding: '22px', background: '#ffffff', border: '1.5px solid #ede6d9', maxHeight: '92vh', overflowY: 'auto' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '10px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <UploadCloud size={18} style={{ color: 'var(--primary)' }} />
+                <h3 style={{ fontSize: '16.5px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
+                  {editingDoc ? 'Edit Vehicle Document' : 'Upload Vehicle Document'}
+                </h3>
+              </div>
+              <button onClick={() => setIsDocModalOpen(false)} className="modal-close">&times;</button>
+            </div>
+
+            <form onSubmit={handleSaveDoc}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                
+                {/* Car Plate */}
+                <div className="form-group">
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Car Number Plate *</label>
+                  <select 
+                    className="form-control"
+                    required
+                    value={docFormData.carPlate}
+                    onChange={(e) => setDocFormData({ ...docFormData, carPlate: e.target.value })}
+                  >
+                    {fleetPlates.map(plate => (
+                      <option key={plate} value={plate}>
+                        {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Category */}
+                <div className="form-group">
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Document Category *</label>
+                  <select 
+                    className="form-control"
+                    required
+                    value={docFormData.category}
+                    onChange={(e) => setDocFormData({ ...docFormData, category: e.target.value })}
+                  >
+                    {CAR_DOCUMENT_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Document Title */}
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Document Title *</label>
+                  <input 
+                    type="text" 
+                    className="form-control"
+                    required
+                    placeholder="e.g. Mulkiya Registration Card 2026-2027 or Orient Insurance Policy"
+                    value={docFormData.title}
+                    onChange={(e) => setDocFormData({ ...docFormData, title: e.target.value })}
+                  />
+                </div>
+
+                {/* Issue Date */}
+                <div className="form-group">
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Issue Date</label>
+                  <input 
+                    type="date" 
+                    className="form-control"
+                    value={docFormData.issueDate}
+                    onChange={(e) => setDocFormData({ ...docFormData, issueDate: e.target.value })}
+                  />
+                </div>
+
+                {/* Expiry Date */}
+                <div className="form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Expiry Date</label>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const d = new Date();
+                          d.setFullYear(d.getFullYear() + 1);
+                          setDocFormData({ ...docFormData, expiryDate: d.toISOString().split('T')[0] });
+                        }}
+                        style={{ fontSize: '10px', background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: '700' }}
+                      >
+                        +1 Yr
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDocFormData({ ...docFormData, expiryDate: '' })}
+                        style={{ fontSize: '10px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                      >
+                        None
+                      </button>
+                    </div>
+                  </div>
+                  <input 
+                    type="date" 
+                    className="form-control"
+                    value={docFormData.expiryDate}
+                    onChange={(e) => setDocFormData({ ...docFormData, expiryDate: e.target.value })}
+                  />
+                </div>
+
+                {/* File Upload Area */}
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>
+                    Document File Attachment (PDF, JPG, PNG, SVG) *
+                  </label>
+                  
+                  <div style={{
+                    border: '2px dashed #ede6d9',
+                    borderRadius: '10px',
+                    padding: '16px',
+                    textAlign: 'center',
+                    background: '#fdfbf7',
+                    position: 'relative'
+                  }}>
+                    <input 
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg,.webp,.svg"
+                      onChange={handleDocFileUpload}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0,
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <UploadCloud size={28} style={{ color: 'var(--primary)', margin: '0 auto 6px' }} />
+                    <p style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-dark)', margin: 0 }}>
+                      {docFormData.fileName ? docFormData.fileName : 'Click or Drag & Drop to Upload Document'}
+                    </p>
+                    <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+                      {docFormData.fileSize ? `File Size: ${docFormData.fileSize} • Click to replace` : 'Supports PDF, PNG, JPG, SVG up to 8MB'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Notes / Description</label>
+                  <textarea 
+                    className="form-control"
+                    rows="2"
+                    placeholder="Policy number, testing center name, claim reference, or specific vehicle remarks..."
+                    value={docFormData.notes}
+                    onChange={(e) => setDocFormData({ ...docFormData, notes: e.target.value })}
+                  />
+                </div>
+
+              </div>
+
+              <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '16px', paddingTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button type="button" onClick={() => setIsDocModalOpen(false)} className="btn btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <UploadCloud size={14} /> {editingDoc ? 'Update Document' : 'Save Document'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Document In-Browser Preview Modal */}
+      {previewingDoc && (
+        <div className="modal-overlay" style={{ zIndex: 2200 }}>
+          <div className="modal-content" style={{ maxWidth: '780px', width: '95%', borderRadius: '14px', padding: '22px', background: '#ffffff', border: '1.5px solid #ede6d9', maxHeight: '92vh', display: 'flex', flexDirection: 'column' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ background: '#ede6d9', color: '#543c2b', fontWeight: '800', fontFamily: 'monospace', fontSize: '13px', padding: '3px 8px', borderRadius: '5px' }}>
+                  {previewingDoc.carPlate}
+                </span>
+                <span className="badge" style={{ ...getDocCategoryStyle(previewingDoc.category), fontWeight: '700', fontSize: '11px' }}>
+                  {previewingDoc.category}
+                </span>
+                <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)', margin: 0, fontFamily: 'var(--font-heading)' }}>
+                  {previewingDoc.title}
+                </h3>
+              </div>
+              <button onClick={() => setPreviewingDoc(null)} className="modal-close">&times;</button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', marginBottom: '14px' }}>
+              {/* Document Visual Viewer */}
+              <div style={{ background: '#fdfbf7', border: '1.5px solid #ede6d9', borderRadius: '10px', padding: '12px', textAlign: 'center', marginBottom: '14px' }}>
+                {previewingDoc.fileType?.includes('pdf') ? (
+                  <div style={{ height: '420px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                    <FileText size={48} style={{ color: 'var(--primary)' }} />
+                    <p style={{ fontWeight: '700', fontSize: '14px' }}>{previewingDoc.fileName}</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>PDF Document ({previewingDoc.fileSize})</p>
+                    <button onClick={() => handleDownloadDoc(previewingDoc)} className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <Download size={14} /> Open / Download PDF
+                    </button>
+                  </div>
+                ) : (
+                  <img 
+                    src={previewingDoc.fileData} 
+                    alt={previewingDoc.title} 
+                    style={{ maxWidth: '100%', maxHeight: '420px', objectFit: 'contain', borderRadius: '6px' }} 
+                  />
+                )}
+              </div>
+
+              {/* Document Metadata Summary */}
+              <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', fontSize: '12px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px' }}>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Car Plate:</span>
+                  <span style={{ fontWeight: '800', fontFamily: 'monospace' }}>{previewingDoc.carPlate}</span> ({carLabels[previewingDoc.carPlate] || 'Fleet Car'})
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Category:</span>
+                  <span style={{ fontWeight: '700' }}>{previewingDoc.category}</span>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Issue Date:</span>
+                  <span style={{ fontWeight: '600' }}>{previewingDoc.issueDate ? previewingDoc.issueDate.split('-').reverse().join('/') : '—'}</span>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Expiry Date:</span>
+                  <span style={{ fontWeight: '700', color: getDocExpiryInfo(previewingDoc.expiryDate).color }}>
+                    {previewingDoc.expiryDate ? previewingDoc.expiryDate.split('-').reverse().join('/') : 'Permanent / No Expiry'}
+                  </span>
+                </div>
+                <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #ede6d9', paddingTop: '6px', marginTop: '2px' }}>
+                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '11px' }}>Notes / Details:</span>
+                  <span>{previewingDoc.notes || 'Official corporate record.'}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button 
+                  onClick={() => handleDownloadDoc(previewingDoc)} 
+                  className="btn btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}
+                >
+                  <Download size={14} /> Download File
+                </button>
+                <button 
+                  onClick={() => handleWhatsAppShareDoc(previewingDoc)} 
+                  className="btn btn-secondary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#047857' }}
+                >
+                  <Share2 size={14} /> Share on WhatsApp
+                </button>
+              </div>
+
+              <button onClick={() => setPreviewingDoc(null)} className="btn btn-secondary" style={{ fontSize: '12px' }}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

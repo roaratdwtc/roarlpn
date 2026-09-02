@@ -188,6 +188,20 @@ $tables = [
         status VARCHAR(50) DEFAULT 'active',
         assignedDate VARCHAR(50) DEFAULT '',
         notes TEXT DEFAULT NULL
+    )",
+    "car_documents" => "CREATE TABLE IF NOT EXISTS car_documents (
+        id VARCHAR(100) PRIMARY KEY,
+        carPlate VARCHAR(100) DEFAULT '',
+        title VARCHAR(255) DEFAULT '',
+        category VARCHAR(100) DEFAULT 'Mulkiya',
+        issueDate VARCHAR(50) DEFAULT '',
+        expiryDate VARCHAR(50) DEFAULT '',
+        fileName VARCHAR(255) DEFAULT '',
+        fileType VARCHAR(100) DEFAULT '',
+        fileSize VARCHAR(50) DEFAULT '',
+        fileData LONGTEXT DEFAULT NULL,
+        notes TEXT DEFAULT NULL,
+        uploadedAt VARCHAR(50) DEFAULT ''
     )"
 ];
 
