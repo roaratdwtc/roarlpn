@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   LayoutDashboard, 
   CalendarRange, 
@@ -15,7 +15,10 @@ import {
   ShieldAlert,
   Settings,
   RefreshCw,
-  Sparkles
+  Sparkles,
+  FileText,
+  Wrench,
+  Building2
 } from 'lucide-react';
 import DashboardView from './components/DashboardView';
 import BookingsView from './components/BookingsView';
@@ -28,8 +31,11 @@ import CustomerBookingView from './components/CustomerBookingView';
 import LoginView from './components/LoginView';
 import AdminAssistantView from './components/AdminAssistantView';
 import CompanyDetailsView from './components/CompanyDetailsView';
+import CompanyDocumentsView from './components/CompanyDocumentsView';
+import CarExpensesView from './components/CarExpensesView';
+import CompanyExpensesView from './components/CompanyExpensesView';
 // import MasterAdminView from './components/MasterAdminView';
-import { initialBookings, initialDrivers, initialExpenses, initialPartners, initialCars, initialPackages, initialCoupons } from './mockData';
+import { initialBookings, initialDrivers, initialExpenses, initialPartners, initialCars, initialPackages, initialCoupons, initialCarExpenses, initialCompanyExpenses, initialCompanySims } from './mockData';
 // Database configuration layer
 
 export default function App() {
@@ -39,7 +45,7 @@ export default function App() {
   const [profileTab, setProfileTab] = useState('adminInfo'); // 'adminInfo' or 'companyInfo'
 
   // Database version reset check
-  const DB_VERSION = 'v31.0';
+  const DB_VERSION = 'v38.0';
   useEffect(() => {
     localStorage.setItem('safari_db_version', DB_VERSION);
   }, []);
@@ -152,7 +158,32 @@ export default function App() {
     return getLocalStorageItemSafe('safari_coupons', initialCoupons);
   });
 
+  const [carExpenses, setCarExpenses] = useState(() => {
+    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
+    if (isNewVersion) {
+      localStorage.setItem('safari_car_expenses', JSON.stringify(initialCarExpenses));
+      return initialCarExpenses;
+    }
+    return getLocalStorageItemSafe('safari_car_expenses', initialCarExpenses);
+  });
 
+  const [companyExpenses, setCompanyExpenses] = useState(() => {
+    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
+    if (isNewVersion) {
+      localStorage.setItem('safari_company_expenses', JSON.stringify(initialCompanyExpenses));
+      return initialCompanyExpenses;
+    }
+    return getLocalStorageItemSafe('safari_company_expenses', initialCompanyExpenses);
+  });
+
+  const [companySims, setCompanySims] = useState(() => {
+    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
+    if (isNewVersion) {
+      localStorage.setItem('safari_company_sims', JSON.stringify(initialCompanySims));
+      return initialCompanySims;
+    }
+    return getLocalStorageItemSafe('safari_company_sims', initialCompanySims);
+  });
 
   const [customers, setCustomers] = useState(() => {
     return getLocalStorageItemSafe('safari_customers', []);
@@ -171,6 +202,19 @@ export default function App() {
   const [viewingBookingFromDashboard, setViewingBookingFromDashboard] = useState(null);
   const [viewingDriverFromDashboard, setViewingDriverFromDashboard] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
+
+  const [companyDocuments, setCompanyDocuments] = useState(() => {
+    return getLocalStorageItemSafe('safari_company_documents', []);
+  });
+
+  useEffect(() => {
+    try {
+      const documentsMetadata = (companyDocuments || []).map(({ fileData, ...rest }) => rest);
+      localStorage.setItem('safari_company_documents', JSON.stringify(documentsMetadata));
+    } catch (e) {
+      console.warn("Failed to write company documents metadata to localStorage:", e);
+    }
+  }, [companyDocuments]);
 
   const [companyDetails, setCompanyDetails] = useState(() => {
     return getLocalStorageItemSafe('safari_company_details', {
@@ -222,136 +266,118 @@ export default function App() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const result = await res.json();
         if (result.status === 'success' && result.data) {
-          const { bookings: bList, drivers: dList, expenses: eList, partners: pList, cars: cList, packages: pkgList, coupons: cpnList, customers: custList, settings: settingsList, company_details: compDetails } = result.data;
-          const seedPayload = {};
+          const { bookings: bList, drivers: dList, expenses: eList, partners: pList, cars: cList, packages: pkgList, coupons: cpnList, customers: custList, settings: settingsList, company_details: compDetails, company_documents: docList, car_expenses: ceList, company_expenses: compExpList, company_sims: simList } = result.data;
           
-          let processedBList = bList || [];
-          let listUpdated = false;
+          if (bList && bList.length > 0) {
+            let processedBList = bList;
+            let listUpdated = false;
 
-          if (!processedBList || processedBList.length === 0) {
-            processedBList = initialBookings || [];
-            listUpdated = true;
-          }
-
-          // Ensure all bookings have 7-digit IDs (1000000 - 9999999)
-          let max7DigitId = 1000000;
-          processedBList.forEach(b => {
-            const numId = parseInt(b.id);
-            if (!isNaN(numId) && numId >= 1000000 && numId <= 9999999) {
-              if (numId > max7DigitId) {
-                max7DigitId = numId;
+            // Ensure all bookings have 7-digit IDs (1000000 - 9999999)
+            let max7DigitId = 1000000;
+            processedBList.forEach(b => {
+              const numId = parseInt(b.id);
+              if (!isNaN(numId) && numId >= 1000000 && numId <= 9999999) {
+                if (numId > max7DigitId) {
+                  max7DigitId = numId;
+                }
               }
-            }
-          });
+            });
 
-          processedBList = processedBList.map(b => {
-            const numId = parseInt(b.id);
-            const is7Digit = !isNaN(numId) && numId >= 1000000 && numId <= 9999999;
-            if (!is7Digit) {
-              listUpdated = true;
-              const oldId = b.id;
-              max7DigitId += 1;
-              const newId = String(max7DigitId);
-              const updatedB = { ...b, id: newId };
-              
-              if (bList && bList.some(item => item.id === oldId)) {
+            processedBList = processedBList.map(b => {
+              const numId = parseInt(b.id);
+              const is7Digit = !isNaN(numId) && numId >= 1000000 && numId <= 9999999;
+              if (!is7Digit) {
+                listUpdated = true;
+                const oldId = b.id;
+                max7DigitId += 1;
+                const newId = String(max7DigitId);
+                const updatedB = { ...b, id: newId };
+                
                 fetch(`api.php?action=delete&table=bookings&company_id=${companyId}`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ id: oldId })
                 });
-              }
 
-              fetch(`api.php?action=save&table=bookings&company_id=${companyId}`, {
+                fetch(`api.php?action=save&table=bookings&company_id=${companyId}`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(updatedB)
+                });
+
+                return updatedB;
+              }
+              return b;
+            });
+
+            const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            processedBList = processedBList.map(b => {
+               if (b.date < todayStr) {
+                 if (b.status !== 'completed' && b.status !== 'cancelled') {
+                   listUpdated = true;
+                   const updatedB = { ...b, status: 'completed' };
+                   fetch(`api.php?action=save&table=bookings&company_id=${companyId}`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(updatedB)
+                   });
+                   return updatedB;
+                 }
+               } else {
+                 if (!b.status) {
+                   listUpdated = true;
+                   const updatedB = { ...b, status: 'confirmed' };
+                   fetch(`api.php?action=save&table=bookings&company_id=${companyId}`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify(updatedB)
+                   });
+                   return updatedB;
+                 }
+               }
+               return b;
+            });
+
+            setBookings(processedBList);
+            localStorage.setItem('safari_bookings', JSON.stringify(processedBList));
+
+            const savedRefSetting = settingsList ? settingsList.find(s => s.setting_key === 'last_booking_ref') : null;
+            const currentRefSettingVal = savedRefSetting ? parseInt(savedRefSetting.setting_value) : 0;
+            if (max7DigitId > currentRefSettingVal) {
+              fetch(`api.php?action=save_setting&company_id=${companyId}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedB)
+                body: JSON.stringify({ key: 'last_booking_ref', value: String(max7DigitId) })
               });
-
-              return updatedB;
+              const updatedSettings = (settingsList || []).some(s => s.setting_key === 'last_booking_ref')
+                ? settingsList.map(s => s.setting_key === 'last_booking_ref' ? { ...s, setting_value: String(max7DigitId) } : s)
+                : [...(settingsList || []), { setting_key: 'last_booking_ref', setting_value: String(max7DigitId) }];
+              setSettings(updatedSettings);
+              localStorage.setItem('safari_settings', JSON.stringify(updatedSettings));
             }
-            return b;
-          });
-
-          const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-          processedBList = processedBList.map(b => {
-             if (b.date < todayStr) {
-               if (b.status !== 'completed' && b.status !== 'cancelled') {
-                 listUpdated = true;
-                 const updatedB = { ...b, status: 'completed' };
-                 fetch(`api.php?action=save&table=bookings&company_id=${companyId}`, {
-                   method: 'POST',
-                   headers: { 'Content-Type': 'application/json' },
-                   body: JSON.stringify(updatedB)
-                 });
-                 return updatedB;
-               }
-             } else {
-               if (!b.status) {
-                 listUpdated = true;
-                 const updatedB = { ...b, status: 'confirmed' };
-                 fetch(`api.php?action=save&table=bookings&company_id=${companyId}`, {
-                   method: 'POST',
-                   headers: { 'Content-Type': 'application/json' },
-                   body: JSON.stringify(updatedB)
-                 });
-                 return updatedB;
-               }
-             }
-             return b;
-          });
-
-          setBookings(processedBList);
-          localStorage.setItem('safari_bookings', JSON.stringify(processedBList));
-
-          const savedRefSetting = settingsList ? settingsList.find(s => s.setting_key === 'last_booking_ref') : null;
-          const currentRefSettingVal = savedRefSetting ? parseInt(savedRefSetting.setting_value) : 0;
-          if (max7DigitId > currentRefSettingVal) {
-            fetch(`api.php?action=save_setting&company_id=${companyId}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ key: 'last_booking_ref', value: String(max7DigitId) })
-            });
-            const updatedSettings = (settingsList || []).some(s => s.setting_key === 'last_booking_ref')
-              ? settingsList.map(s => s.setting_key === 'last_booking_ref' ? { ...s, setting_value: String(max7DigitId) } : s)
-              : [...(settingsList || []), { setting_key: 'last_booking_ref', setting_value: String(max7DigitId) }];
-            setSettings(updatedSettings);
-            localStorage.setItem('safari_settings', JSON.stringify(updatedSettings));
           }
           
           if (dList && dList.length > 0) {
             setDrivers(dList);
-          } else {
-            setDrivers(initialDrivers);
-            localStorage.setItem('safari_drivers', JSON.stringify(initialDrivers));
-            seedPayload.drivers = initialDrivers;
+            localStorage.setItem('safari_drivers', JSON.stringify(dList));
           }
           
           if (eList && eList.length > 0) {
             setExpenses(eList);
-          } else {
-            setExpenses(initialExpenses);
-            localStorage.setItem('safari_expenses', JSON.stringify(initialExpenses));
-            seedPayload.expenses = initialExpenses;
+            localStorage.setItem('safari_expenses', JSON.stringify(eList));
           }
           
           if (pList && pList.length > 0) {
             setPartners(pList);
-          } else {
-            setPartners(initialPartners);
-            localStorage.setItem('safari_partners', JSON.stringify(initialPartners));
-            seedPayload.partners = initialPartners;
+            localStorage.setItem('safari_partners', JSON.stringify(pList));
           }
           
           if (cList && cList.length > 0) {
             setCars(cList);
-          } else {
-            setCars(initialCars);
-            localStorage.setItem('safari_cars', JSON.stringify(initialCars));
-            seedPayload.cars = initialCars;
+            localStorage.setItem('safari_cars', JSON.stringify(cList));
           }
 
-           if (pkgList && pkgList.length > 0) {
+          if (pkgList && pkgList.length > 0) {
              const missing = initialPackages.filter(initPkg => !pkgList.some(p => p.id === initPkg.id));
              if (missing.length > 0) {
                const merged = [...pkgList, ...missing];
@@ -366,50 +392,54 @@ export default function App() {
                });
              } else {
                setPackages(pkgList);
+               localStorage.setItem('safari_packages', JSON.stringify(pkgList));
              }
-           } else {
-             setPackages(initialPackages);
-             localStorage.setItem('safari_packages', JSON.stringify(initialPackages));
-             seedPayload.packages = initialPackages;
-           }
+          }
 
           if (cpnList && cpnList.length > 0) {
             setCoupons(cpnList);
-          } else {
-            setCoupons(initialCoupons);
-            localStorage.setItem('safari_coupons', JSON.stringify(initialCoupons));
-            seedPayload.coupons = initialCoupons;
+            localStorage.setItem('safari_coupons', JSON.stringify(cpnList));
           }
 
           if (custList && custList.length > 0) {
             setCustomers(custList);
-          } else {
-            setCustomers([]);
-            localStorage.setItem('safari_customers', JSON.stringify([]));
+            localStorage.setItem('safari_customers', JSON.stringify(custList));
           }
 
           if (settingsList && settingsList.length > 0) {
             setSettings(settingsList);
             localStorage.setItem('safari_settings', JSON.stringify(settingsList));
-          } else {
-            const defaultSettings = [{ setting_key: 'show_coupons', setting_value: '1' }];
-            setSettings(defaultSettings);
-            localStorage.setItem('safari_settings', JSON.stringify(defaultSettings));
           }
           
           if (compDetails && compDetails.length > 0) {
             setCompanyDetails(compDetails[0]);
             localStorage.setItem('safari_company_details', JSON.stringify(compDetails[0]));
+          } else if (compDetails && compDetails.id) {
+            setCompanyDetails(compDetails);
+            localStorage.setItem('safari_company_details', JSON.stringify(compDetails));
+          }
+          if (docList && docList.length > 0) {
+            setCompanyDocuments(docList);
+            try {
+              const docMetadata = docList.map(({ fileData, ...rest }) => rest);
+              localStorage.setItem('safari_company_documents', JSON.stringify(docMetadata));
+            } catch (e) {
+              console.warn("Failed to write loaded company documents to localStorage:", e);
+            }
+          }
+          if (ceList && ceList.length > 0) {
+            setCarExpenses(ceList);
+            localStorage.setItem('safari_car_expenses', JSON.stringify(ceList));
+          }
+          if (compExpList && compExpList.length > 0) {
+            setCompanyExpenses(compExpList);
+            localStorage.setItem('safari_company_expenses', JSON.stringify(compExpList));
+          }
+          if (simList && simList.length > 0) {
+            setCompanySims(simList);
+            localStorage.setItem('safari_company_sims', JSON.stringify(simList));
           }
           
-          if (Object.keys(seedPayload).length > 0) {
-            console.log("Seeding empty database tables:", Object.keys(seedPayload));
-            fetch(`api.php?action=reseed&company_id=${companyId}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(seedPayload)
-            }).catch(err => console.error("Auto-seeding empty tables failed:", err));
-          }
           setDbStatus('success');
         } else {
           console.warn("MySQL returned error, using local storage cache:", result.message);
@@ -480,9 +510,71 @@ export default function App() {
     localStorage.setItem('safari_customers', JSON.stringify(customers));
   }, [customers]);
 
+  useEffect(() => {
+    localStorage.setItem('safari_car_expenses', JSON.stringify(carExpenses));
+  }, [carExpenses]);
+
+  useEffect(() => {
+    localStorage.setItem('safari_company_expenses', JSON.stringify(companyExpenses));
+  }, [companyExpenses]);
+
+  useEffect(() => {
+    localStorage.setItem('safari_company_sims', JSON.stringify(companySims));
+  }, [companySims]);
+
+  const bookingsRef = useRef(bookings);
+  const driversRef = useRef(drivers);
+  const expensesRef = useRef(expenses);
+  const partnersRef = useRef(partners);
+  const carsRef = useRef(cars);
+  const packagesRef = useRef(packages);
+  const couponsRef = useRef(coupons);
+  const customersRef = useRef(customers);
+  const settingsRef = useRef(settings);
+  const companyDocumentsRef = useRef(companyDocuments);
+  const carExpensesRef = useRef(carExpenses);
+  const companyExpensesRef = useRef(companyExpenses);
+  const companySimsRef = useRef(companySims);
+
+  useEffect(() => { bookingsRef.current = bookings; }, [bookings]);
+  useEffect(() => { driversRef.current = drivers; }, [drivers]);
+  useEffect(() => { expensesRef.current = expenses; }, [expenses]);
+  useEffect(() => { partnersRef.current = partners; }, [partners]);
+  useEffect(() => { carsRef.current = cars; }, [cars]);
+  useEffect(() => { packagesRef.current = packages; }, [packages]);
+  useEffect(() => { couponsRef.current = coupons; }, [coupons]);
+  useEffect(() => { customersRef.current = customers; }, [customers]);
+  useEffect(() => { settingsRef.current = settings; }, [settings]);
+  useEffect(() => { companyDocumentsRef.current = companyDocuments; }, [companyDocuments]);
+  useEffect(() => { carExpensesRef.current = carExpenses; }, [carExpenses]);
+  useEffect(() => { companyExpensesRef.current = companyExpenses; }, [companyExpenses]);
+  useEffect(() => { companySimsRef.current = companySims; }, [companySims]);
+
+  const getLatestStateRef = (colName) => {
+    switch (colName) {
+      case 'bookings': return bookingsRef;
+      case 'drivers': return driversRef;
+      case 'expenses': return expensesRef;
+      case 'partners': return partnersRef;
+      case 'cars': return carsRef;
+      case 'packages': return packagesRef;
+      case 'coupons': return couponsRef;
+      case 'customers': return customersRef;
+      case 'settings': return settingsRef;
+      case 'company_documents': return companyDocumentsRef;
+      case 'car_expenses': return carExpensesRef;
+      case 'company_expenses': return companyExpensesRef;
+      case 'company_sims': return companySimsRef;
+      default: return null;
+    }
+  };
+
   // 3. MySQL REST Sync Factory
-  const createFirestoreSync = (colName, currentState, localSetter) => {
+  const createFirestoreSync = (colName, currentStateDummy, localSetter) => {
     return async (value) => {
+      const stateRef = getLatestStateRef(colName);
+      const currentState = stateRef ? stateRef.current : [];
+      
       let nextList;
       if (typeof value === 'function') {
         nextList = value(currentState);
@@ -629,6 +721,10 @@ export default function App() {
   const setPackagesCustom = createFirestoreSync('packages', packages, setPackages);
   const setCouponsCustom = createFirestoreSync('coupons', coupons, setCoupons);
   const setCustomersCustom = createFirestoreSync('customers', customers, setCustomers);
+  const setCompanyDocumentsCustom = createFirestoreSync('company_documents', companyDocuments, setCompanyDocuments);
+  const setCarExpensesCustom = createFirestoreSync('car_expenses', carExpenses, setCarExpenses);
+  const setCompanyExpensesCustom = createFirestoreSync('company_expenses', companyExpenses, setCompanyExpenses);
+  const setCompanySimsCustom = createFirestoreSync('company_sims', companySims, setCompanySims);
 
   // Tab Header Mapping
   const tabTitles = {
@@ -641,9 +737,12 @@ export default function App() {
     partners: 'Partners Setup & Statement Generator',
     carsFreelancers: 'Cars & Freelancer Profiles Manager',
     carFinance: 'Car Finance Ledger',
+    carExpenses: 'Car Expenses & Fleet Maintenance',
+    companyExpenses: 'Company Expenses & Sales SIMs',
     whatsappAgent: 'WhatsApp Agent & CRM Sandbox',
     adminAssistant: 'Admin AI Assistant Chat',
-    companyDetails: 'Company Profile Setup'
+    companyDetails: 'Company Profile Setup',
+    companyDocuments: 'Company Documents Registry'
   };
 
   // Update browser window tab title to match current panel
@@ -926,6 +1025,30 @@ export default function App() {
               </div>
             </li>
           )}
+          <li>
+            <div 
+              onClick={() => handleTabChange('carExpenses')} 
+              className={`nav-item ${activeTab === 'carExpenses' ? 'active' : ''}`}
+            >
+              <Wrench /> Car Expenses
+            </div>
+          </li>
+          <li>
+            <div 
+              onClick={() => handleTabChange('companyExpenses')} 
+              className={`nav-item ${activeTab === 'companyExpenses' ? 'active' : ''}`}
+            >
+              <Building2 /> Company Expenses
+            </div>
+          </li>
+          <li>
+            <div 
+              onClick={() => handleTabChange('companyDocuments')} 
+              className={`nav-item ${activeTab === 'companyDocuments' ? 'active' : ''}`}
+            >
+              <FileText /> Company Documents
+            </div>
+          </li>
           {(!companyDetails.features || companyDetails.features.ai_assistant !== false) && (
             <li>
               <div 
@@ -1017,6 +1140,8 @@ export default function App() {
               setViewingBookingFromDashboard={setViewingBookingFromDashboard}
               setViewingDriverFromDashboard={setViewingDriverFromDashboard}
               setActiveCardFilter={setFilterStatus}
+              settings={settings}
+              onSaveSetting={saveSetting}
             />
           )}
 
@@ -1109,8 +1234,44 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'carExpenses' && (
+            <CarExpensesView 
+              carExpenses={carExpenses} 
+              setCarExpenses={setCarExpensesCustom} 
+              cars={cars} 
+              drivers={drivers}
+              companyId={companyId}
+            />
+          )}
+
+          {activeTab === 'companyExpenses' && (
+            <CompanyExpensesView 
+              companyExpenses={companyExpenses} 
+              setCompanyExpenses={setCompanyExpensesCustom} 
+              companySims={companySims} 
+              setCompanySims={setCompanySimsCustom} 
+              companyDetails={companyDetails}
+              companyId={companyId}
+            />
+          )}
+
+          {activeTab === 'companyDocuments' && (
+            <CompanyDocumentsView 
+              documents={companyDocuments} 
+              setDocuments={setCompanyDocumentsCustom} 
+              settings={settings}
+              onSaveSetting={saveSetting}
+            />
+          )}
+
           {activeTab === 'adminAssistant' && (
-            <AdminAssistantView />
+            <AdminAssistantView 
+              bookings={bookings}
+              setBookings={setBookings}
+              drivers={drivers}
+              coupons={coupons}
+              setCoupons={setCoupons}
+            />
           )}
         </section>
       </main>

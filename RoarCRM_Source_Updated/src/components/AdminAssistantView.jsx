@@ -10,7 +10,13 @@ const SUGGESTIONS = [
   "Are there any double-booked drivers?"
 ];
 
-export default function AdminAssistantView() {
+export default function AdminAssistantView({
+  bookings = [],
+  setBookings,
+  drivers = [],
+  coupons = [],
+  setCoupons
+}) {
   const [messages, setMessages] = useState([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,6 +25,135 @@ export default function AdminAssistantView() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  const handleLocalAssistant = (queryText) => {
+    const text = queryText.toLowerCase().trim();
+    const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+
+    // 1. Double booked drivers
+    if (text.includes("double") || text.includes("clash") || text.includes("conflict")) {
+      const driverDays = {};
+      bookings.forEach(b => {
+        if (b.driverId && b.status !== 'cancelled') {
+          const key = `${b.date}_${b.driverId}`;
+          if (!driverDays[key]) driverDays[key] = [];
+          driverDays[key].push(b);
+        }
+      });
+
+      const conflicts = [];
+      Object.entries(driverDays).forEach(([key, list]) => {
+        if (list.length > 1) {
+          const driverObj = drivers.find(d => d.id === list[0].driverId);
+          conflicts.push({
+            driverName: driverObj ? driverObj.name : 'Unknown Driver',
+            date: list[0].date,
+            bookings: list.map(b => `${b.customerName} (${b.packageName})`)
+          });
+        }
+      });
+
+      if (conflicts.length === 0) {
+        return "✅ **No driver conflicts found!** All active drivers are assigned to a maximum of one booking per day.";
+      }
+
+      let reply = "⚠️ **Driver Conflicts Detected:**\n\n";
+      conflicts.forEach(c => {
+        reply += `- **${c.driverName}** is assigned to **${c.bookings.length} tours** on **${c.date.split('-').reverse().join('/')}**:\n`;
+        c.bookings.forEach(b => {
+          reply += `  - ${b}\n`;
+        });
+      });
+      return reply;
+    }
+
+    // 2. Assign drivers
+    if (text.includes("assign") || text.includes("auto-assign") || text.includes("allocate")) {
+      const pendingBookings = bookings.filter(b => (!b.driverId || b.driverId === '') && b.status === 'confirmed');
+      if (pendingBookings.length === 0) {
+        return "✅ **Driver Allocation**: All confirmed bookings already have drivers assigned!";
+      }
+
+      if (drivers.length === 0) {
+        return "❌ **Failed to assign**: No drivers exist in the system.";
+      }
+
+      // Allocate round-robin
+      let driverIdx = 0;
+      const updatedBookings = bookings.map(b => {
+        if ((!b.driverId || b.driverId === '') && b.status === 'confirmed') {
+          const assignedDriver = drivers[driverIdx % drivers.length];
+          driverIdx++;
+          return { ...b, driverId: assignedDriver.id };
+        }
+        return b;
+      });
+
+      if (setBookings) {
+        setBookings(updatedBookings);
+      }
+
+      let reply = `🤖 **Auto-Assigned Drivers to ${pendingBookings.length} Bookings:**\n\n`;
+      let currentIdx = 0;
+      bookings.forEach(b => {
+        if ((!b.driverId || b.driverId === '') && b.status === 'confirmed') {
+          const assignedDriver = drivers[currentIdx % drivers.length];
+          reply += `- **${b.customerName}** (${b.packageName}) ➡️ assigned to **${assignedDriver.name}**\n`;
+          currentIdx++;
+        }
+      });
+      return reply;
+    }
+
+    // 3. Create coupon
+    if (text.includes("coupon") || text.includes("promo") || text.includes("discount")) {
+      const nameMatch = queryText.match(/coupon\s+([A-Za-z0-9_-]+)/i) || queryText.match(/code\s+([A-Za-z0-9_-]+)/i);
+      const discountMatch = queryText.match(/(\d+)\s*%/);
+      
+      const couponCode = nameMatch ? nameMatch[1].toUpperCase() : "PROMO" + Math.floor(1000 + Math.random() * 9000);
+      const discountVal = discountMatch ? parseInt(discountMatch[1]) : 10;
+
+      const newCoupon = {
+        id: "cpn_" + Math.random().toString(36).substr(2, 9),
+        code: couponCode,
+        discount: discountVal,
+        type: 'percentage',
+        status: 'active'
+      };
+
+      if (setCoupons) {
+        setCoupons([...coupons, newCoupon]);
+      }
+
+      return `✨ **Promo Coupon Created:**\n\n- **Code**: \`${couponCode}\`\n- **Value**: \`${discountVal}%\` discount\n- **Status**: Active\n\nThis coupon code is now ready for use on the client booking form!`;
+    }
+
+    // 4. Today's stats
+    if (text.includes("stat") || text.includes("summary") || text.includes("today") || text.includes("report")) {
+      const todayBookings = bookings.filter(b => b.date === todayStr);
+      const confirmedToday = todayBookings.filter(b => b.status === 'confirmed');
+      const completedToday = todayBookings.filter(b => b.status === 'completed');
+      const revenueToday = todayBookings.reduce((sum, b) => sum + (parseFloat(b.price) || 0), 0);
+      
+      let reply = `📊 **Today's Operational Dashboard Summary (${todayStr.split('-').reverse().join('/')}):**\n\n`;
+      reply += `- **Total Bookings**: \`${todayBookings.length}\` tours logged today\n`;
+      reply += `- **Confirmed (Upcoming)**: \`${confirmedToday.length}\` slots\n`;
+      reply += `- **Completed**: \`${completedToday.length}\` slots\n`;
+      reply += `- **Gross Today Revenue**: \`${revenueToday.toLocaleString()} AED\`\n`;
+      
+      const driversAssigned = Array.from(new Set(
+        todayBookings.map(b => {
+          const dObj = drivers.find(d => d.id === b.driverId);
+          return dObj ? dObj.name : null;
+        }).filter(Boolean)
+      ));
+
+      reply += `- **Assigned Drivers**: ${driversAssigned.join(', ') || '_None_'}`;
+      return reply;
+    }
+
+    return `👋 **Hi! I am your Offline CRM Admin Assistant.**\n\nI couldn't reach the backend AI microservice (localhost:8000), but I have loaded the live CRM database in-memory to assist you! Try requesting any of these actions:\n\n1. 📊 "Show today's stats summary"\n2. 🚗 "Assign drivers to pending bookings"\n3. 🏷️ "Create coupon SUMMERSALE with 15% discount"\n4. ⚠️ "Are there any double-booked drivers?"`;
+  };
 
   const performChatFetch = async (currentHistory, queryText) => {
     setLoading(true);
@@ -31,10 +166,15 @@ export default function AdminAssistantView() {
           query: queryText
         })
       });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       const data = await response.json();
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
     } catch (err) {
-      setMessages((prev) => [...prev, { role: "assistant", content: `Error: ${err.message}` }]);
+      console.warn("AI Backend unavailable, executing query via offline CRM logic:", err);
+      const offlineReply = handleLocalAssistant(queryText);
+      setMessages((prev) => [...prev, { role: "assistant", content: offlineReply }]);
     } finally {
       setLoading(false);
     }

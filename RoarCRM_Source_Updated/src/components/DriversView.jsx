@@ -73,16 +73,16 @@ function printDriverStatement({ driver, stats, ledgerData, ledgerStartDate, ledg
       <span class="s-value">${stats.totalTrips}</span>
     </div>
     <div class="summary-card">
-      <span class="s-label">Trip Payout</span>
-      <span class="s-value">AED ${(stats.salarySum || 0).toFixed(0)}</span>
+      <span class="s-label">Trip Payout (S+F)</span>
+      <span class="s-value">AED ${((stats.salarySum || 0) + (stats.petrolSum || 0)).toFixed(0)}</span>
     </div>
     <div class="summary-card">
-      <span class="s-label">Camp Use</span>
-      <span class="s-value">AED ${(stats.campUseSum || 0).toFixed(0)}</span>
+      <span class="s-label">Camp Use &amp; Quadbike</span>
+      <span class="s-value">AED ${((stats.campUseSum || 0) + (stats.quadbikeSum || 0)).toFixed(0)}</span>
     </div>
     <div class="summary-card highlight">
-      <span class="s-label">Total Outstanding</span>
-      <span class="s-value">AED ${(stats.totalPayout || 0).toFixed(0)}</span>
+      <span class="s-label">Net Profit</span>
+      <span class="s-value">AED ${(stats.totalCollected - stats.totalPayout).toFixed(0)}</span>
     </div>
   </div>
 
@@ -91,7 +91,7 @@ function printDriverStatement({ driver, stats, ledgerData, ledgerStartDate, ledg
       <tr>
         <th>Date</th>
         <th>Trips</th>
-        <th>Total Collection</th>
+        <th>Total Payment on Arrival</th>
         <th>Camp Use</th>
         <th>S+F</th>
         <th>Expenses</th>
@@ -197,10 +197,11 @@ export default function DriversView({ drivers, setDrivers, bookings, expenses, p
 
     const totalTrips = driverBookings.length;
 
-    // Calculate collections (booking price driver collects from customer - only if tour date is passed/today)
+    // Calculate collections (booking price driver collects from customer - only if tour date is passed/today and payment option is 'Payment on Arrival' / 'Collection')
     const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
     const totalCollected = driverBookings.reduce((sum, b) => {
-      if (b.date <= todayStr) {
+      const isArrival = (b.paymentOption === 'Payment on Arrival' || b.paymentOption === 'Collection' || !b.paymentOption);
+      if (b.date <= todayStr && isArrival) {
         return sum + (parseFloat(b.price) || 0);
       }
       return sum;
@@ -320,7 +321,7 @@ export default function DriversView({ drivers, setDrivers, bookings, expenses, p
       </div>
 
       {/* Grid of Driver Cards */}
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
+      <div className="stats-grid driver-cards-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
         {drivers.map(driver => {
           const stats = getDriverStats(driver.id);
           return (
@@ -445,7 +446,8 @@ export default function DriversView({ drivers, setDrivers, bookings, expenses, p
 
               const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
               const dayCollections = dayBookings.reduce((sum, b) => {
-                if (b.date <= todayStr) {
+                const isArrival = (b.paymentOption === 'Payment on Arrival' || b.paymentOption === 'Collection' || !b.paymentOption);
+                if (b.date <= todayStr && isArrival) {
                   return sum + (parseFloat(b.price) || 0);
                 }
                 return sum;
@@ -511,12 +513,12 @@ export default function DriversView({ drivers, setDrivers, bookings, expenses, p
 
                 <div className="modal-stat-box highlight">
                   <span>OPERATIONAL COSTS</span>
-                  <strong style={{ color: 'var(--success)' }}>AED {(stats.petrolSum + stats.campUseSum).toFixed(1)}</strong>
+                  <strong style={{ color: 'var(--success)' }}>AED {stats.totalPayout.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</strong>
                 </div>
 
                 <div className="modal-stat-box highlight">
-                  <span>OUTSTANDING</span>
-                  <strong style={{ color: 'var(--success)' }}>AED {stats.totalPayout.toFixed(1)}</strong>
+                  <span>NET PROFIT</span>
+                  <strong style={{ color: 'var(--success)' }}>AED {(stats.totalCollected - stats.totalPayout).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</strong>
                 </div>
               </div>
 
@@ -593,19 +595,19 @@ export default function DriversView({ drivers, setDrivers, bookings, expenses, p
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px', marginBottom: '12px' }}>
                     <div>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>TRIP PAYOUTS</span>
-                      <strong>AED {stats.salarySum.toFixed(0)}</strong>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>TRIP PAYOUTS (S+F)</span>
+                      <strong>AED {(stats.salarySum + stats.petrolSum).toFixed(0)}</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>CAMP USE EXPENSE</span>
-                      <strong>AED {stats.campUseSum.toFixed(0)}</strong>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>CAMP USE & QUADBIKE</span>
+                      <strong>AED {(stats.campUseSum + stats.quadbikeSum).toFixed(0)}</strong>
                     </div>
                     <div>
                       <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>MISC CREDITS</span>
                       <strong>AED {stats.miscSum.toFixed(0)}</strong>
                     </div>
                     <div>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>TOTAL OUTSTANDING</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block' }}>TOTAL PAYOUT DUE</span>
                       <strong style={{ color: 'var(--primary)' }}>AED {stats.totalPayout.toFixed(0)}</strong>
                     </div>
                   </div>
@@ -782,13 +784,17 @@ export default function DriversView({ drivers, setDrivers, bookings, expenses, p
                                 </span>
                               </td>
                               <td>
-                                {b.date < new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0] ? (
+                                {(b.paymentOption && b.paymentOption !== 'Payment on Arrival' && b.paymentOption !== 'Collection') ? (
                                   <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#047857', fontWeight: '700', fontSize: '11px', padding: '4px 8px', borderRadius: '4px' }}>
-                                    Paid
+                                    Prepaid
+                                  </span>
+                                ) : b.date < new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0] ? (
+                                  <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.12)', color: '#047857', fontWeight: '700', fontSize: '11px', padding: '4px 8px', borderRadius: '4px' }}>
+                                    Collected
                                   </span>
                                 ) : (
                                   <span className="badge" style={{ background: 'rgba(245, 158, 11, 0.12)', color: '#b45309', fontWeight: '700', fontSize: '11px', padding: '4px 8px', borderRadius: '4px' }}>
-                                    To be Paid
+                                    Payment on Arrival
                                   </span>
                                 )}
                               </td>
@@ -840,7 +846,7 @@ export default function DriversView({ drivers, setDrivers, bookings, expenses, p
                       <th>Customer Name</th>
                       <th>Safari Package</th>
                       <th style={{ textAlign: 'center' }}>Guests</th>
-                      <th style={{ textAlign: 'right' }}>Cash Collections</th>
+                      <th style={{ textAlign: 'right' }}>Payment on Arrival</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -965,6 +971,18 @@ export default function DriversView({ drivers, setDrivers, bookings, expenses, p
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '11px' }}>SAFARI STATUS</span>
                     <span className="badge badge-confirmed">confirmed</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '11px' }}>PAYMENT OPTION</span>
+                    <span className="badge badge-partner" style={{ textTransform: 'capitalize' }}>
+                      {selectedBookingForPopup.paymentOption === 'Collection' ? 'Payment on Arrival' : (selectedBookingForPopup.paymentOption || 'Payment on Arrival')}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '11px' }}>PENDING PAYMENT ON ARRIVAL</span>
+                    <span style={{ fontWeight: '700', color: (selectedBookingForPopup.paymentOption === 'Payment on Arrival' || selectedBookingForPopup.paymentOption === 'Collection' || !selectedBookingForPopup.paymentOption) ? 'var(--primary)' : 'var(--text-muted)' }}>
+                      {(selectedBookingForPopup.paymentOption === 'Payment on Arrival' || selectedBookingForPopup.paymentOption === 'Collection' || !selectedBookingForPopup.paymentOption) ? `${selectedBookingForPopup.price} AED` : '0 AED'}
+                    </span>
                   </div>
                 </div>
               </div>

@@ -20,8 +20,128 @@ export default function DashboardView({
   setFilterDriver,
   setViewingBookingFromDashboard,
   setViewingDriverFromDashboard,
-  setActiveCardFilter
+  setActiveCardFilter,
+  settings = [],
+  onSaveSetting
 }) {
+
+  const [isAdSpendOpen, setIsAdSpendOpen] = useState(false);
+  const [adSpendMonth, setAdSpendMonth] = useState(() => {
+    const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    return todayStr.substring(0, 7); // 'YYYY-MM'
+  });
+  const [metaBudget, setMetaBudget] = useState('');
+  const [googleBudget, setGoogleBudget] = useState('');
+
+  // Parse monthly ad spends settings
+  const monthlyAdSpends = (() => {
+    try {
+      const setting = settings.find(s => s.setting_key === 'monthly_ad_spends')?.setting_value;
+      return setting ? JSON.parse(setting) : {};
+    } catch (e) {
+      console.error("Failed to parse monthly_ad_spends:", e);
+      return {};
+    }
+  })();
+
+  // Keep input fields synced when selected month or settings change
+  React.useEffect(() => {
+    const budget = monthlyAdSpends[adSpendMonth] || { meta: '', google: '' };
+    setMetaBudget(budget.meta === 0 ? '0' : String(budget.meta || ''));
+    setGoogleBudget(budget.google === 0 ? '0' : String(budget.google || ''));
+  }, [adSpendMonth, settings]);
+
+  const handleSaveAdSpend = async () => {
+    const meta = parseFloat(metaBudget) || 0;
+    const google = parseFloat(googleBudget) || 0;
+    
+    const updatedSpends = {
+      ...monthlyAdSpends,
+      [adSpendMonth]: { meta, google }
+    };
+    
+    if (onSaveSetting) {
+      await onSaveSetting('monthly_ad_spends', JSON.stringify(updatedSpends));
+      alert(`Ad Spend budget for ${adSpendMonth} saved successfully!`);
+    }
+  };
+
+  // Resolve daily ad spends
+  const getDailyAdSpendBreakdown = (dateStr) => {
+    const parts = dateStr.split('-');
+    if (parts.length < 2) return { meta: 0, google: 0 };
+    const year = parts[0];
+    const month = parts[1];
+    const monthKey = `${year}-${month}`;
+    const budget = monthlyAdSpends[monthKey];
+    if (!budget) return { meta: 0, google: 0 };
+    
+    const meta = parseFloat(budget.meta) || 0;
+    const google = parseFloat(budget.google) || 0;
+    
+    const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
+    return {
+      meta: meta / daysInMonth,
+      google: google / daysInMonth
+    };
+  };
+
+  // Determine date range for ad spends
+  const getAdSpendsForRange = () => {
+    const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    let start = todayStr;
+    let end = todayStr;
+
+    if (dateFilter === 'today') {
+      start = todayStr;
+      end = todayStr;
+    } else if (dateFilter === 'weekly') {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      start = sevenDaysAgo.toISOString().split('T')[0];
+      end = todayStr;
+    } else if (dateFilter === 'monthly') {
+      const today = new Date(todayStr);
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      const firstDayStr = new Date(firstDay.getTime() - firstDay.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+      const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const lastDayStr = new Date(lastDay.getTime() - lastDay.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+      start = firstDayStr;
+      end = lastDayStr;
+    } else if (dateFilter === 'custom') {
+      start = startDate || todayStr;
+      end = endDate || todayStr;
+    } else {
+      // 'all' range: search min date of bookings
+      const bookingDates = bookings.map(b => b.date).filter(Boolean);
+      if (bookingDates.length > 0) {
+        bookingDates.sort();
+        start = bookingDates[0];
+      } else {
+        start = todayStr;
+      }
+      end = todayStr;
+    }
+
+    let totalAdSpend = 0;
+    let metaSpend = 0;
+    let googleSpend = 0;
+
+    const startDateObj = new Date(start);
+    const endDateObj = new Date(end);
+
+    for (let d = new Date(startDateObj); d <= endDateObj; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split('T')[0];
+      const dailyBreakdown = getDailyAdSpendBreakdown(dateStr);
+      metaSpend += dailyBreakdown.meta;
+      googleSpend += dailyBreakdown.google;
+      totalAdSpend += (dailyBreakdown.meta + dailyBreakdown.google);
+    }
+
+    return { total: totalAdSpend, meta: metaSpend, google: googleSpend };
+  };
+
+  const adSpends = getAdSpendsForRange();
 
   // Filter bookings based on selected range
   const filteredBookings = bookings.filter(b => {
@@ -200,7 +320,13 @@ export default function DashboardView({
 
   // Expense breakdown has already been calculated above
 
-  const totalExpSum = Object.values(expenseBreakdown).reduce((a, b) => a + b, 0) || 1;
+  const allExpensesBreakdown = {
+    ...expenseBreakdown,
+    metaAds: adSpends.meta,
+    googleAds: adSpends.google
+  };
+
+  const totalExpSum = Object.values(allExpensesBreakdown).reduce((a, b) => a + b, 0) || 1;
 
   // Top Drivers Performance & Profitability
   const driverPerformance = drivers.map(d => {
@@ -329,7 +455,69 @@ export default function DashboardView({
             </div>
           )}
         </div>
+        <button
+          onClick={() => setIsAdSpendOpen(!isAdSpendOpen)}
+          className="btn btn-secondary"
+          style={{ padding: '8px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', marginLeft: 'auto', border: '1.5px solid #ede6d9', background: '#fff' }}
+        >
+          📢 Manage Ad Spend
+        </button>
       </div>
+
+      {isAdSpendOpen && (
+        <div className="panel-card" style={{ marginBottom: '20px', padding: '16px', border: '1.5px solid #ede6d9', background: '#fdfbf7', borderRadius: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '900', color: 'var(--primary)', textTransform: 'uppercase' }}>
+              📢 Configure Monthly Ad Spend Budget
+            </h4>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Meta & Google Ads Budget Reporting</span>
+          </div>
+          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div className="form-group" style={{ marginBottom: 0, width: '150px' }}>
+              <label style={{ fontSize: '11px', fontWeight: '800', display: 'block', marginBottom: '4px' }}>Select Month</label>
+              <input 
+                type="month" 
+                className="form-control" 
+                style={{ height: '36px', fontSize: '13px', border: '1.5px solid #ede6d9', borderRadius: '8px', background: '#fff' }}
+                value={adSpendMonth}
+                onChange={(e) => setAdSpendMonth(e.target.value)}
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0, width: '150px' }}>
+              <label style={{ fontSize: '11px', fontWeight: '800', display: 'block', marginBottom: '4px' }}>Meta Ads (AED)</label>
+              <input 
+                type="number" 
+                min="0"
+                className="form-control" 
+                placeholder="0"
+                style={{ height: '36px', fontSize: '13px', border: '1.5px solid #ede6d9', borderRadius: '8px', background: '#fff' }}
+                value={metaBudget}
+                onChange={(e) => setMetaBudget(e.target.value)}
+              />
+            </div>
+            <div className="form-group" style={{ marginBottom: 0, width: '150px' }}>
+              <label style={{ fontSize: '11px', fontWeight: '800', display: 'block', marginBottom: '4px' }}>Google Ads (AED)</label>
+              <input 
+                type="number" 
+                min="0"
+                className="form-control" 
+                placeholder="0"
+                style={{ height: '36px', fontSize: '13px', border: '1.5px solid #ede6d9', borderRadius: '8px', background: '#fff' }}
+                value={googleBudget}
+                onChange={(e) => setGoogleBudget(e.target.value)}
+              />
+            </div>
+            <button 
+              onClick={handleSaveAdSpend} 
+              className="btn btn-primary"
+              style={{ height: '36px', display: 'flex', alignItems: 'center', gap: '6px', padding: '0 16px', fontSize: '13px', borderRadius: '8px' }}
+            >
+              Save Budget
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Overview Cards */}
       <div className="stats-grid">
         <div 
@@ -404,24 +592,48 @@ export default function DashboardView({
           <div className="stat-footer" style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Tours scheduled ahead</div>
         </div>
 
-        <div className="stat-card expenses">
-          <div className="stat-header">
-            <span>OPERATIONAL COSTS</span>
-            <DollarSign />
+        <div className="stat-card expenses" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+          <div className="stat-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>OPERATIONAL COSTS</span>
+            <DollarSign size={18} style={{ color: '#dc2626' }} />
           </div>
-          <div className="stat-value">{(totalDriverCost + totalPartnerCost).toLocaleString('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })}</div>
-          <div className="stat-footer">Drivers & Partners payouts</div>
+          <div className="stat-value" style={{ fontSize: '24px', fontWeight: '800', color: '#dc2626', marginTop: '6px' }}>{(totalDriverCost + totalPartnerCost).toLocaleString('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })}</div>
+          <div className="stat-footer" style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Drivers & Partners payouts</div>
         </div>
 
-        <div className="stat-card profit">
-          <div className="stat-header">
-            <span>NET PROFIT</span>
-            <TrendingUp />
+        <div className="stat-card profit" style={{ background: '#fff', border: '1px solid var(--border)' }}>
+          <div className="stat-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>OPERATIONAL PROFIT</span>
+            <TrendingUp size={18} style={{ color: '#059669' }} />
           </div>
-          <div className="stat-value" style={{ color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+          <div className="stat-value" style={{ fontSize: '24px', fontWeight: '800', color: netProfit >= 0 ? 'var(--success)' : 'var(--danger)', marginTop: '6px' }}>
             {netProfit.toLocaleString('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })}
           </div>
-          <div className="stat-footer">Revenue minus all expenses</div>
+          <div className="stat-footer" style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Revenue minus operations</div>
+        </div>
+
+        <div className="stat-card ad-spend" style={{ background: '#fff', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="stat-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>AD SPEND</span>
+            <TrendingUp size={18} style={{ color: '#4f46e5' }} />
+          </div>
+          <div className="stat-value" style={{ fontSize: '24px', fontWeight: '800', color: '#4f46e5', marginTop: '6px' }}>
+            {adSpends.total.toLocaleString('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })}
+          </div>
+          <div className="stat-footer" style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+            Meta: AED {Math.round(adSpends.meta).toLocaleString()} | Google: AED {Math.round(adSpends.google).toLocaleString()}
+          </div>
+        </div>
+
+        <div className="stat-card total-profit" style={{ background: '#fff', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div className="stat-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TOTAL PROFIT</span>
+            <TrendingUp size={18} style={{ color: (netProfit - adSpends.total) >= 0 ? '#059669' : '#dc2626' }} />
+          </div>
+          <div className="stat-value" style={{ fontSize: '24px', fontWeight: '800', color: (netProfit - adSpends.total) >= 0 ? 'var(--success)' : 'var(--danger)', marginTop: '6px' }}>
+            {(netProfit - adSpends.total).toLocaleString('en-AE', { style: 'currency', currency: 'AED', maximumFractionDigits: 0 })}
+          </div>
+          <div className="stat-footer" style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Net Profit minus Ad Spend</div>
         </div>
       </div>
 
@@ -616,13 +828,15 @@ export default function DashboardView({
             <DollarSign size={18} style={{ color: 'var(--primary)' }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
-            {Object.entries(expenseBreakdown).map(([key, value]) => {
+            {Object.entries(allExpensesBreakdown).map(([key, value]) => {
               const pct = ((value / totalExpSum) * 100).toFixed(1);
               let displayName = key;
               if (key === 'carPetrol') displayName = 'Car Petrol / Fuel';
               if (key === 'campUse') displayName = 'Camp Use Cost';
               if (key === 'salary') displayName = 'Daily Salary';
               if (key === 'misc') displayName = 'Miscellaneous';
+              if (key === 'metaAds') displayName = 'Meta Ads Budget';
+              if (key === 'googleAds') displayName = 'Google Ads Budget';
               return (
                 <div key={key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>

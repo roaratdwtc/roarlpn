@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Tag, Compass, Layers, Percent, BadgeAlert } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, Compass, Layers, Percent, BadgeAlert, Check, Save, Image, Sparkles, Zap } from 'lucide-react';
 
 export default function PackagesView({ packages = [], setPackages, coupons = [], setCoupons, settings = [], onSaveSetting }) {
   const [activeSubTab, setActiveSubTab] = useState('packages'); // 'packages' or 'coupons'
   const [isPkgModalOpen, setIsPkgModalOpen] = useState(false);
   const [isCpnModalOpen, setIsCpnModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [newCatName, setNewCatName] = useState('');
+  const [editingCategoryName, setEditingCategoryName] = useState({});
+
 
   const [editingPkg, setEditingPkg] = useState(null);
   const [pkgFormData, setPkgFormData] = useState({
@@ -86,6 +90,122 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
     
     setNewCatInput('');
     alert(`Category "${cat}" added successfully! You can now assign it to packages.`);
+  };
+
+  // Category image settings
+  const categoryImagesSetting = settings.find(s => s.setting_key === 'category_images')?.setting_value;
+  let categoryImages = {};
+  if (categoryImagesSetting) {
+    try {
+      categoryImages = JSON.parse(categoryImagesSetting);
+    } catch (e) {
+      console.error("Failed to parse category images:", e);
+    }
+  }
+
+  const handleSaveCategoryImage = async (category, imageUrl) => {
+    const updatedImages = { ...categoryImages, [category]: imageUrl };
+    if (onSaveSetting) {
+      await onSaveSetting('category_images', JSON.stringify(updatedImages));
+    }
+  };
+
+  const handleUploadCustomImage = (category, file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      handleSaveCategoryImage(category, e.target.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUpdateCategory = async (oldName, newName, imageUrl) => {
+    const cleanNewName = newName.trim();
+    if (!cleanNewName) {
+      alert('Category name cannot be empty.');
+      return;
+    }
+
+    // 1. Update the category name in the custom_categories setting list
+    const savedSetting = settings.find(s => s.setting_key === 'custom_categories')?.setting_value;
+    let customs = [];
+    if (savedSetting) {
+      try {
+        customs = JSON.parse(savedSetting);
+      } catch (e) {}
+    }
+    
+    // Update name in customs
+    const updatedCustoms = customs.map(c => c === oldName ? cleanNewName : c);
+    if (onSaveSetting) {
+      await onSaveSetting('custom_categories', JSON.stringify(updatedCustoms));
+    }
+
+    // 2. Update category image mapping
+    const updatedImages = { ...categoryImages };
+    if (imageUrl) {
+      updatedImages[cleanNewName] = imageUrl;
+      if (oldName !== cleanNewName) {
+        delete updatedImages[oldName];
+      }
+    } else {
+      if (oldName !== cleanNewName && updatedImages[oldName]) {
+        updatedImages[cleanNewName] = updatedImages[oldName];
+        delete updatedImages[oldName];
+      }
+    }
+    if (onSaveSetting) {
+      await onSaveSetting('category_images', JSON.stringify(updatedImages));
+    }
+
+    // 3. Update packages that were using the old category name!
+    if (oldName !== cleanNewName) {
+      const updatedPkgs = packages.map(p => {
+        if (p.category === oldName) {
+          return { ...p, category: cleanNewName };
+        }
+        return p;
+      });
+      if (setPackages) {
+        setPackages(updatedPkgs);
+      }
+    }
+    
+    // Update local category list state
+    setCategoriesList(prev => prev.map(c => c === oldName ? cleanNewName : c));
+    alert('Category updated successfully.');
+  };
+
+  const handleDeleteCategory = async (catName) => {
+    const assignedPkgs = packages.filter(p => p.category === catName);
+    if (assignedPkgs.length > 0) {
+      alert(`Cannot delete category "${catName}" because it is currently assigned to ${assignedPkgs.length} packages. Please reassign those packages first.`);
+      return;
+    }
+    
+    // Remove from custom_categories
+    const savedSetting = settings.find(s => s.setting_key === 'custom_categories')?.setting_value;
+    let customs = [];
+    if (savedSetting) {
+      try {
+        customs = JSON.parse(savedSetting);
+      } catch (e) {}
+    }
+    const updatedCustoms = customs.filter(c => c !== catName);
+    if (onSaveSetting) {
+      await onSaveSetting('custom_categories', JSON.stringify(updatedCustoms));
+    }
+
+    // Remove from category images
+    const updatedImages = { ...categoryImages };
+    delete updatedImages[catName];
+    if (onSaveSetting) {
+      await onSaveSetting('category_images', JSON.stringify(updatedImages));
+    }
+
+    // Update state
+    setCategoriesList(prev => prev.filter(c => c !== catName));
+    alert(`Category "${catName}" deleted successfully.`);
   };
 
   /* ────────────────────────────────────────────────────────────────────────
@@ -310,6 +430,117 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
       </div>
 
       {/* ────────────────────────────────────────────────────────────────────────
+         SEASONAL AUTO-APPLY COUPON DISCOUNT CONTROL (ALL PACKAGES)
+         ──────────────────────────────────────────────────────────────────────── */}
+      {(() => {
+        const autoApplyOffpeak = settings.find(s => s.setting_key === 'auto_apply_offpeak_coupon')?.setting_value === '1';
+        const selectedOffpeakCode = settings.find(s => s.setting_key === 'offpeak_coupon_code')?.setting_value || (coupons.find(c => c.code.toLowerCase().includes('summer') || c.packageId === 'all_safari')?.code || coupons[0]?.code || 'RoarSummerOffer26');
+
+        return (
+          <div 
+            className="card"
+            style={{
+              background: autoApplyOffpeak ? 'rgba(5, 150, 105, 0.05)' : '#ffffff',
+              border: autoApplyOffpeak ? '1.5px solid #059669' : '1.5px solid #ede6d9',
+              borderRadius: '12px',
+              padding: '16px 20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '14px',
+              boxShadow: '0 2px 8px rgba(140, 91, 48, 0.05)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: '1 1 320px' }}>
+              <div style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '10px',
+                background: autoApplyOffpeak ? 'rgba(5, 150, 105, 0.15)' : 'rgba(140, 91, 48, 0.1)',
+                color: autoApplyOffpeak ? '#047857' : 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Percent size={22} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: 'var(--text-dark)' }}>
+                    Auto-Apply Summer End Sale Discount (All Packages)
+                  </h4>
+                  <span className="badge" style={{
+                    background: autoApplyOffpeak ? 'rgba(5, 150, 105, 0.15)' : 'rgba(107, 114, 128, 0.15)',
+                    color: autoApplyOffpeak ? '#047857' : '#4b5563',
+                    fontWeight: '800',
+                    fontSize: '11px',
+                    padding: '3px 8px',
+                    borderRadius: '12px'
+                  }}>
+                    {autoApplyOffpeak ? '✓ SUMMER SALE ACTIVE' : '○ DISABLED'}
+                  </span>
+                </div>
+                <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
+                  Automatically applies the Summer End Sale discounted coupon code to all packages in Bookings and for online customers.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)' }}>Coupon:</span>
+                <select
+                  value={selectedOffpeakCode}
+                  onChange={(e) => onSaveSetting && onSaveSetting('offpeak_coupon_code', e.target.value)}
+                  className="form-control"
+                  style={{ width: 'auto', fontSize: '12.5px', padding: '6px 10px', fontWeight: '800', color: 'var(--primary)', height: '36px' }}
+                >
+                  {coupons.filter(c => parseInt(c.isActive) !== 0).map(c => (
+                    <option key={c.id} value={c.code}>
+                      {c.code} ({c.packageId === 'all_safari' ? 'All Packages' : 'Package'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onSaveSetting && onSaveSetting('auto_apply_offpeak_coupon', autoApplyOffpeak ? '0' : '1')}
+                className="btn"
+                style={{
+                  background: autoApplyOffpeak ? '#059669' : '#8c5b30',
+                  color: '#ffffff',
+                  fontWeight: '800',
+                  fontSize: '12.5px',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  height: '36px',
+                  boxShadow: autoApplyOffpeak ? '0 2px 10px rgba(5, 150, 105, 0.3)' : '0 2px 10px rgba(140, 91, 48, 0.2)'
+                }}
+              >
+                {autoApplyOffpeak ? (
+                  <>
+                    <Check size={16} /> Summer End Sale Discount Applied (All Packages)
+                  </>
+                ) : (
+                  <>
+                    <Zap size={16} /> Enable Summer End Sale Discount on All Packages
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ────────────────────────────────────────────────────────────────────────
          TAB 1: PACKAGES
          ──────────────────────────────────────────────────────────────────────── */}
       {activeSubTab === 'packages' && (
@@ -320,24 +551,13 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
               <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>Configure package peak/offpeak prices, default camp use costs, quadbike costs, and addons.</p>
             </div>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <input 
-                  type="text" 
-                  className="form-control" 
-                  placeholder="Add tour category..." 
-                  value={newCatInput} 
-                  onChange={e => setNewCatInput(e.target.value)} 
-                  style={{ width: '180px', height: '38px', fontSize: '13px', padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)', boxSizing: 'border-box' }}
-                />
-                <button 
-                  type="button" 
-                  onClick={handleAddCategory} 
-                  className="btn btn-secondary" 
-                  style={{ height: '38px', padding: '0 12px', fontSize: '13px', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  Add Category
-                </button>
-              </div>
+              <button 
+                onClick={() => setIsCategoryModalOpen(true)} 
+                className="btn btn-secondary" 
+                style={{ gap: '8px', height: '38px', display: 'flex', alignItems: 'center', fontWeight: '800' }}
+              >
+                <Compass size={16} /> Manage Categories
+              </button>
               <button onClick={handleAddPkgClick} className="btn btn-primary" style={{ gap: '8px', height: '38px', display: 'flex', alignItems: 'center' }}>
                 <Plus size={16} /> Add New Package
               </button>
@@ -498,7 +718,7 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                   coupons.map(cpn => {
                     const linkedPkg = packages.find(p => p.id === cpn.packageId);
                     const linkedPkgName = cpn.packageId === 'all_safari'
-                      ? 'All Evening & Morning Private (Universal)'
+                      ? 'All Packages (Universal Off-Peak Rate)'
                       : (linkedPkg ? linkedPkg.name : 'Deleted Package (Orphaned)');
                     const discountPriceStr = cpn.packageId === 'all_safari'
                       ? 'Off-Peak Rates'
@@ -578,6 +798,7 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
           </div>
         </div>
       )}
+
 
       {/* ────────────────────────────────────────────────────────────────────────
          MODAL: CREATE / EDIT PACKAGE
@@ -786,7 +1007,7 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                     onChange={(e) => setCpnFormData({ ...cpnFormData, packageId: e.target.value })}
                     required
                   >
-                    <option value="all_safari">All Evening & Morning Private Safaris (Universal)</option>
+                    <option value="all_safari">All Packages (Universal Off-Peak Rate on Every Package)</option>
                     {packages.map(p => (
                       <option key={p.id} value={p.id}>
                         {p.name} (Base: AED {p.offpeakRate})
@@ -855,6 +1076,221 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {isCategoryModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: '650px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <h3 style={{ fontSize: '18px', fontWeight: '800' }}>
+                📁 Manage Package Categories & Flyers
+              </h3>
+              <button onClick={() => setIsCategoryModalOpen(false)} className="modal-close">&times;</button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginTop: '10px' }}>
+              
+              {/* Creator Section */}
+              <div style={{ background: '#fdfbf7', border: '1.5px solid #ede6d9', padding: '16px', borderRadius: '12px' }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: '900', color: 'var(--primary-dark)' }}>
+                  Add New Category
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div className="form-group">
+                    <label>Category Name *</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="e.g. Quad & Buggy Safari" 
+                      value={newCatName}
+                      onChange={(e) => setNewCatName(e.target.value)}
+                    />
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '4px' }}>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary" 
+                      style={{ fontSize: '13px', padding: '6px 12px' }}
+                      onClick={() => {
+                        setNewCatName('');
+                      }}
+                    >
+                      Clear
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-primary" 
+                      style={{ fontSize: '13px', padding: '6px 16px' }}
+                      onClick={async () => {
+                        const name = newCatName.trim();
+                        if (!name) {
+                          alert('Please enter a category name.');
+                          return;
+                        }
+                        if (categoriesList.includes(name)) {
+                          alert(`Category "${name}" already exists.`);
+                          return;
+                        }
+                        
+                        // Add category to list
+                        const updatedList = [...categoriesList, name];
+                        setCategoriesList(updatedList);
+                        
+                        // Save in custom_categories setting
+                        const savedSetting = settings.find(s => s.setting_key === 'custom_categories')?.setting_value;
+                        let customs = [];
+                        if (savedSetting) {
+                          try {
+                            customs = JSON.parse(savedSetting);
+                          } catch (e) {}
+                        }
+                        const newCustoms = [...new Set([...customs, name])];
+                        if (onSaveSetting) {
+                          await onSaveSetting('custom_categories', JSON.stringify(newCustoms));
+                        }
+                        
+                        setNewCatName('');
+                        alert(`Category "${name}" added successfully!`);
+                      }}
+                    >
+                      + Create Category
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* List of Categories Section */}
+              <div>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: '900', color: 'var(--text-dark)' }}>
+                  Active Categories & Flyers Directory
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '45vh', overflowY: 'auto', paddingRight: '4px' }}>
+                  {categoriesList.map(cat => {
+                    const standardFlyers = [
+                      { label: 'Evening Safari Flyer', path: '/evening_safari.jpg' },
+                      { label: 'Morning Safari Flyer', path: '/morning_safari.jpg' },
+                      { label: 'Self Drive Safari Flyer', path: '/self_drive_safari.jpg' },
+                      { label: 'City Tours Flyer', path: '/city_tours.jpg' },
+                      { label: 'Quadbike Flyer', path: '/quadpackages.png' },
+                      { label: 'Dune Buggy Flyer', path: '/buggypackages.png' }
+                    ];
+
+                    const currentImg = categoryImages[cat] || (
+                      cat === 'City Tours' ? '/city_tours.jpg' :
+                      cat === 'Morning Desert Safari' ? '/morning_safari.jpg' :
+                      cat === 'Dune Buggy Ride' ? '/morning_safari.jpg' :
+                      cat === 'Self Drive Safari' ? '/self_drive_safari.jpg' :
+                      '/evening_safari.jpg'
+                    );
+
+                    const isCustom = !standardFlyers.some(f => f.path === currentImg);
+                    const isSeeded = [
+                      'Morning Desert Safari',
+                      'Evening Desert Safari',
+                      'Self Drive Safari',
+                      'City Tours',
+                      'Dune Buggy Ride'
+                    ].includes(cat);
+
+                    const localEditName = editingCategoryName[cat] !== undefined ? editingCategoryName[cat] : cat;
+
+                    return (
+                      <div key={cat} style={{ background: '#fff', border: '1px solid var(--border-light)', borderRadius: '10px', padding: '12px', display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        
+                        {/* Thumbnail Preview */}
+                        <div style={{ width: '80px', height: '80px', borderRadius: '6px', border: '1px solid var(--border-light)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fdfbf7', flexShrink: 0 }}>
+                          <img src={currentImg} alt={cat} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        </div>
+
+                        {/* Details and Inputs */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            {isSeeded ? (
+                              <span style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-dark)' }}>
+                                {cat} <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 'normal' }}>(Default System)</span>
+                              </span>
+                            ) : (
+                              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flex: 1 }}>
+                                <input 
+                                  type="text" 
+                                  className="form-control"
+                                  style={{ fontSize: '12px', padding: '4px 8px', height: '28px', flex: 1 }}
+                                  value={localEditName}
+                                  onChange={(e) => setEditingCategoryName({ ...editingCategoryName, [cat]: e.target.value })}
+                                />
+                                {localEditName !== cat && (
+                                  <button 
+                                    className="btn btn-secondary" 
+                                    style={{ padding: '4px 6px', minWidth: 'auto', background: '#10b981', borderColor: '#10b981', color: '#fff' }}
+                                    title="Save Category Name"
+                                    onClick={() => handleUpdateCategory(cat, localEditName)}
+                                  >
+                                    <Check size={12} />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                            <div>
+                              <select 
+                                className="form-control"
+                                style={{ fontSize: '11px', padding: '2px 6px', height: '26px', borderRadius: '6px' }}
+                                value={isCustom ? 'custom' : currentImg}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val !== 'custom') {
+                                    handleSaveCategoryImage(cat, val);
+                                  }
+                                }}
+                              >
+                                {standardFlyers.map(f => (
+                                  <option key={f.path} value={f.path}>{f.label}</option>
+                                ))}
+                                <option value="custom">-- Custom Flyer --</option>
+                              </select>
+                            </div>
+                            <div style={{ position: 'relative' }}>
+                              <input 
+                                type="file" 
+                                accept="image/*"
+                                className="form-control"
+                                style={{ fontSize: '10px', padding: '2px', height: '26px', borderRadius: '6px' }}
+                                onChange={(e) => {
+                                  if (e.target.files && e.target.files[0]) {
+                                    handleUploadCustomImage(cat, e.target.files[0]);
+                                  }
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Delete button (only for custom categories) */}
+                        {!isSeeded && (
+                          <button 
+                            className="btn btn-danger" 
+                            style={{ padding: '6px', minWidth: 'auto', color: 'var(--danger)', background: 'transparent', borderColor: 'transparent' }}
+                            title="Delete Category"
+                            onClick={() => handleDeleteCategory(cat)}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ marginTop: '10px', padding: 0 }}>
+                <button type="button" onClick={() => setIsCategoryModalOpen(false)} className="btn btn-primary" style={{ width: '100%' }}>Done</button>
+              </div>
+
+            </div>
           </div>
         </div>
       )}

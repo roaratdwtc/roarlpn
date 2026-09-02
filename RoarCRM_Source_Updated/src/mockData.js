@@ -118,7 +118,7 @@ export const initialPackages = [
 
 export const initialCoupons = [
   { id: 'coupon-1', code: 'RoarNYOfferDxb', packageId: 'all_safari', customPrice: 0, isActive: 1, startDate: '', endDate: '' },
-  { id: 'coupon-2', code: 'RoarSummerOffer26', packageId: 'all_safari', customPrice: 0, isActive: 1, startDate: '2026-07-09', endDate: '2026-09-30' }
+  { id: 'coupon-2', code: 'RoarSummerOffer26', packageId: 'all_safari', customPrice: 0, isActive: 1, startDate: '2026-05-01', endDate: '2026-10-31' }
 ];
 
 export const initialPartners = [
@@ -3000,5 +3000,281 @@ export const initialCars = [
     "chassisNo": "JTMAUCBJ0S4081787",
     "engineNo": "C974217",
     "passengers": 7
+  }
+];
+
+export const initialCarExpenses = [
+  {
+    id: "carexp-101",
+    carId: "car-ff79157",
+    plateNo: "FF79157",
+    category: "Car Passing",
+    amount: 170,
+    date: "2026-08-15",
+    paymentMethod: "Card",
+    status: "paid",
+    notes: "Annual RTA Technical passing passed with zero defects"
+  },
+  {
+    id: "carexp-102",
+    carId: "car-dd21596",
+    plateNo: "DD21596",
+    category: "Tyre Change",
+    amount: 1600,
+    date: "2026-08-18",
+    paymentMethod: "Bank Transfer",
+    status: "paid",
+    notes: "Replaced 4x Bridgestone Desert Dueller 285/65R17 tyres"
+  },
+  {
+    id: "carexp-103",
+    carId: "car-bb23370",
+    plateNo: "BB23370",
+    category: "Oil Change",
+    amount: 380,
+    date: "2026-08-20",
+    paymentMethod: "Cash",
+    status: "paid",
+    notes: "Mobil 1 10,000 KM synthetic oil + OEM oil filter & air filter clean"
+  },
+  {
+    id: "carexp-104",
+    carId: "car-i49209",
+    plateNo: "I49209",
+    category: "Floor Mats & Detailing",
+    amount: 250,
+    date: "2026-08-22",
+    paymentMethod: "Cash",
+    status: "paid",
+    notes: "Heavy duty 7D all-weather sand floor mats and interior steam detailing"
+  },
+  {
+    id: "carexp-105",
+    carId: "car-d16197",
+    plateNo: "D16197",
+    category: "Accidents & Body Repair",
+    amount: 950,
+    date: "2026-08-24",
+    paymentMethod: "Bank Transfer",
+    status: "paid",
+    notes: "Front right fender minor dune dent repair and paint touchup"
+  },
+  {
+    id: "carexp-106",
+    carId: "car-i49209",
+    plateNo: "I49209",
+    category: "Insurance Renewal",
+    amount: 2450,
+    date: "2026-08-25",
+    paymentMethod: "Bank Transfer",
+    status: "paid",
+    notes: "Annual comprehensive commercial motor insurance policy with desert safari cover"
+  },
+  {
+    id: "carexp-107",
+    carId: "car-g25801",
+    plateNo: "G25801",
+    category: "Mulkiya Renewals",
+    amount: 350,
+    date: "2026-08-26",
+    paymentMethod: "Card",
+    status: "paid",
+    notes: "Vehicle electronic Mulkiya registration card renewal fee"
+  },
+  {
+    id: "carexp-108",
+    carId: "car-dd50781",
+    plateNo: "DD50781",
+    category: "Battery & Brake Pads",
+    amount: 580,
+    date: "2026-08-28",
+    paymentMethod: "Cash",
+    status: "paid",
+    notes: "Installed new AC Delco heavy battery and front ceramic brake pads"
+  }
+];
+
+export const initialCompanyExpenses = [
+  {
+    id: "compexp-201",
+    category: "Trade License Renewal",
+    amount: 14500,
+    date: "2026-08-10",
+    dueDate: "2026-12-15",
+    paymentMethod: "Bank Transfer",
+    invoiceNo: "DET-2026-8819",
+    status: "paid",
+    notes: "DET / DTCM commercial tourism license renewal and chamber fees"
+  },
+  {
+    id: "compexp-202",
+    category: "Establishment Card Renewal",
+    amount: 1850,
+    date: "2026-08-12",
+    dueDate: "2026-11-20",
+    paymentMethod: "Card",
+    invoiceNo: "GDRFA-55219",
+    status: "paid",
+    notes: "GDRFA Immigration 3-year establishment card and smart gate access"
+  },
+  {
+    id: "compexp-203",
+    category: "Office Rent & Ejari",
+    amount: 18500,
+    date: "2026-08-01",
+    dueDate: "2026-08-01",
+    paymentMethod: "Bank Cheque",
+    invoiceNo: "DWTC-RENT-Q3",
+    status: "paid",
+    notes: "DWTC Complex Suite 402 commercial office Q3 quarterly lease"
+  },
+  {
+    id: "compexp-204",
+    category: "Company Main Phone Bill",
+    amount: 650,
+    date: "2026-08-25",
+    dueDate: "2026-09-05",
+    paymentMethod: "Auto Debit",
+    invoiceNo: "DU-HOTLINE-0826",
+    status: "paid",
+    notes: "Du main booking hotline (+971 58 934 4077) business postpaid plan"
+  },
+  {
+    id: "compexp-205",
+    category: "Office Internet & Telephony Bill",
+    amount: 899,
+    date: "2026-08-25",
+    dueDate: "2026-09-05",
+    paymentMethod: "Card",
+    invoiceNo: "DU-INTERNET-0826",
+    status: "paid",
+    notes: "Office high-speed fiber internet 500Mbps and static IP"
+  },
+  {
+    id: "compexp-206",
+    category: "Office Expenses & Supplies",
+    amount: 480,
+    date: "2026-08-16",
+    dueDate: "2026-08-16",
+    paymentMethod: "Petty Cash",
+    invoiceNo: "OF-4419",
+    status: "paid",
+    notes: "Monthly stationery, A4 reams, bottled drinking water and espresso beans"
+  },
+  {
+    id: "compexp-207",
+    category: "Petty Cash Disbursements",
+    amount: 350,
+    date: "2026-08-20",
+    dueDate: "2026-08-20",
+    paymentMethod: "Cash",
+    invoiceNo: "PC-AUG-02",
+    status: "paid",
+    notes: "Daily office petty cash top-up, agency courier and office refreshments"
+  },
+  {
+    id: "compexp-208",
+    category: "Miscellaneous & Legal",
+    amount: 1200,
+    date: "2026-08-22",
+    dueDate: "2026-08-22",
+    paymentMethod: "Bank Transfer",
+    invoiceNo: "CT-8831",
+    status: "paid",
+    notes: "Google Workspace emails, cloud server backup and financial auditing"
+  }
+];
+
+export const initialCompanySims = [
+  {
+    id: "sim-1",
+    phoneNumber: "+971 58 934 4077",
+    provider: "Du",
+    planName: "Business Unlimited 300",
+    monthlyCost: 300,
+    assignedAgent: "Asad (Sales Lead)",
+    agentRole: "Inbound Sales & VIP Bookings",
+    simCardNumber: "89971032194019283",
+    status: "active",
+    assignedDate: "2025-01-10",
+    notes: "Primary WhatsApp marketing hotline & VIP client management"
+  },
+  {
+    id: "sim-2",
+    phoneNumber: "+971 55 135 6738",
+    provider: "Du",
+    planName: "Business Executive 200",
+    monthlyCost: 200,
+    assignedAgent: "Jaspreen",
+    agentRole: "Outbound Leads & Partner Relations",
+    simCardNumber: "89971032194019284",
+    status: "active",
+    assignedDate: "2025-02-15",
+    notes: "B2B travel agent coordination & hotel concierge desk desk outreach"
+  },
+  {
+    id: "sim-3",
+    phoneNumber: "+971 55 806 6595",
+    provider: "Etisalat",
+    planName: "Business Freedom 250",
+    monthlyCost: 250,
+    assignedAgent: "Bashar",
+    agentRole: "Operations & Driver Dispatch",
+    simCardNumber: "89971032194019285",
+    status: "active",
+    assignedDate: "2025-03-01",
+    notes: "Safari convoy logistics, desert camp coordination & driver allocations"
+  },
+  {
+    id: "sim-4",
+    phoneNumber: "+971 56 484 7249",
+    provider: "Du",
+    planName: "Business Smart 150",
+    monthlyCost: 150,
+    assignedAgent: "Shahmir",
+    agentRole: "Sales & Customer Support",
+    simCardNumber: "89971032194019286",
+    status: "active",
+    assignedDate: "2025-04-10",
+    notes: "Website live chat handling & direct booking followups"
+  },
+  {
+    id: "sim-5",
+    phoneNumber: "+971 52 226 2975",
+    provider: "Etisalat",
+    planName: "Business Smart 150",
+    monthlyCost: 150,
+    assignedAgent: "Umar",
+    agentRole: "Inbound Leads & WhatsApp Agent",
+    simCardNumber: "89971032194019287",
+    status: "active",
+    assignedDate: "2025-05-12",
+    notes: "Social media ad inquiry response & payment link distribution"
+  },
+  {
+    id: "sim-6",
+    phoneNumber: "+971 52 474 8814",
+    provider: "Du",
+    planName: "Business Smart 150",
+    monthlyCost: 150,
+    assignedAgent: "Mirza",
+    agentRole: "Driver Dispatch Support",
+    simCardNumber: "89971032194019288",
+    status: "active",
+    assignedDate: "2025-06-01",
+    notes: "City tours and airport transfer driver communication"
+  },
+  {
+    id: "sim-7",
+    phoneNumber: "+971 55 432 1940",
+    provider: "Virgin",
+    planName: "Corporate Standby 100",
+    monthlyCost: 100,
+    assignedAgent: "Office Standby SIM 1",
+    agentRole: "Spare / Standby Line",
+    simCardNumber: "89971032194019289",
+    status: "spare",
+    assignedDate: "2025-06-15",
+    notes: "Emergency standby line for temporary staff / seasonal peak drivers"
   }
 ];

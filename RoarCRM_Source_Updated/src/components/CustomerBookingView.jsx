@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { CheckCircle, Check, Send } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { CheckCircle, Check, Send, Percent, Sparkles } from "lucide-react";
 import { safariPackages } from "../mockData";
 
 // Addons definition
@@ -22,6 +22,32 @@ function getMinDate() {
   }
   return uae.toISOString().split("T")[0];
 }
+function getSeasonalIsSummer(dateStr) {
+  let month = new Date().getMonth() + 1;
+  if (dateStr) {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      month = parseInt(parts[1], 10);
+    }
+  }
+  return month >= 5 && month <= 10;
+}
+
+function getSeasonalPickupTime(dateStr, isMorning) {
+  let month = new Date().getMonth() + 1;
+  if (dateStr) {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      month = parseInt(parts[1], 10);
+    }
+  }
+  const isSummer = month >= 5 && month <= 10;
+  if (isMorning) {
+    return isSummer ? '7:00 AM' : '8:00 AM';
+  } else {
+    return isSummer ? '3:30 PM to 4:00 PM' : '2:00 PM to 2:30 PM';
+  }
+}
 
 const BRAND = "#c9762a";
 
@@ -34,7 +60,9 @@ const inp = {
 
 export default function CustomerBookingView({ bookings, setBookings, partners = [], packages = [], coupons = [], customers = [], setCustomers, settings = [] }) {
   const activePackages = packages.length > 0 ? packages : safariPackages;
-  const showCouponsSetting = settings.find(s => s.setting_key === 'show_coupons')?.setting_value !== '0';
+  const showCouponsSetting = (settings || []).find(s => s.setting_key === 'show_coupons')?.setting_value !== '0';
+  const autoApplyOffpeakSetting = (settings || []).find(s => s.setting_key === 'auto_apply_offpeak_coupon')?.setting_value === '1';
+  const offpeakCouponCodeSetting = (settings || []).find(s => s.setting_key === 'offpeak_coupon_code')?.setting_value || 'RoarSummerOffer26';
 
   // Extract categories dynamically from packages and sort them
   const categoryOrder = {
@@ -63,11 +91,12 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
     whatsapp: "",
     pickupLocation: "",
     roomNo: "",
-    date: "",
+    date: getMinDate(),
     pax: 1, // Default to 1 guest as minimum
     categoryKey: initialCategory,
     subPackageId: initialSubPkg ? initialSubPkg.id : "",
     message: "",
+    tourType: "pick_drop"
   });
 
   const [addonQty, setAddonQty] = useState({});
@@ -84,8 +113,41 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
     return name.replace(/\s?\d+\s?AED/gi, "").trim();
   };
 
+  const getFeaturedImage = (categoryKey) => {
+    // Parse custom category images from settings
+    const categoryImagesSetting = settings.find(s => s.setting_key === 'category_images')?.setting_value;
+    let categoryImages = {};
+    if (categoryImagesSetting) {
+      try {
+        categoryImages = JSON.parse(categoryImagesSetting);
+      } catch (e) {
+        console.error("Failed to parse category images in customer booking view:", e);
+      }
+    }
+
+    if (categoryImages[categoryKey]) {
+      return categoryImages[categoryKey];
+    }
+
+    switch (categoryKey) {
+      case 'City Tours':
+        return '/city_tours.jpg';
+      case 'Morning Desert Safari':
+        return '/morning_safari.jpg';
+      case 'Dune Buggy Ride':
+        return '/morning_safari.jpg';
+      case 'Self Drive Safari':
+        return '/self_drive_safari.jpg';
+      case 'Evening Desert Safari':
+      default:
+        return '/evening_safari.jpg';
+    }
+  };
+
   const [submitted, setSubmitted] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+
 
   // Sync sub-package list and active sub-package dynamically, sorted by price ascending
   const subPackagesList = activePackages
@@ -162,7 +224,10 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
 
     const matchesPkg = activeAndNotExpired.find(c => {
       if (c.packageId === pkgId) return true;
-      if (c.packageId === 'all_safari' && (isEveningSafari || isMorningPrivate)) return true;
+      if (c.packageId === 'all_safari' || c.packageId === 'all_packages') return true;
+      const isUniversal = c.code.toLowerCase() === 'roarnyofferdxb' || 
+                          c.code.toLowerCase() === 'roarsummeroffer26';
+      if (isUniversal) return true;
       return false;
     });
 
@@ -170,21 +235,46 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       return { status: 'wrong_package', message: '✗ Coupon code not valid for this package' };
     }
 
-    if (matchesPkg.packageId === 'all_safari' && selectedPkgObj) {
+    const isUniversalMatch = matchesPkg.packageId === 'all_safari' || 
+                             matchesPkg.packageId === 'all_packages' ||
+                             matchesPkg.code.toLowerCase() === 'roarnyofferdxb' || 
+                             matchesPkg.code.toLowerCase() === 'roarsummeroffer26';
+
+    if (isUniversalMatch && selectedPkgObj) {
       const offpeakRate = parseFloat(selectedPkgObj.offpeakRate) || parseFloat(selectedPkgObj.rate) || 0;
       return {
         status: 'valid',
-        message: `✓ Coupon Applied: AED ${offpeakRate} package price override`,
+        message: `✓ Summer End Sale Discount Applied: AED ${offpeakRate} (${matchesPkg.code})`,
         coupon: { ...matchesPkg, customPrice: offpeakRate }
       };
     }
 
-    return { status: 'valid', message: `✓ Coupon Applied: AED ${matchesPkg.customPrice} package price override`, coupon: matchesPkg };
+    return { 
+      status: 'valid', 
+      message: `✓ Summer End Sale Discount Applied: AED ${matchesPkg.customPrice} (${matchesPkg.code})`, 
+      coupon: matchesPkg 
+    };
   };
 
   // Get only the first active coupon for the promo unlock wall
   const activeCoupons = coupons.filter(c => parseInt(c.isActive) !== 0);
   const promoCoupon = activeCoupons[0];
+
+  // Auto-apply off-peak season coupon if enabled
+  useEffect(() => {
+    if (autoApplyOffpeakSetting) {
+      const targetCoupon = (coupons || []).find(c => 
+        parseInt(c.isActive) !== 0 && 
+        (c.code.toLowerCase() === offpeakCouponCodeSetting.toLowerCase() || c.packageId === 'all_safari' || c.packageId === 'all_packages')
+      ) || promoCoupon;
+
+      if (targetCoupon) {
+        setCouponCode(targetCoupon.code);
+        setTempCouponCode(targetCoupon.code);
+        setIsCouponUnlocked(true);
+      }
+    }
+  }, [autoApplyOffpeakSetting, offpeakCouponCodeSetting, coupons, promoCoupon]);
 
   const handleUnlockCoupon = async (e) => {
     e.preventDefault();
@@ -258,9 +348,11 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
     const isEveningSafari = selectedPkg.category === 'Evening Desert Safari';
     const isMorningPrivate = selectedPkg.id === 'morning_private';
 
-    let defaultRate = (isEveningSafari || isMorningPrivate)
-      ? (parseFloat(selectedPkg.peakRate) || parseFloat(selectedPkg.rate) || 0)
-      : (parseFloat(selectedPkg.rate) || 0);
+    let defaultRate = autoApplyOffpeakSetting
+      ? (parseFloat(selectedPkg.offpeakRate) || parseFloat(selectedPkg.rate) || 0)
+      : ((isEveningSafari || isMorningPrivate)
+        ? (parseFloat(selectedPkg.peakRate) || parseFloat(selectedPkg.rate) || 0)
+        : (parseFloat(selectedPkg.rate) || 0));
 
     let rate = defaultRate;
     if (activeCpn) {
@@ -297,10 +389,33 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
 
   const handleSave = async e => {
     e.preventDefault();
-    if (!formData.customerName || !formData.date || !formData.whatsapp || !formData.pickupLocation) {
-      alert("Please fill in Name, WhatsApp, Date, and Pickup Location.");
+    const errors = {};
+    if (!formData.customerName || formData.customerName.trim().length < 3) {
+      errors.customerName = "Please enter your full name (minimum 3 characters).";
+    }
+    if (!formData.whatsapp || formData.whatsapp.trim().replace(/[^0-9]/g, '').length < 7) {
+      errors.whatsapp = "Please enter a valid WhatsApp number (minimum 7 digits).";
+    }
+    if (formData.tourType !== 'self_drive' && (!formData.pickupLocation || formData.pickupLocation.trim().length < 4)) {
+      errors.pickupLocation = "Please enter a valid pickup hotel or location name.";
+    }
+    if (!formData.date) {
+      errors.date = "Please select a tour date.";
+    } else {
+      const minD = getMinDate();
+      if (formData.date < minD) {
+        errors.date = `Tour date cannot be in the past. Please select ${minD.split("-").reverse().join("/")} or later.`;
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      const errorMsg = Object.values(errors).join("\n");
+      alert("Please fix the following validation errors:\n\n" + errorMsg);
       return;
     }
+
+    setFormErrors({});
     const lines = displayAddons.filter(a => {
       return (addonQty[a.key] || 0) > 0;
     }).map(a => `${a.label} x${addonQty[a.key]} (+AED ${addonQty[a.key] * a.price})`);
@@ -331,18 +446,22 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       email: formData.email,
       date: formData.date,
       packageName: selectedPkg ? selectedPkg.name : "",
-      pickupLocation: formData.pickupLocation,
-      roomNo: formData.roomNo,
-      pickupTime: (selectedPkg?.category === 'Morning Desert Safari' || selectedPkg?.id === 'morning_private') ? "9:00 AM to 9:30 AM" : "3:30 PM to 4:00 PM",
+      pickupLocation: formData.tourType === 'self_drive' ? 'https://maps.app.goo.gl/jcACpe96sKRcmbVe6' : formData.pickupLocation,
+      roomNo: formData.tourType === 'self_drive' ? '' : formData.roomNo,
+      pickupTime: formData.tourType === 'self_drive'
+        ? (getSeasonalIsSummer(formData.date) ? '4:40 PM' : '3:30 PM')
+        : getSeasonalPickupTime(formData.date, selectedPkg?.category === 'Morning Desert Safari' || selectedPkg?.id === 'morning_private'),
       pax: pax,
       price: totalPrice,
       addonName: lines.join(", "),
       addonPrice: addonsTotal,
       partnerId: "website",
-      status: "pending",
+      status: "confirmed",
       driverId: "",
-      couponCode: activeCpn ? activeCpn.code : "",
-      pricingType: "offpeak"
+      couponCode: activeCpn ? activeCpn.code : (autoApplyOffpeakSetting ? offpeakCouponCodeSetting : ""),
+      pricingType: "offpeak",
+      tourType: formData.tourType || 'pick_drop',
+      paymentOption: "Payment on Arrival"
     };
     try {
       const res = await fetch("api.php?action=save&table=bookings", {
@@ -366,14 +485,25 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
 
   const waLink = b => {
     if (!b) return "";
-    const ref = b.id.replace("book-", "").toUpperCase() + "ASD";
-    const t = `Hi Roar Adventure Tourism, confirming Ref# ${ref}:\n1. Name: ${b.customerName}\n2. WhatsApp: ${b.whatsapp}\n3. Guests: ${b.pax} pax\n4. Package: ${b.packageName}\n5. Date: ${(b.date||"").split("-").reverse().join("/")}\n6. Pickup: ${b.pickupLocation}${b.roomNo ? ` Rm ${b.roomNo}` : ""}${b.addonName ? `\n7. Addons: ${b.addonName}` : ""}\n${b.addonName ? "8" : "7"}. Total: AED ${b.price} (Pay on Arrival)`;
+    const ref = b.id.replace("book-", "").toUpperCase();
+    const isSelfDrive = b.tourType === 'self_drive' || 
+                        (b.pickupLocation || '').toLowerCase().trim() === 'self drive' ||
+                        (b.pickupLocation || '').toLowerCase().includes('maps.app.goo.gl');
+                        
+    const pickupOrArrivalLabel = isSelfDrive ? 'Arrival' : 'Pickup';
+    const locationLabel = isSelfDrive ? 'Meeting Point' : 'Pickup';
+    const locValue = isSelfDrive ? 'https://maps.app.goo.gl/jcACpe96sKRcmbVe6' : b.pickupLocation;
+    const timeValue = isSelfDrive 
+      ? (getSeasonalIsSummer(b.date) ? '4:40 PM' : '3:30 PM')
+      : b.pickupTime;
+      
+    const t = `Hi Roar Adventure Tourism, confirming Ref# ${ref}:\n1. Name: ${b.customerName}\n2. WhatsApp: ${b.whatsapp}\n3. Guests: ${b.pax} pax\n4. Package: ${b.packageName}\n5. Date: ${(b.date||"").split("-").reverse().join("/")}\n6. ${locationLabel}: ${locValue}\n7. ${pickupOrArrivalLabel} Time: ${timeValue}${b.addonName ? `\n8. Addons: ${b.addonName}` : ""}\n${b.addonName ? "9" : "8"}. Total: AED ${b.price} (Pay on Arrival)`;
     return `https://wa.me/971589344077?text=${encodeURIComponent(t)}`;
   };
 
   /* ── Success Screen ──────────────────────────────────────────────────── */
   if (submitted) {
-    const refCode = submitted.id.replace("book-", "").toUpperCase() + "ASD";
+    const refCode = submitted.id.replace("book-", "").toUpperCase();
     return (
       <div style={{ minHeight: "100vh", background: "#faf6f0", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", color: "#543c2b" }}>
         <div className="glass-card" style={{ maxWidth: "520px", width: "100%", padding: "40px 36px", textAlign: "center", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", boxShadow: "0 10px 30px rgba(84, 60, 43, 0.05)" }}>
@@ -385,12 +515,34 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
             Reference: <strong style={{ color: BRAND, fontSize: "16px" }}>{refCode}</strong><br />WhatsApp us to confirm your slot.
           </p>
           <div style={{ background: "#fdfbf7", border: "1px solid #ede6d9", borderRadius: "12px", padding: "18px", textAlign: "left", fontSize: "13px", display: "flex", flexDirection: "column", gap: "9px", marginBottom: "22px" }}>
-            {[["👤 Name", submitted.customerName], ["📱 WhatsApp", submitted.whatsapp], ["👥 Guests", `${submitted.pax} Pax`], ["📅 Date", (submitted.date||"").split("-").reverse().join("/")], ["📍 Pickup", `${submitted.pickupLocation}${submitted.roomNo ? ` Rm ${submitted.roomNo}` : ""}`], ...(submitted.addonName ? [["✨ Addons", submitted.addonName]] : []), ["💰 Pay on Arrival", `AED ${submitted.price}`]].map(([l, v]) => (
-              <div key={l} style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                <span style={{ color: "#8c7361", fontWeight: "700", minWidth: "130px" }}>{l}</span>
-                <span style={{ fontWeight: "800", color: "#543c2b", textAlign: "right" }}>{v}</span>
-              </div>
-            ))}
+            {(() => {
+              const isSelf = submitted.tourType === 'self_drive' || 
+                             (submitted.pickupLocation || '').toLowerCase().trim() === 'self drive' ||
+                             (submitted.pickupLocation || '').toLowerCase().includes('maps.app.goo.gl');
+                             
+              const locationLabel = isSelf ? "📍 Meeting Point" : "📍 Pickup Location";
+              const timeLabel = isSelf ? "⏳ Arrival Time" : "⏳ Pickup Time";
+              const locValue = isSelf ? 'https://maps.app.goo.gl/jcACpe96sKRcmbVe6' : submitted.pickupLocation;
+              const timeValue = isSelf 
+                ? (getSeasonalIsSummer(submitted.date) ? '4:40 PM' : '3:30 PM')
+                : submitted.pickupTime;
+              const rows = [
+                ["👤 Name", submitted.customerName],
+                ["📱 WhatsApp", submitted.whatsapp],
+                ["👥 Guests", `${submitted.pax} Pax`],
+                ["📅 Date", (submitted.date||"").split("-").reverse().join("/")],
+                [locationLabel, locValue],
+                [timeLabel, timeValue],
+                ...(submitted.addonName ? [["✨ Addons", submitted.addonName]] : []),
+                ["💰 Pay on Arrival", `AED ${submitted.price}`]
+              ];
+              return rows.map(([l, v]) => (
+                <div key={l} style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                  <span style={{ color: "#8c7361", fontWeight: "700", minWidth: "130px" }}>{l}</span>
+                  <span style={{ fontWeight: "800", color: "#543c2b", textAlign: "right" }}>{v}</span>
+                </div>
+              ));
+            })()}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <a href={waLink(submitted)} target="_blank" rel="noopener noreferrer"
@@ -444,14 +596,14 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
             </div>
             <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid #ede6d9" }}>
               <img 
-                src="/featured_safari.jpg" 
-                alt="Desert Safari Dubai" 
+                src={getFeaturedImage(formData.categoryKey)} 
+                alt={formData.categoryKey} 
                 style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }} 
               />
             </div>
             <div style={{ fontSize: "12px", color: "#8c7361", lineHeight: "1.4" }}>
               <p style={{ margin: "0 0 8px 0" }}>
-                Review the tour highlights and rates directly on our official Summer Deal flyer.
+                Review the tour highlights and rates directly on our official flyer.
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "10px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -478,39 +630,136 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
+              {autoApplyOffpeakSetting && (
+                <div style={{
+                  background: "rgba(5, 150, 105, 0.08)",
+                  border: "1.2px solid rgba(5, 150, 105, 0.25)",
+                  borderRadius: "10px",
+                  padding: "9px 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: "#047857",
+                  marginBottom: "4px"
+                }}>
+                  <Percent size={16} style={{ flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: "11.5px", fontWeight: "800" }}>
+                      🎉 Summer End Sale Discount Applied (Coupon: {couponCode || offpeakCouponCodeSetting})
+                    </div>
+                    <div style={{ fontSize: "10.5px", opacity: 0.9 }}>
+                      Summer End Sale discount active on all packages with coupon <strong>{couponCode || offpeakCouponCodeSetting}</strong>.
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div>
-                <input style={inp} placeholder="Full Name *" value={formData.customerName} onChange={e => setFormData({ ...formData, customerName: e.target.value })} required />
+                <input style={{ ...inp, borderColor: formErrors.customerName ? "#ef4444" : "#ede6d9" }} placeholder="Full Name *" value={formData.customerName} onChange={e => { setFormData({ ...formData, customerName: e.target.value }); setFormErrors(prev => ({ ...prev, customerName: null })); }} required />
+                {formErrors.customerName && <div style={{ color: "#ef4444", fontSize: "11px", marginTop: "3px", fontWeight: "bold" }}>{formErrors.customerName}</div>}
               </div>
 
               <div>
-                <input style={inp} placeholder="WhatsApp Number *" value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} required />
+                <input style={{ ...inp, borderColor: formErrors.whatsapp ? "#ef4444" : "#ede6d9" }} placeholder="WhatsApp Number *" value={formData.whatsapp} onChange={e => { setFormData({ ...formData, whatsapp: e.target.value }); setFormErrors(prev => ({ ...prev, whatsapp: null })); }} required />
+                {formErrors.whatsapp && <div style={{ color: "#ef4444", fontSize: "11px", marginTop: "3px", fontWeight: "bold" }}>{formErrors.whatsapp}</div>}
               </div>
 
               <div>
                 <input style={inp} type="email" placeholder="Email Address (Optional)" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
               </div>
 
-              <div>
-                <input style={inp} placeholder="Pickup Location / Hotel Name *" value={formData.pickupLocation} onChange={e => setFormData({ ...formData, pickupLocation: e.target.value })} required />
+              <div style={{ marginBottom: "6px" }}>
+                <label style={{ fontSize: "11px", fontWeight: "800", color: "#8c7361", display: "block", marginBottom: "4px" }}>Type of Tour</label>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        tourType: 'pick_drop', 
+                        pickupLocation: prev.pickupLocation === 'https://maps.app.goo.gl/jcACpe96sKRcmbVe6' ? '' : prev.pickupLocation 
+                      }));
+                    }}
+                    style={{ 
+                      flex: 1, 
+                      padding: "10px", 
+                      borderRadius: "8px", 
+                      border: `1.5px solid ${formData.tourType !== 'self_drive' ? BRAND : '#ede6d9'}`, 
+                      background: formData.tourType !== 'self_drive' ? '#fdf8f4' : '#fff', 
+                      color: formData.tourType !== 'self_drive' ? BRAND : '#543c2b', 
+                      fontWeight: "850", 
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    🚗 With Pick/Drop
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        tourType: 'self_drive', 
+                        pickupLocation: 'https://maps.app.goo.gl/jcACpe96sKRcmbVe6',
+                        roomNo: ''
+                      }));
+                    }}
+                    style={{ 
+                      flex: 1, 
+                      padding: "10px", 
+                      borderRadius: "8px", 
+                      border: `1.5px solid ${formData.tourType === 'self_drive' ? BRAND : '#ede6d9'}`, 
+                      background: formData.tourType === 'self_drive' ? '#fdf8f4' : '#fff', 
+                      color: formData.tourType === 'self_drive' ? BRAND : '#543c2b', 
+                      fontWeight: "850", 
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    🏁 Self Drive
+                  </button>
+                </div>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                <div>
-                  <input 
-                    style={inp} 
-                    type={formData.date ? "date" : "text"} 
-                    placeholder="Select Tour Date *" 
-                    min={getMinDate()} 
-                    value={formData.date} 
-                    onChange={e => setFormData({ ...formData, date: e.target.value })} 
-                    onFocus={(e) => { e.target.type = "date"; }} 
-                    onBlur={(e) => { if (!formData.date) e.target.type = "text"; }} 
-                    required 
-                  />
-                </div>
-                <div>
-                  <input style={inp} placeholder="Room No (Optional)" value={formData.roomNo} onChange={e => setFormData({ ...formData, roomNo: e.target.value })} />
-                </div>
+              <div>
+                {formData.tourType === 'self_drive' ? (
+                  <div>
+                    <label style={{ fontSize: "11px", fontWeight: "800", color: "#8c7361", display: "block", marginBottom: "4px" }}>Meeting Point</label>
+                    <input 
+                      style={{ ...inp, background: "#f8f9fa", cursor: "not-allowed", color: "#543c2b", fontWeight: "750" }} 
+                      value="https://maps.app.goo.gl/jcACpe96sKRcmbVe6" 
+                      readOnly 
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <input 
+                      style={{ ...inp, borderColor: formErrors.pickupLocation ? "#ef4444" : "#ede6d9" }} 
+                      placeholder="Area/Hotel Name & Room Number *" 
+                      value={formData.pickupLocation} 
+                      onChange={e => { 
+                        setFormData({ ...formData, pickupLocation: e.target.value }); 
+                        setFormErrors(prev => ({ ...prev, pickupLocation: null })); 
+                      }} 
+                      required 
+                    />
+                    {formErrors.pickupLocation && <div style={{ color: "#ef4444", fontSize: "11px", marginTop: "3px", fontWeight: "bold" }}>{formErrors.pickupLocation}</div>}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <input 
+                  style={{ ...inp, borderColor: formErrors.date ? "#ef4444" : "#ede6d9" }} 
+                  type="date" 
+                  min={getMinDate()} 
+                  value={formData.date} 
+                  onChange={e => { setFormData({ ...formData, date: e.target.value }); setFormErrors(prev => ({ ...prev, date: null })); }} 
+                  required 
+                />
+                {formErrors.date && <div style={{ color: "#ef4444", fontSize: "11px", marginTop: "3px", fontWeight: "bold" }}>{formErrors.date}</div>}
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr", gap: "8px" }}>
@@ -654,8 +903,10 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
                 <div style={{ fontSize: "11px", color: BRAND, fontWeight: "700", marginTop: "1px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {selectedPkg ? (
                     activeCpn 
-                      ? `${getCleanPackageName(selectedPkg.name)} (Coupon Applied: ${activeCpn.customPrice} AED)` 
-                      : getCleanPackageName(selectedPkg.name)
+                      ? `${getCleanPackageName(selectedPkg.name)} (Summer End Sale Discount Applied: ${rate} AED - Code: ${activeCpn.code})` 
+                      : (autoApplyOffpeakSetting
+                        ? `${getCleanPackageName(selectedPkg.name)} (Summer End Sale Discount Applied: ${rate} AED - Code: ${offpeakCouponCodeSetting})`
+                        : getCleanPackageName(selectedPkg.name))
                   ) : "—"}
                 </div>
               </div>
@@ -665,13 +916,13 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ color: "#8c7361" }}>Base Rate:</span>
                   <span style={{ fontWeight: "700", color: "#543c2b", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                    {activeCpn && (
+                    {(activeCpn || autoApplyOffpeakSetting) && selectedPkg && (
                       <span style={{ textDecoration: "line-through", color: "#8c7361", fontSize: "11px" }}>
-                        AED {selectedPkg && (selectedPkg.category === 'Evening Desert Safari' || selectedPkg.id === 'morning_private') ? selectedPkg.peakRate : selectedPkg?.rate}
+                        AED {selectedPkg.peakRate || selectedPkg.rate}
                       </span>
                     )}
-                    <span>
-                      AED {activeCpn ? activeCpn.customPrice : (selectedPkg ? ((selectedPkg.category === 'Evening Desert Safari' || selectedPkg.id === 'morning_private') ? selectedPkg.peakRate : selectedPkg.rate) : "—")} {selectedPkg?.type === 'flat' ? '/car' : '/person'}
+                    <span style={{ color: (activeCpn || autoApplyOffpeakSetting) ? '#047857' : '#543c2b', fontWeight: '800' }}>
+                      AED {rate} {selectedPkg?.type === 'flat' ? '/car' : '/person'}
                     </span>
                   </span>
                 </div>
@@ -798,7 +1049,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
           </svg>
           <span>Check Availability</span>
         </a>
-        <a href="https://wa.me/+971589344077?text=i%20want%20to%20desert%20safari%20at%20RoarAdventures." target="_blank" rel="noopener noreferrer" className="floating-action-btn whatsapp-chat-btn">
+        <a href="https://wa.me/971589344077?text=I%20want%20to%20Book%20Desert%20Safari%20at%20RoarAdventures%2C%20please%20assist%2C%20Thanks" target="_blank" rel="noopener noreferrer" className="floating-action-btn whatsapp-chat-btn">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style={{ flexShrink: 0 }}>
             <path d="M12.012 2C6.48 2 2 6.48 2 12.012c0 1.764.468 3.42 1.284 4.884L2 22l5.244-1.26c1.416.768 3.012 1.212 4.768 1.212 5.532 0 10.012-4.48 10.012-10.012C22.024 6.48 17.544 2 12.012 2zm.006 17.172c-1.572 0-3.12-.42-4.488-1.224l-.324-.192-3.324.804.816-3.216-.216-.336c-.888-1.428-1.356-3.096-1.356-4.8 0-4.944 4.02-8.964 8.964-8.964 4.944 0 8.964 4.02 8.964 8.964 0 4.956-4.008 8.964-8.964 8.964zm4.908-6.72c-.276-.132-1.608-.792-1.86-.888-.252-.096-.432-.144-.612.132-.18.276-.696.888-.852 1.068-.156.18-.312.204-.588.072-.276-.132-1.164-.432-2.22-1.368-.816-.732-1.368-1.632-1.524-1.908-.156-.276-.012-.42.12-.552.12-.12.276-.324.408-.48.132-.156.18-.276.264-.456.096-.18.048-.336-.024-.48-.072-.144-.612-1.476-.84-2.016-.216-.528-.444-.456-.612-.456-.156 0-.336-.024-.516-.024-.18 0-.48.072-.732.348-.252.276-.96.936-.96 2.28 0 1.344.984 2.64 1.104 2.808.12.168 1.932 2.952 4.692 4.14 1.548.66 2.196.756 2.988.648.516-.072 1.608-.66 1.836-1.296.228-.636.228-1.188.156-1.296-.072-.108-.264-.168-.54-.3z"/>
           </svg>

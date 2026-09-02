@@ -191,14 +191,12 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
 
   // Selected vehicle lease calculations (60 months total financed)
   const paidInsts = selectedCar ? (selectedCar.ledger || []).filter(row => {
-    const inst = parseFloat(row.installment) || 0;
-    const rec = parseFloat(row.received) || 0;
-    return inst > 0 && rec >= inst;
+    const note = (row.note || '').toLowerCase();
+    return !note.includes('deferment') && !note.includes('deferred');
   }).length : 0;
   
   const pendingInsts = selectedCar ? Math.max(0, 60 - paidInsts) : 0;
-  const totalPaidToOwn = selectedCar ? (selectedCar.ledger || []).reduce((sum, row) => sum + (parseFloat(row.received) || 0), 0) : 0;
-  const leasePendingBalance = selectedCar ? Math.max(0, (60 * (parseFloat(selectedCar.installment) || 0)) - totalPaidToOwn) : 0;
+  const leasePendingBalance = selectedCar ? Math.max(0, pendingInsts * (parseFloat(selectedCar.installment) || 0)) : 0;
 
   // Overview stats across all cars
   const totalVehiclesCount = cars.length;
@@ -567,8 +565,8 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
           </div>
         )}
 
-        {/* Overview stats cards */}
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        {/* Overview stats cards (2 cards per row on mobile) */}
+        <div className="stats-grid" style={{ marginBottom: '24px' }}>
           <div className="stat-card">
             <div className="stat-header">
               <span>TOTAL REGISTERED CARS</span>
@@ -1024,7 +1022,7 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
             position: 'relative',
             zIndex: 20
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', width: 'auto' }}>
               <span style={{ fontWeight: '800', fontSize: '13.5px', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Select Vehicle:
               </span>
@@ -1054,7 +1052,7 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
               </select>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', width: '100%', justifyContent: 'flex-start', marginTop: '4px' }} className="no-print">
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', width: 'auto', justifyContent: 'flex-start', alignItems: 'center', marginTop: '0px' }} className="no-print">
               <button 
                 onClick={handleWhatsAppShare}
                 className="btn btn-secondary" 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Calendar, Edit2, Trash2, Phone, CheckCircle, Clock, Info, User, Clipboard, Send, Award, DollarSign, Copy, Database, Printer } from 'lucide-react';
+import { Plus, Search, Calendar, Edit2, Trash2, Phone, CheckCircle, Clock, Info, User, Clipboard, Send, Award, DollarSign, Copy, Database, Printer, Sparkles, Percent } from 'lucide-react';
 import { safariPackages } from '../mockData';
 
 export function cleanPhone(phone) {
@@ -16,27 +16,50 @@ export function cleanPhone(phone) {
   }
   return cleaned;
 }
+export function getSeasonalIsSummer(dateStr) {
+  let month = new Date().getMonth() + 1;
+  if (dateStr) {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      month = parseInt(parts[1], 10);
+    } else {
+      const slashParts = dateStr.split('/');
+      if (slashParts.length === 3) {
+        month = parseInt(slashParts[1], 10);
+      }
+    }
+  }
+  return month >= 5 && month <= 10;
+}
+
+export function getSeasonalPickupTime(dateStr, categoryOrIsMorning) {
+  let month = new Date().getMonth() + 1;
+  if (dateStr) {
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      month = parseInt(parts[1], 10);
+    } else {
+      const slashParts = dateStr.split('/');
+      if (slashParts.length === 3) {
+        month = parseInt(slashParts[1], 10);
+      }
+    }
+  }
+  const isSummer = month >= 5 && month <= 10;
+  const isMorning = typeof categoryOrIsMorning === 'boolean' 
+    ? categoryOrIsMorning 
+    : (categoryOrIsMorning || '').toLowerCase().includes('morning');
+
+  if (isMorning) {
+    return isSummer ? '7:00 AM' : '8:00 AM';
+  } else {
+    return isSummer ? '3:30 PM to 4:00 PM' : '2:00 PM to 2:30 PM';
+  }
+}
 
 export function getWhatsAppConfirmationLink(booking) {
   if (!booking) return '';
-  const refCode = booking.id ? booking.id.replace('book-', '') : '199600';
-  
-  const msg = `Thank you for choosing Roar Adventure Tourism LLC, Your booking regarding Dubai Desert Safari with Booking Reference# ${refCode} is confirmed with following details.   
-1. Name: ${booking.customerName} 
-2. WhatsApp: ${booking.whatsapp} 
-3. No of Guests: ${booking.pax} 
-4. Package: ${booking.packageName || 'Dubai Desert Safari'} 
-5. Pickup time: ${booking.pickupTime || '3:30 PM to 4:00 PM'} 
-6. Payment: ${booking.price} AED 
-7. ${parseFloat(booking.price) === 0 ? 'Online Paid' : 'Payment on arrival (5% VAT apply on card payment) .'}   
-8. Date: ${(booking.date || '').split('-').reverse().join('/')}  
-9. ROOM no : ${booking.roomNo || 'N/A'} 
-10. Pickup location: ${booking.pickupLocation || 'Hotel Lobby'} 
-Terms:   
-1. Free Cancellation before 24 hours  
-2. 50% refund before 12 hours.   
-3. 0 refund for no showup or same day cancellation.   
-For Cancellation Reschedule or Modifications please Call/WhatsApp +97145578679.`;
+  const msg = getConfirmationText(booking);
   const phoneClean = cleanPhone(booking.whatsapp);
   return `https://wa.me/${phoneClean}?text=${encodeURIComponent(msg)}`;
 }
@@ -44,7 +67,14 @@ For Cancellation Reschedule or Modifications please Call/WhatsApp +97145578679.`
 export function getWhatsAppDriverLink(booking, driver) {
   if (!booking || !driver) return '';
   const refCode = booking.id ? booking.id.replace('book-', '') : '199600';
-  
+  const isMorning = (booking.packageName || '').toLowerCase().includes('morning');
+  const resolvedPickupTime = booking.pickupTime && 
+    booking.pickupTime !== '3:30 PM to 4:00 PM' && 
+    booking.pickupTime !== '9:00 AM to 9:30 AM' &&
+    booking.pickupTime !== '2:00 PM to 2:30 PM'
+      ? booking.pickupTime
+      : getSeasonalPickupTime(booking.date, isMorning);
+
   // Calculate pax for this specific driver if it's a split booking
   let paxStr = booking.pax;
   if (booking.driverId && booking.driverId.includes(',')) {
@@ -52,7 +82,13 @@ export function getWhatsAppDriverLink(booking, driver) {
     const idx = ids.indexOf(driver.id);
     if (idx !== -1) {
       const totalPax = parseInt(booking.pax) || 1;
-      const paxForThisDriver = Math.min(6, totalPax - idx * 6);
+      let paxForThisDriver = Math.min(6, totalPax - idx * 6);
+      if (booking.carPax) {
+        const splits = booking.carPax.split(',').map(s => parseInt(s) || 0);
+        if (splits[idx] !== undefined) {
+          paxForThisDriver = splits[idx];
+        }
+      }
       paxStr = `${paxForThisDriver} pax (Car ${idx + 1} of ${ids.length})`;
     }
   }
@@ -64,13 +100,13 @@ WhatsApp: ${booking.whatsapp}
 Pax: ${paxStr}
 Package: ${booking.packageName}
 Date: ${(booking.date || '').split('-').reverse().join('/')}
-Pickup Time: ${booking.pickupTime}
+Pickup Time: ${resolvedPickupTime}
 Location: ${booking.pickupLocation} ${booking.roomNo ? `(Room: ${booking.roomNo})` : ''}`;
 
   if (booking.addonName && parseFloat(booking.addonPrice) > 0) {
     msg += `\nAddon: ${booking.addonName} (+${booking.addonPrice} AED)`;
   }
-  msg += `\nCollection on Arrival: ${parseFloat(booking.price) === 0 ? 'Online Paid / Nil' : `${booking.price} AED`}`;
+  msg += `\nPayment on Arrival: ${parseFloat(booking.price) === 0 ? 'Online Paid / Nil' : `${booking.price} AED`}`;
 
   const phoneClean = driver.whatsapp.replace(/[^0-9]/g, '');
   return `https://wa.me/${phoneClean}?text=${encodeURIComponent(msg)}`;
@@ -79,20 +115,36 @@ Location: ${booking.pickupLocation} ${booking.roomNo ? `(Room: ${booking.roomNo}
 export function getConfirmationText(booking) {
   if (!booking) return '';
   const refCode = booking.id ? booking.id.replace('book-', '') : '1000001';
-  
+  const isMorning = (booking.packageName || '').toLowerCase().includes('morning');
+  const isSelfDrive = booking.tourType === 'self_drive' || 
+                      (booking.pickupLocation || '').toLowerCase().trim() === 'self drive' ||
+                      (booking.pickupLocation || '').toLowerCase().includes('maps.app.goo.gl');
+
+  const resolvedPickupTime = isSelfDrive 
+    ? (getSeasonalIsSummer(booking.date) ? '4:40 PM' : '3:30 PM')
+    : (booking.pickupTime && 
+       booking.pickupTime !== '3:30 PM to 4:00 PM' && 
+       booking.pickupTime !== '9:00 AM to 9:30 AM' &&
+       booking.pickupTime !== '2:00 PM to 2:30 PM'
+         ? booking.pickupTime
+         : getSeasonalPickupTime(booking.date, isMorning));
+
+  const resolvedLocation = isSelfDrive ? 'https://maps.app.goo.gl/jcACpe96sKRcmbVe6' : (booking.pickupLocation || 'Hotel Lobby');
+
+  const isPaidOnline = (booking.paymentOption && booking.paymentOption !== 'Payment on Arrival' && booking.paymentOption !== 'Collection');
+
   let lines = [
     `Thank you for choosing Roar Adventure Tourism LLC, Your booking regarding Dubai Desert Safari with Booking Reference# ${refCode} is confirmed with following details.`,
     `1. Name: ${booking.customerName}`,
     `2. WhatsApp: ${booking.whatsapp}`,
     `3. No of Guests: ${booking.pax}`,
     `4. Package: ${booking.packageName || 'Dubai Desert Safari'}`,
-    `5. Pickup location: ${booking.pickupLocation || 'Hotel Lobby'}`,
-    `6. Pickup time: ${booking.pickupTime || '3:30 PM to 4:00 PM'}`,
+    isSelfDrive ? `5. Meeting point: ${resolvedLocation}` : `5. Pickup location: ${resolvedLocation}`,
+    isSelfDrive ? `6. Arrival time: ${resolvedPickupTime}` : `6. Pickup time: ${resolvedPickupTime}`,
     booking.addonName ? `7. Addon Service: ${booking.addonName} ${parseFloat(booking.addonPrice) > 0 ? `(+${booking.addonPrice} AED)` : ''}` : null,
-    `8. ROOM no : ${booking.roomNo || 'N/A'}`,
-    `9. Payment: ${booking.price} AED`,
-    `10. ${parseFloat(booking.price) === 0 ? 'Online Paid' : 'Payment on arrival (5% VAT apply on card payment) .'}`,
-    `11. Date: ${(booking.date || '').split('-').reverse().join('/')}`
+    `8. Payment: ${booking.price} AED`,
+    `9. ${isPaidOnline ? `${booking.paymentOption} (Paid)` : 'Payment on arrival (5% VAT apply on card payment) .'}`,
+    `10. Date: ${(booking.date || '').split('-').reverse().join('/')}`
   ].filter(Boolean);
 
   let itemIndex = 1;
@@ -122,7 +174,13 @@ export function getDriverDayBookings(driverId, bookings = []) {
     const idx = ids.indexOf(driverId);
     if (idx !== -1) {
       const paxTotal = parseInt(b.pax) || 1;
-      const paxForThisDriver = Math.min(6, paxTotal - idx * 6);
+      let paxForThisDriver = Math.min(6, paxTotal - idx * 6);
+      if (b.carPax) {
+        const splits = b.carPax.split(',').map(s => parseInt(s) || 0);
+        if (splits[idx] !== undefined) {
+          paxForThisDriver = splits[idx];
+        }
+      }
       if (paxForThisDriver > 0) {
         const share = paxForThisDriver / paxTotal;
         result.push({
@@ -703,7 +761,8 @@ export default function BookingsView({
     addonName: '',
     addonPrice: 0,
     couponCode: '',
-    pricingType: 'peak'
+    pricingType: 'peak',
+    paymentOption: 'Payment on Arrival'
   });
 
   const activePackages = packages.length > 0 ? packages : safariPackages;
@@ -741,9 +800,10 @@ export default function BookingsView({
     const matchesPkg = activeAndNotExpired.find(c => {
       if (c.packageId === pkgId) return true;
       const isUniversal = c.packageId === 'all_safari' || 
+                          c.packageId === 'all_packages' ||
                           c.code.toLowerCase() === 'roarnyofferdxb' || 
                           c.code.toLowerCase() === 'roarsummeroffer26';
-      if (isUniversal && (isEveningSafari || isMorningPrivate)) return true;
+      if (isUniversal) return true;
       return false;
     });
 
@@ -752,6 +812,7 @@ export default function BookingsView({
     }
 
     const isUniversalMatch = matchesPkg.packageId === 'all_safari' || 
+                             matchesPkg.packageId === 'all_packages' ||
                              matchesPkg.code.toLowerCase() === 'roarnyofferdxb' || 
                              matchesPkg.code.toLowerCase() === 'roarsummeroffer26';
 
@@ -759,12 +820,16 @@ export default function BookingsView({
       const offpeakRate = parseFloat(selectedPkgObj.offpeakRate) || parseFloat(selectedPkgObj.rate) || 0;
       return {
         status: 'valid',
-        message: `✓ Coupon Applied: AED ${offpeakRate} package price override`,
+        message: `✓ Summer End Sale Discount Applied: AED ${offpeakRate} (${matchesPkg.code})`,
         coupon: { ...matchesPkg, customPrice: offpeakRate }
       };
     }
 
-    return { status: 'valid', message: `✓ Coupon Applied: AED ${matchesPkg.customPrice} package price override`, coupon: matchesPkg };
+    return { 
+      status: 'valid', 
+      message: `✓ Summer End Sale Discount Applied: AED ${matchesPkg.customPrice} (${matchesPkg.code})`, 
+      coupon: matchesPkg 
+    };
   };
 
   // Centralized helper to compute base rate and booking price
@@ -796,28 +861,44 @@ export default function BookingsView({
   };
   const autoPrice = calculateBookingPrice(formData.packageName, formData.pax, formData.pricingType, formData.couponCode, formData.addonPrice);
 
+  const autoApplyOffpeakSetting = (settings || []).find(s => s.setting_key === 'auto_apply_offpeak_coupon')?.setting_value === '1';
+  const offpeakCouponCodeSetting = (settings || []).find(s => s.setting_key === 'offpeak_coupon_code')?.setting_value || 'RoarSummerOffer26';
+
   // Open modal for add
   const handleAddClick = () => {
     setEditingBooking(null);
     setDiscountInput(0);
     const initialPkg = activePackages[0];
+    const isMorning = (initialPkg?.name || '').toLowerCase().includes('morning');
+    const todayDateStr = new Date().toISOString().split('T')[0];
+
+    const activeOffpeakCpn = (coupons || []).find(c => 
+      parseInt(c.isActive) !== 0 && 
+      (c.code.toLowerCase() === offpeakCouponCodeSetting.toLowerCase() || c.packageId === 'all_safari' || c.packageId === 'all_packages')
+    );
+    const defaultCouponCode = autoApplyOffpeakSetting && activeOffpeakCpn ? activeOffpeakCpn.code : '';
+    const defaultPricingType = autoApplyOffpeakSetting ? 'offpeak' : 'peak';
+    const computedPrice = calculateBookingPrice(initialPkg?.name || '', 2, defaultPricingType, defaultCouponCode, 0);
+
     setFormData({
       customerName: '',
       whatsapp: '',
       partnerId: (partners || [])[0]?.id || 'website',
-      date: new Date().toISOString().split('T')[0],
+      date: todayDateStr,
       packageName: initialPkg?.name || '',
       pickupLocation: '',
       roomNo: '',
-      pickupTime: '3:30 PM to 4:00 PM',
+      pickupTime: getSeasonalPickupTime(todayDateStr, isMorning),
       pax: 2,
-      price: initialPkg ? (initialPkg.type === 'per_person' ? initialPkg.rate * 2 : initialPkg.rate) : 0,
+      price: computedPrice,
       driverId: '',
       status: 'confirmed',
       addonName: '',
       addonPrice: 0,
-      couponCode: '',
-      pricingType: 'peak'
+      couponCode: defaultCouponCode,
+      pricingType: defaultPricingType,
+      tourType: 'pick_drop',
+      paymentOption: 'Payment on Arrival'
     });
     setIsModalOpen(true);
   };
@@ -844,18 +925,55 @@ export default function BookingsView({
       addonPrice: 0,
       couponCode: '',
       pricingType: 'peak',
+      tourType: 'pick_drop',
       ...booking,
-      status: initialStatus
+      status: initialStatus,
+      paymentOption: booking.paymentOption === 'Collection' ? 'Payment on Arrival' : (booking.paymentOption || (parseFloat(booking.price) === 0 ? 'Paid via stripe' : 'Payment on Arrival'))
     });
     setIsModalOpen(true);
+  };
+
+  const handleDuplicateClick = async (booking) => {
+    // Generate a new 7-digit ID
+    const highWaterMarkStr = settings.find(s => s.setting_key === 'last_booking_ref')?.setting_value;
+    let nextIdVal = highWaterMarkStr ? parseInt(highWaterMarkStr) : 0;
+    
+    // Fallback if settings high water mark is missing
+    if (!nextIdVal || isNaN(nextIdVal)) {
+      const allIds = bookings.map(b => parseInt(b.id)).filter(id => !isNaN(id) && id >= 1000000 && id <= 9999999);
+      nextIdVal = allIds.length > 0 ? Math.max(...allIds) : 1000000;
+    }
+    
+    const newId = String(nextIdVal + 1);
+    
+    // Save settings high water mark
+    if (onSaveSetting) {
+      await onSaveSetting('last_booking_ref', newId);
+    }
+    
+    const duplicatedBooking = {
+      ...booking,
+      id: newId,
+      customerName: `${booking.customerName} (Copy)`,
+      status: 'confirmed', // default status
+      calendar_event_id: '' // reset calendar event id
+    };
+    
+    // Add to bookings list
+    setBookings([duplicatedBooking, ...bookings]);
+    
+    alert(`Booking duplicated successfully! New Reference ID: ${newId}`);
   };
 
   // Auto pricing calculations
   const handlePackageChange = (packageName, currentPax) => {
     const nextAuto = calculateBookingPrice(packageName, currentPax, formData.pricingType, formData.couponCode, formData.addonPrice);
+    const isMorning = (packageName || '').toLowerCase().includes('morning');
+    const seasonalTime = getSeasonalPickupTime(formData.date, isMorning);
     setFormData(prev => ({ 
       ...prev, 
       packageName,
+      pickupTime: seasonalTime,
       price: Math.max(0, nextAuto - discountInput)
     }));
   };
@@ -1433,6 +1551,14 @@ export default function BookingsView({
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                       <button 
+                        onClick={() => handleDuplicateClick(b)} 
+                        className="btn btn-secondary" 
+                        style={{ padding: '6px', color: 'var(--primary)' }}
+                        title="Duplicate Booking"
+                      >
+                        <Copy size={14} />
+                      </button>
+                      <button 
                         onClick={() => handleEditClick(b)} 
                         className="btn btn-secondary" 
                         style={{ padding: '6px' }}
@@ -1558,7 +1684,7 @@ export default function BookingsView({
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '11px' }}>ASSIGNED DRIVER</span>
                     <span style={{ fontWeight: '700' }}>
-                      {(drivers || []).find(d => d.id === viewingBooking.driverId)?.name || 'Unassigned'}
+                      {(viewingBooking.driverId || '').split(',').map(id => (drivers || []).find(d => d.id === id)?.name).filter(Boolean).join(' / ') || 'Unassigned'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1574,6 +1700,20 @@ export default function BookingsView({
                       ...(viewingBooking.status === 'confirmed' ? { background: 'rgba(59, 130, 246, 0.12)', color: '#1d4ed8' } : {})
                     }}>
                       {viewingBooking.status || 'Confirmed'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '11px' }}>PAYMENT OPTION</span>
+                    <span className="badge badge-partner" style={{ textTransform: 'capitalize' }}>
+                      {viewingBooking.paymentOption === 'Collection' ? 'Payment on Arrival' : (viewingBooking.paymentOption || 'Payment on Arrival')}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '11px' }}>PENDING PAYMENT ON ARRIVAL</span>
+                    <span style={{ fontWeight: '700', color: (viewingBooking.paymentOption === 'Payment on Arrival' || viewingBooking.paymentOption === 'Collection' || !viewingBooking.paymentOption) ? 'var(--primary)' : 'var(--text-muted)' }}>
+                      {(viewingBooking.paymentOption === 'Payment on Arrival' || viewingBooking.paymentOption === 'Collection' || !viewingBooking.paymentOption) ? `${viewingBooking.price} AED` : '0 AED'}
                     </span>
                   </div>
 
@@ -1766,7 +1906,25 @@ export default function BookingsView({
                     className="form-control"
                     required
                     value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    onChange={(e) => {
+                      const newDate = e.target.value;
+                      if (formData.tourType === 'self_drive') {
+                        const isSummer = getSeasonalIsSummer(newDate);
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          date: newDate,
+                          pickupTime: isSummer ? '4:40 PM' : '3:30 PM'
+                        }));
+                      } else {
+                        const isMorning = (formData.packageName || '').toLowerCase().includes('morning');
+                        const seasonalTime = getSeasonalPickupTime(newDate, isMorning);
+                        setFormData(prev => ({ 
+                          ...prev, 
+                          date: newDate,
+                          pickupTime: seasonalTime
+                        }));
+                      }
+                    }}
                   />
                 </div>
 
@@ -1785,6 +1943,62 @@ export default function BookingsView({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Seasonal Off-Peak Rate Indicator & 1-Click Toggle */}
+                <div style={{
+                  gridColumn: 'span 2',
+                  background: (formData.pricingType === 'offpeak' || (formData.couponCode && formData.couponCode.toLowerCase().includes('summer'))) ? 'rgba(5, 150, 105, 0.08)' : '#fdfbf7',
+                  border: (formData.pricingType === 'offpeak' || (formData.couponCode && formData.couponCode.toLowerCase().includes('summer'))) ? '1px solid rgba(5, 150, 105, 0.25)' : '1px solid #ede6d9',
+                  borderRadius: '8px',
+                  padding: '9px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Sparkles size={16} style={{ color: (formData.pricingType === 'offpeak') ? '#047857' : 'var(--primary)' }} />
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: (formData.pricingType === 'offpeak') ? '#047857' : 'var(--text-dark)' }}>
+                        {formData.pricingType === 'offpeak' 
+                          ? `⚡ Summer End Sale Discount Applied (Coupon: ${formData.couponCode || offpeakCouponCodeSetting})` 
+                          : `Peak Standard Pricing Active`}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        {autoApplyOffpeakSetting 
+                          ? `Summer End Sale coupon is globally active (${offpeakCouponCodeSetting})`
+                          : `Toggle to apply seasonal off-peak discounted rate overrides on this booking`}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.pricingType === 'offpeak') {
+                        handlePricingTypeChange('peak');
+                        handleCouponCodeChange('');
+                      } else {
+                        handlePricingTypeChange('offpeak');
+                        handleCouponCodeChange(offpeakCouponCodeSetting);
+                      }
+                    }}
+                    className="btn btn-secondary"
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: '800',
+                      padding: '4px 10px',
+                      background: formData.pricingType === 'offpeak' ? '#ffffff' : '#059669',
+                      color: formData.pricingType === 'offpeak' ? 'var(--text-dark)' : '#ffffff',
+                      border: formData.pricingType === 'offpeak' ? '1px solid #d1d5db' : 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {formData.pricingType === 'offpeak' ? 'Switch to Peak (Standard)' : '⚡ Apply Summer End Sale Discount'}
+                  </button>
                 </div>
 
                 <div className="form-group">
@@ -1819,33 +2033,67 @@ export default function BookingsView({
                 </div>
 
                 <div className="form-group col-span-2">
-                  <label>Hotel Pickup Location</label>
-                  <input 
-                    type="text" 
+                  <label>Type of Tour</label>
+                  <select 
                     className="form-control"
-                    placeholder="e.g. Atlantis The Palm, Lobby West"
-                    value={formData.pickupLocation}
-                    onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value })}
-                  />
+                    value={formData.tourType || 'pick_drop'}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === 'self_drive') {
+                        const isSummer = getSeasonalIsSummer(formData.date);
+                        setFormData(prev => ({
+                          ...prev,
+                          tourType: val,
+                          pickupLocation: 'https://maps.app.goo.gl/jcACpe96sKRcmbVe6',
+                          roomNo: '',
+                          pickupTime: isSummer ? '4:40 PM' : '3:30 PM'
+                        }));
+                      } else {
+                        setFormData(prev => ({
+                          ...prev,
+                          tourType: val,
+                          pickupLocation: prev.pickupLocation === 'https://maps.app.goo.gl/jcACpe96sKRcmbVe6' ? '' : prev.pickupLocation,
+                          pickupTime: getSeasonalPickupTime(prev.date, (prev.packageName || '').toLowerCase().includes('morning'))
+                        }));
+                      }
+                    }}
+                  >
+                    <option value="pick_drop">With Pick/Drop</option>
+                    <option value="self_drive">Self Drive</option>
+                  </select>
                 </div>
 
-                <div className="form-group">
-                  <label>Hotel Room Number</label>
-                  <input 
-                    type="text" 
-                    className="form-control"
-                    placeholder="e.g. 3196"
-                    value={formData.roomNo}
-                    onChange={(e) => setFormData({ ...formData, roomNo: e.target.value })}
-                  />
-                </div>
+                {formData.tourType === 'self_drive' ? (
+                  <div className="form-group">
+                    <label>Meeting Point</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      style={{ background: '#f8f9fa', cursor: 'not-allowed', fontWeight: 'bold' }}
+                      value="https://maps.app.goo.gl/jcACpe96sKRcmbVe6"
+                      readOnly
+                    />
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <label>Area/Hotel Name & Room Number *</label>
+                    <input 
+                      type="text" 
+                      className="form-control"
+                      placeholder="e.g. Atlantis The Palm, Room 1204"
+                      value={formData.pickupLocation}
+                      onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value })}
+                      required
+                    />
+                  </div>
+                )}
 
                 <div className="form-group">
-                  <label>Pickup Time Slot</label>
+                  <label>{formData.tourType === 'self_drive' ? 'Arrival Time' : 'Pickup Time Slot'}</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="e.g. 3:30 PM to 4:00 PM"
+                    placeholder={formData.tourType === 'self_drive' ? 'e.g. 4:40 PM' : 'e.g. 3:30 PM to 4:00 PM'}
                     value={formData.pickupTime}
                     onChange={(e) => setFormData({ ...formData, pickupTime: e.target.value })}
                   />
@@ -1985,19 +2233,68 @@ export default function BookingsView({
                 </div>
 
                 <div className="form-group">
+                  <label>Payment Option</label>
+                  <select 
+                    className="form-control"
+                    value={formData.paymentOption === 'Collection' ? 'Payment on Arrival' : (formData.paymentOption || 'Payment on Arrival')}
+                    onChange={(e) => setFormData({ ...formData, paymentOption: e.target.value })}
+                  >
+                    <option value="Payment on Arrival">Payment on Arrival</option>
+                    <option value="Paid on Viator">Paid on Viator</option>
+                    <option value="Paid via stripe">Paid via stripe</option>
+                    <option value="Paid to Partner">Paid to Partner</option>
+                    <option value="Paid via Payment Link">Paid via Payment Link</option>
+                    <option value="Paid via RAK Bank">Paid via RAK Bank</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Pending Payment on Arrival (AED)</label>
+                  <input 
+                    type="number" 
+                    className="form-control"
+                    value={(formData.paymentOption === 'Payment on Arrival' || formData.paymentOption === 'Collection' || !formData.paymentOption) ? formData.price : 0}
+                    disabled
+                    style={{ background: '#f3f4f6', color: '#543d2b', fontWeight: 'bold', cursor: 'not-allowed' }}
+                  />
+                </div>
+
+                <div className="form-group">
                   <label>Assign Drivers</label>
                   {(() => {
                     const carsCount = Math.ceil((parseInt(formData.pax) || 1) / 6) || 1;
                     const currentDrivers = (formData.driverId || '').split(',');
+                    const currentCarPaxStr = (formData.carPax || '').split(',');
+                    const totalPax = parseInt(formData.pax) || 1;
+
+                    // Build active car pax counts
+                    const activeCarPax = [];
+                    let tempRemaining = totalPax;
+                    for (let i = 0; i < carsCount; i++) {
+                      if (currentCarPaxStr[i] !== undefined && currentCarPaxStr[i] !== '' && !isNaN(parseInt(currentCarPaxStr[i]))) {
+                        activeCarPax.push(parseInt(currentCarPaxStr[i]));
+                      } else {
+                        // Standard sequential allocation
+                        const alloc = Math.min(6, tempRemaining);
+                        activeCarPax.push(alloc);
+                        tempRemaining -= alloc;
+                      }
+                    }
+
+                    const sumCarPax = activeCarPax.reduce((sum, current) => sum + current, 0);
+                    const hasMismatch = sumCarPax !== totalPax;
+
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {Array.from({ length: carsCount }).map((_, idx) => {
                           const val = currentDrivers[idx] || '';
+                          const carPaxVal = activeCarPax[idx] || 0;
                           return (
                             <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                               <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', minWidth: '45px' }}>Car {idx + 1}:</span>
                               <select
                                 className="form-control"
+                                style={{ flex: 1 }}
                                 value={val}
                                 onChange={(e) => {
                                   const newDrivers = [...currentDrivers];
@@ -2011,9 +2308,33 @@ export default function BookingsView({
                                   <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
                               </select>
+                              {carsCount > 1 && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>Pax:</span>
+                                  <input 
+                                    type="number"
+                                    min="0"
+                                    max={totalPax}
+                                    className="form-control"
+                                    style={{ width: '60px', padding: '4px', textAlign: 'center' }}
+                                    value={carPaxVal}
+                                    onChange={(e) => {
+                                      const newVal = parseInt(e.target.value) || 0;
+                                      const newCarPaxList = [...activeCarPax];
+                                      newCarPaxList[idx] = newVal;
+                                      setFormData({ ...formData, carPax: newCarPaxList.join(',') });
+                                    }}
+                                  />
+                                </div>
+                              )}
                             </div>
                           );
                         })}
+                        {carsCount > 1 && hasMismatch && (
+                          <div style={{ fontSize: '11px', fontWeight: 'bold', color: '#ef4444', marginTop: '2px' }}>
+                            ⚠️ Sum of car pax ({sumCarPax}) does not match total guests ({totalPax})
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
