@@ -77,6 +77,43 @@ export default function CarExpensesView({
     return DEFAULT_ROAR_PLATES;
   });
 
+  // Custom Car Labels (e.g. Car 1 - Land Cruiser, Driver Ali)
+  const [carLabels, setCarLabels] = useState(() => {
+    try {
+      const saved = localStorage.getItem('safari_car_custom_labels');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      'FF79157': 'Toyota Land Cruiser (Car 1)',
+      'DD21596': 'Nissan Patrol (Car 2)',
+      'G25801': 'Toyota Fortuner (Car 3)',
+      'D16197': 'Toyota Land Cruiser (Car 4)',
+      'I49209': 'Nissan Patrol (Car 5)',
+      'BB23370': 'Toyota Land Cruiser (Car 6)',
+      'DD50781': 'Toyota Fortuner (Car 7)'
+    };
+  });
+
+  // Customizable 8 KPI card titles
+  const DEFAULT_CAR_CARD_LABELS = {
+    total: 'TOTAL SPEND',
+    oil: 'OIL CHANGE',
+    tyres: 'TYRES & MATS',
+    passing: 'PASSING / REG',
+    insurance: 'INSURANCE',
+    repairs: 'REPAIRS / BRAKES',
+    highest: 'HIGHEST SPEND',
+    thisMonth: 'THIS MONTH'
+  };
+
+  const [cardLabels, setCardLabels] = useState(() => {
+    try {
+      const saved = localStorage.getItem('safari_car_card_labels');
+      if (saved) return { ...DEFAULT_CAR_CARD_LABELS, ...JSON.parse(saved) };
+    } catch (e) {}
+    return DEFAULT_CAR_CARD_LABELS;
+  });
+
   useEffect(() => {
     localStorage.setItem('safari_car_expense_categories', JSON.stringify(categories));
   }, [categories]);
@@ -84,6 +121,14 @@ export default function CarExpensesView({
   useEffect(() => {
     localStorage.setItem('safari_car_fleet_plates', JSON.stringify(fleetPlates));
   }, [fleetPlates]);
+
+  useEffect(() => {
+    localStorage.setItem('safari_car_custom_labels', JSON.stringify(carLabels));
+  }, [carLabels]);
+
+  useEffect(() => {
+    localStorage.setItem('safari_car_card_labels', JSON.stringify(cardLabels));
+  }, [cardLabels]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -99,6 +144,15 @@ export default function CarExpensesView({
   // Add Custom Plate Modal / Inline State
   const [isAddPlateOpen, setIsAddPlateOpen] = useState(false);
   const [newPlateNumber, setNewPlateNumber] = useState('');
+  const [newPlateLabel, setNewPlateLabel] = useState('');
+
+  // Edit Car Label Modal State
+  const [isEditCarLabelOpen, setIsEditCarLabelOpen] = useState(false);
+  const [editingPlateForLabel, setEditingPlateForLabel] = useState('');
+  const [customPlateLabelInput, setCustomPlateLabelInput] = useState('');
+
+  // Edit Card Labels Modal State
+  const [isEditCardLabelsOpen, setIsEditCardLabelsOpen] = useState(false);
 
   // Report Modal State
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
@@ -193,10 +247,25 @@ export default function CarExpensesView({
     if (!fleetPlates.includes(trimmed)) {
       const updated = [...fleetPlates, trimmed];
       setFleetPlates(updated);
+      if (newPlateLabel.trim()) {
+        setCarLabels(prev => ({ ...prev, [trimmed]: newPlateLabel.trim() }));
+      }
+      setSelectedPlateFilter(trimmed);
       setFormData(prev => ({ ...prev, plateNo: trimmed, carId: `car-${trimmed.toLowerCase()}` }));
     }
     setNewPlateNumber('');
+    setNewPlateLabel('');
     setIsAddPlateOpen(false);
+  };
+
+  const handleSaveCarLabel = (e) => {
+    e.preventDefault();
+    if (!editingPlateForLabel) return;
+    setCarLabels(prev => ({
+      ...prev,
+      [editingPlateForLabel]: customPlateLabelInput.trim()
+    }));
+    setIsEditCarLabelOpen(false);
   };
 
   const handleSaveExpense = (e) => {
@@ -330,9 +399,9 @@ export default function CarExpensesView({
       }
     });
 
-    // 7. This Month's Fleet Maintenance
+    // 7. This Month's Maintenance (for selected car or entire fleet)
     const thisMonthTotal = carExpenses
-      .filter(item => (item.date || '').startsWith(currentMonthPrefix))
+      .filter(item => (item.date || '').startsWith(currentMonthPrefix) && (selectedPlateFilter === 'all' || item.plateNo === selectedPlateFilter))
       .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
     return {
@@ -421,10 +490,74 @@ export default function CarExpensesView({
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          
+          {/* Add New Car Button (Per Image 1) */}
+          <button 
+            onClick={() => { setNewPlateNumber(''); setNewPlateLabel(''); setIsAddPlateOpen(true); }}
+            className="btn btn-secondary" 
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 11px', height: '36px' }}
+            title="Add new car number plate to fleet"
+          >
+            <Plus size={14} /> Add New Car
+          </button>
+
+          {/* Car Number Plate Dropdown (Per Image 1) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <select 
+              value={selectedPlateFilter}
+              onChange={(e) => setSelectedPlateFilter(e.target.value)}
+              className="form-control"
+              style={{
+                width: 'auto',
+                minWidth: '190px',
+                fontSize: '12px',
+                fontWeight: '800',
+                color: selectedPlateFilter !== 'all' ? '#8c5b30' : 'var(--text-dark)',
+                borderColor: selectedPlateFilter !== 'all' ? '#8c5b30' : '#ede6d9',
+                background: '#ffffff',
+                height: '36px',
+                padding: '4px 10px'
+              }}
+              title="Filter expenses by car number plate"
+            >
+              <option value="all">🚗 All Fleet Cars ({fleetPlates.length} Cars)</option>
+              {fleetPlates.map(plate => (
+                <option key={plate} value={plate}>
+                  #{plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''} ({(carExpensesMap[plate] || 0).toLocaleString()} AED)
+                </option>
+              ))}
+            </select>
+
+            {selectedPlateFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingPlateForLabel(selectedPlateFilter);
+                  setCustomPlateLabelInput(carLabels[selectedPlateFilter] || '');
+                  setIsEditCarLabelOpen(true);
+                }}
+                className="btn btn-secondary"
+                style={{ padding: '7px 10px', height: '36px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                title="Change car label text / nickname"
+              >
+                <Edit2 size={13} /> Label
+              </button>
+            )}
+          </div>
+
+          <button 
+            onClick={() => setIsEditCardLabelsOpen(true)}
+            className="btn btn-secondary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '7px 11px', height: '36px' }}
+            title="Customize the 8 card header label texts"
+          >
+            <Layers size={14} /> Edit Card Labels
+          </button>
+
           <button 
             onClick={handleOpenReport}
             className="btn btn-secondary" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 12px' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
           >
             <Printer size={14} /> Print Report
           </button>
@@ -432,7 +565,7 @@ export default function CarExpensesView({
           <button 
             onClick={() => setIsAddCategoryOpen(true)}
             className="btn btn-secondary" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 12px' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
           >
             <Plus size={14} /> Add Type
           </button>
@@ -440,93 +573,21 @@ export default function CarExpensesView({
           <button 
             onClick={() => handleOpenAddModal()}
             className="btn btn-primary" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 14px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 14px', height: '36px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
           >
             <Plus size={14} /> Log Expense
           </button>
         </div>
       </div>
 
-      {/* Fleet Cars Selector Strip (Plate numbers only, clean mobile cards) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            FLEET VEHICLES ({fleetPlates.length})
-          </span>
-          {selectedPlateFilter !== 'all' && (
-            <button 
-              onClick={() => setSelectedPlateFilter('all')} 
-              className="btn btn-secondary" 
-              style={{ fontSize: '10.5px', padding: '2px 8px' }}
-            >
-              Show All
-            </button>
-          )}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '8px' }}>
-          {fleetPlates.map(plate => {
-            const isSelected = selectedPlateFilter === plate;
-            const totalCarSpent = carExpensesMap[plate] || 0;
-
-            return (
-              <div 
-                key={plate}
-                onClick={() => setSelectedPlateFilter(isSelected ? 'all' : plate)}
-                style={{
-                  background: isSelected ? 'rgba(140, 91, 48, 0.1)' : '#ffffff',
-                  border: isSelected ? '2px solid var(--primary)' : '1px solid #ede6d9',
-                  borderRadius: '10px',
-                  padding: '10px 10px',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  boxShadow: isSelected ? '0 2px 8px rgba(140, 91, 48, 0.15)' : 'none'
-                }}
-              >
-                <div style={{ fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'monospace', fontSize: '12px' }}>
-                  #{plate}
-                </div>
-                <div style={{ fontSize: '11px', fontWeight: '700', color: totalCarSpent > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>
-                  {totalCarSpent.toLocaleString()} AED
-                </div>
-              </div>
-            );
-          })}
-
-          <div 
-            onClick={() => setIsAddPlateOpen(true)}
-            style={{
-              background: '#fdfbf7',
-              border: '1px dashed #d1c7b7',
-              borderRadius: '10px',
-              padding: '10px 10px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              color: 'var(--primary)',
-              fontSize: '11.5px',
-              fontWeight: '700'
-            }}
-            title="Add another plate to fleet"
-          >
-            <Plus size={13} /> Add Car
-          </div>
-        </div>
-      </div>
-
-      {/* 8 KPI & Report Cards Grid (2 cards per row on mobile) */}
+      {/* 8 KPI & Report Cards Grid (2 cards per row on mobile, customizable titles) */}
       <div className="stats-grid" style={{ marginBottom: '8px' }}>
         
         {/* 1. Total Fleet Expenses */}
         <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              TOTAL SPEND
+              {selectedPlateFilter !== 'all' ? `TOTAL (CAR #${selectedPlateFilter})` : cardLabels.total}
             </span>
             <Wrench size={14} style={{ color: 'var(--primary)' }} />
           </div>
@@ -542,7 +603,7 @@ export default function CarExpensesView({
         <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              OIL CHANGE
+              {cardLabels.oil}
             </span>
             <Droplet size={14} style={{ color: '#c9762a' }} />
           </div>
@@ -558,7 +619,7 @@ export default function CarExpensesView({
         <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              TYRES & MATS
+              {cardLabels.tyres}
             </span>
             <Disc size={14} style={{ color: '#b45309' }} />
           </div>
@@ -574,7 +635,7 @@ export default function CarExpensesView({
         <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              PASSING / REG
+              {cardLabels.passing}
             </span>
             <ShieldCheck size={14} style={{ color: '#047857' }} />
           </div>
@@ -590,7 +651,7 @@ export default function CarExpensesView({
         <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              INSURANCE
+              {cardLabels.insurance}
             </span>
             <FileText size={14} style={{ color: '#1d4ed8' }} />
           </div>
@@ -606,7 +667,7 @@ export default function CarExpensesView({
         <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              REPAIRS / BRAKES
+              {cardLabels.repairs}
             </span>
             <AlertCircle size={14} style={{ color: '#b91c1c' }} />
           </div>
@@ -618,27 +679,29 @@ export default function CarExpensesView({
           </div>
         </div>
 
-        {/* 7. Top Expensed Vehicle (Plate only) */}
+        {/* 7. Top Expensed Vehicle or Selected Car Label */}
         <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              HIGHEST SPEND
+              {selectedPlateFilter !== 'all' ? 'SELECTED CAR' : cardLabels.highest}
             </span>
             <Car size={14} style={{ color: 'var(--primary)' }} />
           </div>
           <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px', fontFamily: 'monospace' }}>
-            #{stats.topCarPlate}
+            #{selectedPlateFilter !== 'all' ? selectedPlateFilter : stats.topCarPlate}
           </div>
-          <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '700', marginTop: '2px' }}>
-            {stats.topCarAmount.toLocaleString()} AED total
+          <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '700', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {selectedPlateFilter !== 'all' 
+              ? (carLabels[selectedPlateFilter] || 'Fleet Vehicle') 
+              : `${stats.topCarAmount.toLocaleString()} AED total`}
           </div>
         </div>
 
-        {/* 8. This Month's Fleet Maintenance */}
+        {/* 8. This Month */}
         <div className="stat-card" style={{ background: '#fdfbf7', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              THIS MONTH
+              {selectedPlateFilter !== 'all' ? `THIS MONTH (#${selectedPlateFilter})` : cardLabels.thisMonth}
             </span>
             <Clock size={14} style={{ color: '#047857' }} />
           </div>
@@ -646,7 +709,7 @@ export default function CarExpensesView({
             {stats.thisMonthTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
           </div>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Current month
+            {selectedPlateFilter !== 'all' ? `Car #${selectedPlateFilter}` : 'Current month'}
           </div>
         </div>
 
@@ -1064,6 +1127,16 @@ export default function CarExpensesView({
                   autoFocus
                 />
               </div>
+              <div className="form-group" style={{ marginTop: '8px' }}>
+                <label>Car Label / Nickname (Optional)</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="e.g. Toyota Land Cruiser (Car 1) or Driver Ali"
+                  value={newPlateLabel}
+                  onChange={(e) => setNewPlateLabel(e.target.value)}
+                />
+              </div>
               <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '14px', paddingTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                 <button type="button" onClick={() => setIsAddPlateOpen(false)} className="btn btn-secondary">
                   Cancel
@@ -1095,27 +1168,40 @@ export default function CarExpensesView({
             }}
           >
             {/* Modal Header / Actions */}
-            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #ede6d9', paddingBottom: '14px', marginBottom: '20px' }}>
+            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #ede6d9', paddingBottom: '14px', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
-                  Fleet Maintenance & Expense Report
+                  {selectedPlateFilter === 'all' ? 'Fleet Maintenance & Expense Report' : `Vehicle Report: Car #${selectedPlateFilter}`}
                 </h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Filtered by: {selectedPlateFilter === 'all' ? 'All Fleet Cars' : `Plate #${selectedPlateFilter}`} | {dateFilter === 'this_month' ? 'This Month' : (dateFilter === 'last_month' ? 'Last Month' : 'All Time')}
+                  Scope: {selectedPlateFilter === 'all' ? 'Entire Fleet (All Cars)' : `Car #${selectedPlateFilter} ${carLabels[selectedPlateFilter] ? `(${carLabels[selectedPlateFilter]})` : ''}`} | {dateFilter === 'this_month' ? 'This Month' : (dateFilter === 'last_month' ? 'Last Month' : 'All Time')}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Plate selector inside report modal */}
+                <select
+                  value={selectedPlateFilter}
+                  onChange={(e) => setSelectedPlateFilter(e.target.value)}
+                  className="form-control"
+                  style={{ width: 'auto', fontSize: '12px', height: '34px', fontWeight: '800', color: 'var(--primary)' }}
+                >
+                  <option value="all">🚗 Entire Fleet ({fleetPlates.length} Cars)</option>
+                  {fleetPlates.map(p => (
+                    <option key={p} value={p}>#{p} {carLabels[p] ? `- ${carLabels[p]}` : ''}</option>
+                  ))}
+                </select>
+
                 <button 
                   onClick={handleExportCSV}
                   className="btn btn-secondary"
-                  style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '34px' }}
                 >
                   <Download size={14} /> Export CSV
                 </button>
                 <button 
                   onClick={handlePrintReport}
                   className="btn btn-primary"
-                  style={{ fontSize: '12px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  style={{ fontSize: '12px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '34px' }}
                 >
                   <Printer size={14} /> Print Statement
                 </button>
@@ -1142,12 +1228,14 @@ export default function CarExpensesView({
                     DWTC Complex, Sheikh Zayed Road, Dubai, UAE | DET/DTCM Licensed Tour Operator
                   </div>
                   <div style={{ fontSize: '14px', fontWeight: '800', color: '#8c5b30', marginTop: '6px' }}>
-                    OFFICIAL FLEET CAR EXPENSES STATEMENT
+                    {selectedPlateFilter !== 'all' 
+                      ? `OFFICIAL VEHICLE MAINTENANCE STATEMENT - CAR #${selectedPlateFilter} ${carLabels[selectedPlateFilter] ? `(${carLabels[selectedPlateFilter]})` : ''}` 
+                      : 'OFFICIAL FLEET CAR EXPENSES STATEMENT'}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', fontSize: '12px', color: '#6b7280' }}>
                   <div>Date Generated: <strong style={{ color: '#111827' }}>{todayStr.split('-').reverse().join('/')}</strong></div>
-                  <div>Report Scope: <strong style={{ color: '#8c5b30' }}>{selectedPlateFilter === 'all' ? 'Entire Fleet (7 Cars)' : `Plate #${selectedPlateFilter}`}</strong></div>
+                  <div>Report Scope: <strong style={{ color: '#8c5b30' }}>{selectedPlateFilter === 'all' ? `Entire Fleet (${fleetPlates.length} Cars)` : `Car #${selectedPlateFilter} ${carLabels[selectedPlateFilter] ? `(${carLabels[selectedPlateFilter]})` : ''}`}</strong></div>
                   <div>Total Invoices: <strong style={{ color: '#111827' }}>{filteredExpenses.length}</strong></div>
                 </div>
               </div>
@@ -1155,7 +1243,9 @@ export default function CarExpensesView({
               {/* Summary Scorecards in Report */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
                 <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>TOTAL EXPENSES</div>
+                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>
+                    {selectedPlateFilter !== 'all' ? `TOTAL (CAR #${selectedPlateFilter})` : 'TOTAL EXPENSES'}
+                  </div>
                   <div style={{ fontSize: '18px', fontWeight: '900', color: '#8c5b30', marginTop: '4px' }}>
                     {stats.totalFleetExpense.toLocaleString()} AED
                   </div>
@@ -1173,49 +1263,57 @@ export default function CarExpensesView({
                   </div>
                 </div>
                 <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>HIGHEST EXPENSED</div>
-                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#047857', marginTop: '4px', fontFamily: 'monospace' }}>
-                    #{stats.topCarPlate}
+                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>
+                    {selectedPlateFilter !== 'all' ? 'OTHER REPAIRS' : 'HIGHEST EXPENSED'}
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#047857', marginTop: '4px', fontFamily: selectedPlateFilter !== 'all' ? 'inherit' : 'monospace' }}>
+                    {selectedPlateFilter !== 'all' 
+                      ? `${(stats.accidentRepairsTotal + stats.insuranceTotal).toLocaleString()} AED` 
+                      : `#${stats.topCarPlate}`}
                   </div>
                 </div>
               </div>
 
-              {/* Breakdown by Vehicle Plate Table */}
-              <div style={{ marginBottom: '24px' }}>
-                <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#543c2b', textTransform: 'uppercase', marginBottom: '8px' }}>
-                  Fleet Vehicle Breakdown
-                </h4>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: '1px solid #ede6d9' }}>
-                  <thead>
-                    <tr style={{ background: '#fdfbf7', borderBottom: '1.5px solid #ede6d9', textAlign: 'left' }}>
-                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>VEHICLE PLATE</th>
-                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'center' }}>SERVICES COUNT</th>
-                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>TOTAL SPENT (AED)</th>
-                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>SHARE OF FLEET</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {fleetPlates.map(plate => {
-                      const carItems = filteredExpenses.filter(e => e.plateNo === plate);
-                      const carTotal = carItems.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-                      const sharePct = stats.totalFleetExpense > 0 ? ((carTotal / stats.totalFleetExpense) * 100).toFixed(1) : '0.0';
+              {/* Breakdown by Vehicle Plate Table - ONLY SHOWN IF ALL CARS SELECTED */}
+              {selectedPlateFilter === 'all' && (
+                <div style={{ marginBottom: '24px' }}>
+                  <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#543c2b', textTransform: 'uppercase', marginBottom: '8px' }}>
+                    Fleet Vehicle Breakdown
+                  </h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: '1px solid #ede6d9' }}>
+                    <thead>
+                      <tr style={{ background: '#fdfbf7', borderBottom: '1.5px solid #ede6d9', textAlign: 'left' }}>
+                        <th style={{ padding: '8px 10px', fontWeight: '800' }}>VEHICLE PLATE</th>
+                        <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'center' }}>SERVICES COUNT</th>
+                        <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>TOTAL SPENT (AED)</th>
+                        <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>SHARE OF FLEET</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {fleetPlates.map(plate => {
+                        const carItems = filteredExpenses.filter(e => e.plateNo === plate);
+                        const carTotal = carItems.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                        const sharePct = stats.totalFleetExpense > 0 ? ((carTotal / stats.totalFleetExpense) * 100).toFixed(1) : '0.0';
 
-                      return (
-                        <tr key={plate} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                          <td style={{ padding: '8px 10px', fontWeight: '800', fontFamily: 'monospace' }}>#{plate}</td>
-                          <td style={{ padding: '8px 10px', textAlign: 'center' }}>{carItems.length}</td>
-                          <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: carTotal > 0 ? '#8c5b30' : '#9ca3af' }}>
-                            {carTotal.toLocaleString()} AED
-                          </td>
-                          <td style={{ padding: '8px 10px', textAlign: 'right', color: '#6b7280' }}>
-                            {sharePct}%
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                        return (
+                          <tr key={plate} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                            <td style={{ padding: '8px 10px', fontWeight: '800', fontFamily: 'monospace' }}>
+                              #{plate} {carLabels[plate] ? <span style={{ color: '#8c5b30', fontWeight: '600' }}>({carLabels[plate]})</span> : ''}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>{carItems.length}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: carTotal > 0 ? '#8c5b30' : '#9ca3af' }}>
+                              {carTotal.toLocaleString()} AED
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right', color: '#6b7280' }}>
+                              {sharePct}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               {/* Itemized Maintenance Records */}
               <div>
@@ -1276,6 +1374,155 @@ export default function CarExpensesView({
 
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Edit Car Label Modal */}
+      {isEditCarLabelOpen && (
+        <div className="modal-overlay" style={{ zIndex: 2100 }}>
+          <div className="modal-content" style={{ maxWidth: '420px', borderRadius: '14px', padding: '20px', background: '#ffffff', border: '1.5px solid #ede6d9' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
+                Customize Car Label: #{editingPlateForLabel}
+              </h3>
+              <button onClick={() => setIsEditCarLabelOpen(false)} className="modal-close">&times;</button>
+            </div>
+            <form onSubmit={handleSaveCarLabel}>
+              <div className="form-group">
+                <label>Car Label / Nickname / Driver Name</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  placeholder="e.g. Toyota Land Cruiser (Car 1) or Driver Ali"
+                  value={customPlateLabelInput}
+                  onChange={(e) => setCustomPlateLabelInput(e.target.value)}
+                  autoFocus
+                />
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
+                  This label text will appear in the dropdown, KPI cards, and reports for this vehicle.
+                </span>
+              </div>
+              <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '14px', paddingTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button type="button" onClick={() => setIsEditCarLabelOpen(false)} className="btn btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Save Label
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Card Labels Modal */}
+      {isEditCardLabelsOpen && (
+        <div className="modal-overlay" style={{ zIndex: 2100 }}>
+          <div className="modal-content" style={{ maxWidth: '500px', borderRadius: '14px', padding: '22px', background: '#ffffff', border: '1.5px solid #ede6d9', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Layers size={18} style={{ color: 'var(--primary)' }} />
+                <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
+                  Customize 8 KPI Card Header Labels
+                </h3>
+              </div>
+              <button onClick={() => setIsEditCardLabelsOpen(false)} className="modal-close">&times;</button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); setIsEditCardLabelsOpen(false); }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label>Card 1 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.total} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, total: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 2 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.oil} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, oil: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 3 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.tyres} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, tyres: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 4 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.passing} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, passing: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 5 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.insurance} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, insurance: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 6 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.repairs} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, repairs: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 7 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.highest} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, highest: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 8 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.thisMonth} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, thisMonth: e.target.value })} 
+                  />
+                </div>
+              </div>
+              <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '16px', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setCardLabels(DEFAULT_CAR_CARD_LABELS)} 
+                  className="btn btn-secondary"
+                  style={{ fontSize: '11px' }}
+                >
+                  Reset Defaults
+                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="button" onClick={() => setIsEditCardLabelsOpen(false)} className="btn btn-secondary">
+                    Close
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Save Labels
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}

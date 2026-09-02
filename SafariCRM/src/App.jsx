@@ -45,7 +45,7 @@ export default function App() {
   const [profileTab, setProfileTab] = useState('adminInfo'); // 'adminInfo' or 'companyInfo'
 
   // Database version reset check
-  const DB_VERSION = 'v36.0';
+  const DB_VERSION = 'v37.0';
   useEffect(() => {
     localStorage.setItem('safari_db_version', DB_VERSION);
   }, []);

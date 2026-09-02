@@ -76,6 +76,36 @@ export default function CompanyExpensesView({
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
+  // Report date range state (Per Image 2 user request: allow option to select dates)
+  const [reportStartDate, setReportStartDate] = useState('');
+  const [reportEndDate, setReportEndDate] = useState('');
+
+  // Customizable 8 KPI Card Titles
+  const DEFAULT_COMPANY_CARD_LABELS = {
+    total: 'TOTAL OVERHEADS',
+    license: 'TRADE LICENSE',
+    rent: 'OFFICE RENT',
+    telecom: 'INTERNET / PHONE',
+    sims: 'SALES SIMS',
+    supplies: 'OFFICE SUPPLIES',
+    pettyCash: 'PETTY CASH',
+    renewal: 'NEXT RENEWAL'
+  };
+
+  const [cardLabels, setCardLabels] = useState(() => {
+    try {
+      const saved = localStorage.getItem('safari_company_card_labels');
+      if (saved) return { ...DEFAULT_COMPANY_CARD_LABELS, ...JSON.parse(saved) };
+    } catch (e) {}
+    return DEFAULT_COMPANY_CARD_LABELS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('safari_company_card_labels', JSON.stringify(cardLabels));
+  }, [cardLabels]);
+
+  const [isEditCardLabelsOpen, setIsEditCardLabelsOpen] = useState(false);
+
   // Dynamic Category management (allows adding more types later)
   const [categories, setCategories] = useState(() => {
     try {
@@ -120,6 +150,7 @@ export default function CompanyExpensesView({
   const [isSimModalOpen, setIsSimModalOpen] = useState(false);
   const [editingSim, setEditingSim] = useState(null);
   const [simFormData, setSimFormData] = useState({
+    cardLabel: '',
     phoneNumber: '+971 ',
     provider: 'Du',
     planName: 'Business Smart 150',
@@ -233,6 +264,7 @@ export default function CompanyExpensesView({
   const handleOpenAddSim = () => {
     setEditingSim(null);
     setSimFormData({
+      cardLabel: '',
       phoneNumber: '+971 ',
       provider: 'Du',
       planName: 'Business Smart 150',
@@ -250,6 +282,7 @@ export default function CompanyExpensesView({
   const handleOpenEditSim = (sim) => {
     setEditingSim(sim);
     setSimFormData({
+      cardLabel: sim.cardLabel || '',
       phoneNumber: sim.phoneNumber || '',
       provider: sim.provider || 'Du',
       planName: sim.planName || '',
@@ -415,7 +448,53 @@ export default function CompanyExpensesView({
     };
   }, [filteredExpenses, companyExpenses, companySims, currentMonthPrefix, todayStr]);
 
+  // Dynamic report-specific dataset responding to report modal date and category selections
+  const reportExpenses = useMemo(() => {
+    return companyExpenses.filter(item => {
+      const matchCat = categoryFilter === 'all' || item.category === categoryFilter;
+      let matchDate = true;
+      if (reportStartDate) matchDate = matchDate && (item.date || '') >= reportStartDate;
+      if (reportEndDate) matchDate = matchDate && (item.date || '') <= reportEndDate;
+      return matchCat && matchDate;
+    });
+  }, [companyExpenses, categoryFilter, reportStartDate, reportEndDate]);
+
+  const reportTotal = useMemo(() => {
+    return reportExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  }, [reportExpenses]);
+
+  const reportLicensingTotal = useMemo(() => {
+    return reportExpenses
+      .filter(item => item.category === 'Trade License Renewal' || item.category === 'Establishment Card Renewal')
+      .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  }, [reportExpenses]);
+
+  const reportRentTotal = useMemo(() => {
+    return reportExpenses
+      .filter(item => item.category === 'Office Rent & Ejari')
+      .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  }, [reportExpenses]);
+
+  const reportTelecomTotal = useMemo(() => {
+    return reportExpenses
+      .filter(item => item.category === 'Company Main Phone Bill' || item.category === 'Office Internet & Telephony Bill')
+      .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+  }, [reportExpenses]);
+
   const handleOpenReport = () => {
+    if (dateFilter === 'this_month') {
+      setReportStartDate(`${currentMonthPrefix}-01`);
+      setReportEndDate(todayStr);
+    } else if (dateFilter === 'last_month') {
+      setReportStartDate(`${lastMonthPrefix}-01`);
+      setReportEndDate(`${lastMonthPrefix}-28`);
+    } else if (dateFilter === 'custom') {
+      setReportStartDate(customStartDate);
+      setReportEndDate(customEndDate);
+    } else {
+      setReportStartDate('');
+      setReportEndDate('');
+    }
     setIsReportModalOpen(true);
   };
 
@@ -424,8 +503,9 @@ export default function CompanyExpensesView({
   };
 
   const handleExportCSV = () => {
+    const listToExport = isReportModalOpen ? reportExpenses : filteredExpenses;
     const headers = ["Date", "Category", "Amount AED", "Due Date", "Payment Method", "Invoice No", "Status", "Notes"];
-    const rows = filteredExpenses.map(e => [
+    const rows = listToExport.map(e => [
       e.date || '',
       `"${(e.category || '').replace(/"/g, '""')}"`,
       e.amount || 0,
@@ -480,6 +560,15 @@ export default function CompanyExpensesView({
         </div>
 
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button 
+            onClick={() => setIsEditCardLabelsOpen(true)}
+            className="btn btn-secondary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '8px 12px' }}
+            title="Customize the 8 card header labels"
+          >
+            <Layers size={14} /> Edit Card Labels
+          </button>
+
           <button 
             onClick={handleOpenReport}
             className="btn btn-secondary" 
@@ -563,14 +652,160 @@ export default function CompanyExpensesView({
         </button>
       </div>
 
-      {/* 8 KPI & Report Cards Grid (2 cards per row on mobile) */}
+      {/* 1-Row Unified Search & Filters (Per Image 2 user annotation: "move the filter here in 1 row") */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        flexWrap: 'wrap',
+        background: '#ffffff',
+        border: '1.5px solid #ede6d9',
+        borderRadius: '10px',
+        padding: '8px 12px',
+        marginBottom: '2px'
+      }}>
+        {/* Search */}
+        <div style={{ position: 'relative', flex: '1', minWidth: '180px' }}>
+          <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <input 
+            type="text" 
+            className="form-control" 
+            placeholder={activeSubTab === 'expenses' ? "Search category, notes..." : "Search sales agent, number, role..."}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ paddingLeft: '30px', fontSize: '12px', height: '34px' }}
+          />
+        </div>
+
+        {activeSubTab === 'expenses' ? (
+          <>
+            {/* Category Dropdown */}
+            <select 
+              className="form-control"
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              style={{ width: 'auto', minWidth: '150px', fontSize: '12px', height: '34px', fontWeight: categoryFilter !== 'all' ? '800' : 'normal', color: categoryFilter !== 'all' ? '#8c5b30' : 'inherit' }}
+            >
+              <option value="all">All Categories ({categories.length})</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+
+            {/* Status Dropdown */}
+            <select 
+              className="form-control"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ width: 'auto', minWidth: '105px', fontSize: '12px', height: '34px' }}
+            >
+              <option value="all">All Statuses</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+              <option value="overdue">Overdue</option>
+            </select>
+
+            {/* Date Range Dropdown */}
+            <select 
+              className="form-control"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              style={{ width: 'auto', minWidth: '110px', fontSize: '12px', height: '34px' }}
+            >
+              <option value="all">All Time</option>
+              <option value="this_month">This Month</option>
+              <option value="last_month">Last Month</option>
+              <option value="custom">Custom Range</option>
+            </select>
+
+            {dateFilter === 'custom' && (
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <input 
+                  type="date" 
+                  className="form-control" 
+                  value={customStartDate} 
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  style={{ width: 'auto', fontSize: '11px', height: '34px' }}
+                />
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>to</span>
+                <input 
+                  type="date" 
+                  className="form-control" 
+                  value={customEndDate} 
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  style={{ width: 'auto', fontSize: '11px', height: '34px' }}
+                />
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Provider Filter */}
+            <select 
+              className="form-control"
+              value={simProviderFilter}
+              onChange={(e) => setSimProviderFilter(e.target.value)}
+              style={{ width: 'auto', minWidth: '110px', fontSize: '12px', height: '34px' }}
+            >
+              <option value="all">All Providers</option>
+              {SIM_PROVIDERS.map(p => (
+                <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+
+            {/* SIM Status */}
+            <select 
+              className="form-control"
+              value={simStatusFilter}
+              onChange={(e) => setSimStatusFilter(e.target.value)}
+              style={{ width: 'auto', minWidth: '110px', fontSize: '12px', height: '34px' }}
+            >
+              <option value="all">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="spare">Spare</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </>
+        )}
+
+        {(searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || dateFilter !== 'all' || simProviderFilter !== 'all' || simStatusFilter !== 'all') && (
+          <button 
+            onClick={() => {
+              setSearchTerm('');
+              setCategoryFilter('all');
+              setStatusFilter('all');
+              setDateFilter('all');
+              setSimProviderFilter('all');
+              setSimStatusFilter('all');
+            }}
+            className="btn btn-secondary"
+            style={{ fontSize: '11px', padding: '4px 10px', height: '34px' }}
+          >
+            Reset
+          </button>
+        )}
+      </div>
+
+      {/* 8 KPI & Report Cards Grid (Clickable Category Filters, 2 cards per row on mobile) */}
       <div className="stats-grid" style={{ marginBottom: '8px' }}>
         
         {/* 1. Total Corporate Overheads */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
+        <div 
+          onClick={() => { setCategoryFilter('all'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
+          className="stat-card" 
+          style={{ 
+            background: categoryFilter === 'all' && statusFilter === 'all' ? 'rgba(140, 91, 48, 0.08)' : '#ffffff', 
+            border: categoryFilter === 'all' && statusFilter === 'all' ? '2px solid var(--primary)' : '1px solid #ede6d9', 
+            padding: '12px 14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: categoryFilter === 'all' && statusFilter === 'all' ? '0 2px 8px rgba(140, 91, 48, 0.15)' : 'none'
+          }}
+          title="Click to show all overheads"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              TOTAL OVERHEADS
+              {cardLabels.total}
             </span>
             <Building2 size={14} style={{ color: 'var(--primary)' }} />
           </div>
@@ -583,10 +818,22 @@ export default function CompanyExpensesView({
         </div>
 
         {/* 2. Government & Licensing */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
+        <div 
+          onClick={() => { setCategoryFilter('Trade License Renewal'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
+          className="stat-card" 
+          style={{ 
+            background: categoryFilter === 'Trade License Renewal' ? 'rgba(4, 120, 87, 0.08)' : '#ffffff', 
+            border: categoryFilter === 'Trade License Renewal' ? '2px solid #047857' : '1px solid #ede6d9', 
+            padding: '12px 14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: categoryFilter === 'Trade License Renewal' ? '0 2px 8px rgba(4, 120, 87, 0.15)' : 'none'
+          }}
+          title="Click to filter by Trade License"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              TRADE LICENSE
+              {cardLabels.license}
             </span>
             <ShieldCheck size={14} style={{ color: '#047857' }} />
           </div>
@@ -599,10 +846,22 @@ export default function CompanyExpensesView({
         </div>
 
         {/* 3. Office Rent & Ejari */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
+        <div 
+          onClick={() => { setCategoryFilter('Office Rent & Ejari'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
+          className="stat-card" 
+          style={{ 
+            background: categoryFilter === 'Office Rent & Ejari' ? 'rgba(201, 118, 42, 0.08)' : '#ffffff', 
+            border: categoryFilter === 'Office Rent & Ejari' ? '2px solid #c9762a' : '1px solid #ede6d9', 
+            padding: '12px 14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: categoryFilter === 'Office Rent & Ejari' ? '0 2px 8px rgba(201, 118, 42, 0.15)' : 'none'
+          }}
+          title="Click to filter by Office Rent"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              OFFICE RENT
+              {cardLabels.rent}
             </span>
             <Layers size={14} style={{ color: '#c9762a' }} />
           </div>
@@ -615,10 +874,22 @@ export default function CompanyExpensesView({
         </div>
 
         {/* 4. Internet & Main Phone Bills */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
+        <div 
+          onClick={() => { setCategoryFilter('Company Main Phone Bill'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
+          className="stat-card" 
+          style={{ 
+            background: categoryFilter === 'Company Main Phone Bill' ? 'rgba(29, 78, 216, 0.08)' : '#ffffff', 
+            border: categoryFilter === 'Company Main Phone Bill' ? '2px solid #1d4ed8' : '1px solid #ede6d9', 
+            padding: '12px 14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: categoryFilter === 'Company Main Phone Bill' ? '0 2px 8px rgba(29, 78, 216, 0.15)' : 'none'
+          }}
+          title="Click to filter by Internet & Phone Bills"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              INTERNET / PHONE
+              {cardLabels.telecom}
             </span>
             <Wifi size={14} style={{ color: '#1d4ed8' }} />
           </div>
@@ -631,10 +902,22 @@ export default function CompanyExpensesView({
         </div>
 
         {/* 5. Active Sales SIMs */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
+        <div 
+          onClick={() => setActiveSubTab('sims')}
+          className="stat-card" 
+          style={{ 
+            background: activeSubTab === 'sims' ? 'rgba(180, 83, 9, 0.08)' : '#ffffff', 
+            border: activeSubTab === 'sims' ? '2px solid #b45309' : '1px solid #ede6d9', 
+            padding: '12px 14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: activeSubTab === 'sims' ? '0 2px 8px rgba(180, 83, 9, 0.15)' : 'none'
+          }}
+          title="Click to switch to Sales SIMs view"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              SALES SIMS
+              {cardLabels.sims}
             </span>
             <Smartphone size={14} style={{ color: '#b45309' }} />
           </div>
@@ -647,10 +930,22 @@ export default function CompanyExpensesView({
         </div>
 
         {/* 6. Office Supplies & Consumables */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
+        <div 
+          onClick={() => { setCategoryFilter('Office Expenses & Supplies'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
+          className="stat-card" 
+          style={{ 
+            background: categoryFilter === 'Office Expenses & Supplies' ? 'rgba(201, 118, 42, 0.08)' : '#ffffff', 
+            border: categoryFilter === 'Office Expenses & Supplies' ? '2px solid #c9762a' : '1px solid #ede6d9', 
+            padding: '12px 14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: categoryFilter === 'Office Expenses & Supplies' ? '0 2px 8px rgba(201, 118, 42, 0.15)' : 'none'
+          }}
+          title="Click to filter by Office Supplies"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              OFFICE SUPPLIES
+              {cardLabels.supplies}
             </span>
             <Coffee size={14} style={{ color: '#c9762a' }} />
           </div>
@@ -663,10 +958,22 @@ export default function CompanyExpensesView({
         </div>
 
         {/* 7. Petty Cash Disbursements */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
+        <div 
+          onClick={() => { setCategoryFilter('Petty Cash Disbursements'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
+          className="stat-card" 
+          style={{ 
+            background: categoryFilter === 'Petty Cash Disbursements' ? 'rgba(140, 91, 48, 0.08)' : '#ffffff', 
+            border: categoryFilter === 'Petty Cash Disbursements' ? '2px solid var(--primary)' : '1px solid #ede6d9', 
+            padding: '12px 14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: categoryFilter === 'Petty Cash Disbursements' ? '0 2px 8px rgba(140, 91, 48, 0.15)' : 'none'
+          }}
+          title="Click to filter by Petty Cash"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              PETTY CASH
+              {cardLabels.pettyCash}
             </span>
             <CreditCard size={14} style={{ color: 'var(--primary)' }} />
           </div>
@@ -679,10 +986,22 @@ export default function CompanyExpensesView({
         </div>
 
         {/* 8. Upcoming Critical Renewals */}
-        <div className="stat-card" style={{ background: '#fdfbf7', border: '1px solid #ede6d9', padding: '12px 14px' }}>
+        <div 
+          onClick={() => { setStatusFilter('pending'); setActiveSubTab('expenses'); }}
+          className="stat-card" 
+          style={{ 
+            background: statusFilter === 'pending' ? 'rgba(185, 28, 28, 0.08)' : '#fdfbf7', 
+            border: statusFilter === 'pending' ? '2px solid #b91c1c' : '1px solid #ede6d9', 
+            padding: '12px 14px',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: statusFilter === 'pending' ? '0 2px 8px rgba(185, 28, 28, 0.15)' : 'none'
+          }}
+          title="Click to show pending renewals"
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              NEXT RENEWAL
+              {cardLabels.renewal}
             </span>
             <Clock size={14} style={{ color: '#b91c1c' }} />
           </div>
@@ -699,96 +1018,6 @@ export default function CompanyExpensesView({
       {/* SUB-TAB 1: COMPANY EXPENSES LEDGER */}
       {activeSubTab === 'expenses' && (
         <>
-          {/* Filters & Search */}
-          <div className="card" style={{ padding: '12px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px' }}>
-            
-            <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '180px' }}>
-              <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-              <input 
-                type="text"
-                className="form-control"
-                placeholder="Search category, invoice, notes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ paddingLeft: '32px', fontSize: '12.5px' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-              
-              <select 
-                className="form-control"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                style={{ width: 'auto', minWidth: '150px', fontSize: '12px' }}
-              >
-                <option value="all">All Categories</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-
-              <select 
-                className="form-control"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                style={{ width: 'auto', minWidth: '110px', fontSize: '12px' }}
-              >
-                <option value="all">All Statuses</option>
-                <option value="paid">Paid</option>
-                <option value="pending">Pending</option>
-                <option value="overdue">Overdue</option>
-              </select>
-
-              <select 
-                className="form-control"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                style={{ width: 'auto', minWidth: '110px', fontSize: '12px' }}
-              >
-                <option value="all">All Time</option>
-                <option value="this_month">This Month</option>
-                <option value="last_month">Last Month</option>
-                <option value="custom">Custom Range</option>
-              </select>
-
-              {dateFilter === 'custom' && (
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                  <input 
-                    type="date" 
-                    className="form-control" 
-                    value={customStartDate} 
-                    onChange={(e) => setCustomStartDate(e.target.value)}
-                    style={{ width: 'auto', fontSize: '11.5px' }}
-                  />
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>to</span>
-                  <input 
-                    type="date" 
-                    className="form-control" 
-                    value={customEndDate} 
-                    onChange={(e) => setCustomEndDate(e.target.value)}
-                    style={{ width: 'auto', fontSize: '11.5px' }}
-                  />
-                </div>
-              )}
-
-              {(searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || dateFilter !== 'all') && (
-                <button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setCategoryFilter('all');
-                    setStatusFilter('all');
-                    setDateFilter('all');
-                  }}
-                  className="btn btn-secondary"
-                  style={{ fontSize: '11px', padding: '5px 8px' }}
-                >
-                  Reset
-                </button>
-              )}
-
-            </div>
-          </div>
 
           {/* Expenses Table (Scrollable on mobile to show all details) */}
           <div className="table-responsive card" style={{ background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px', padding: '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
@@ -837,11 +1066,6 @@ export default function CompanyExpensesView({
                         >
                           {exp.category}
                         </span>
-                        {exp.invoiceNo && (
-                          <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            Inv: {exp.invoiceNo}
-                          </span>
-                        )}
                       </td>
 
                       {/* Amount */}
@@ -1007,6 +1231,22 @@ export default function CompanyExpensesView({
                       boxShadow: '0 2px 6px rgba(140, 91, 48, 0.04)'
                     }}
                   >
+                    {/* SIM Card Header: Custom Card Label / Title */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ede6d9', paddingBottom: '6px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {sim.cardLabel || 'SALES SIM LINE'}
+                      </span>
+                      <button 
+                        type="button"
+                        onClick={() => handleOpenEditSim(sim)}
+                        className="btn btn-secondary"
+                        style={{ padding: '2px 7px', fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                        title="Change SIM Card Label / Title"
+                      >
+                        <Edit2 size={10} /> Edit Label
+                      </button>
+                    </div>
+
                     {/* Card Top: Number & Provider */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
@@ -1329,6 +1569,20 @@ export default function CompanyExpensesView({
             <form onSubmit={handleSaveSim}>
               <div className="form-grid-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                 
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label>Card Label / Line Title</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="e.g. VIP Inbound Hotline, Desert Safari Dispatch, Online Leads"
+                    value={simFormData.cardLabel}
+                    onChange={(e) => setSimFormData({ ...simFormData, cardLabel: e.target.value })}
+                  />
+                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                    Title displayed at the top of this sales SIM card.
+                  </span>
+                </div>
+
                 <div className="form-group">
                   <label>Mobile Number *</label>
                   <input 
@@ -1484,34 +1738,85 @@ export default function CompanyExpensesView({
             }}
           >
             {/* Modal Header / Actions */}
-            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #ede6d9', paddingBottom: '14px', marginBottom: '20px' }}>
+            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #ede6d9', paddingBottom: '14px', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
-                  Company Overheads & Operating Expenses Report
+                  {categoryFilter !== 'all' ? `${categoryFilter} Statement` : 'Company Overheads & Operating Expenses Report'}
                 </h3>
                 <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                  Scope: {categoryFilter === 'all' ? 'All Operating Categories' : categoryFilter} | {dateFilter === 'this_month' ? 'This Month' : (dateFilter === 'last_month' ? 'Last Month' : 'All Time')}
+                  Scope: {categoryFilter === 'all' ? 'All Operating Categories' : categoryFilter} | {reportStartDate || reportEndDate ? `${(reportStartDate || 'Start').split('-').reverse().join('/')} to ${(reportEndDate || 'Present').split('-').reverse().join('/')}` : 'All Recorded Dates'}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Interactive Date Range Selector for Report (Per Image 2) */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: '#fdfbf7', padding: '4px 8px', borderRadius: '8px', border: '1px solid #ede6d9' }}>
+                  <Calendar size={13} style={{ color: 'var(--primary)' }} />
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)' }}>Dates:</span>
+                  <input 
+                    type="date" 
+                    value={reportStartDate} 
+                    onChange={(e) => setReportStartDate(e.target.value)} 
+                    className="form-control"
+                    style={{ width: 'auto', fontSize: '11px', height: '28px', padding: '2px 6px' }}
+                    title="Report start date"
+                  />
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>to</span>
+                  <input 
+                    type="date" 
+                    value={reportEndDate} 
+                    onChange={(e) => setReportEndDate(e.target.value)} 
+                    className="form-control"
+                    style={{ width: 'auto', fontSize: '11px', height: '28px', padding: '2px 6px' }}
+                    title="Report end date"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => { setReportStartDate(`${currentMonthPrefix}-01`); setReportEndDate(todayStr); }}
+                    className="btn btn-secondary"
+                    style={{ fontSize: '10px', padding: '2px 6px', height: '28px' }}
+                  >
+                    This Month
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => { setReportStartDate(''); setReportEndDate(''); }}
+                    className="btn btn-secondary"
+                    style={{ fontSize: '10px', padding: '2px 6px', height: '28px' }}
+                  >
+                    All
+                  </button>
+                </div>
+
+                {/* Category Scope Selector inside Report */}
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="form-control"
+                  style={{ width: 'auto', fontSize: '11.5px', height: '32px', fontWeight: '700', color: 'var(--primary)' }}
+                >
+                  <option value="all">All Overheads</option>
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+
                 <button 
                   onClick={handleExportCSV}
                   className="btn btn-secondary"
-                  style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px' }}
                 >
                   <Download size={14} /> Export CSV
                 </button>
                 <button 
                   onClick={handlePrintReport}
                   className="btn btn-primary"
-                  style={{ fontSize: '12px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  style={{ fontSize: '12px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px', height: '32px' }}
                 >
                   <Printer size={14} /> Print Statement
                 </button>
                 <button 
                   onClick={() => setIsReportModalOpen(false)} 
                   className="modal-close"
-                  style={{ marginLeft: '6px' }}
+                  style={{ marginLeft: '4px' }}
                 >
                   &times;
                 </button>
@@ -1531,87 +1836,92 @@ export default function CompanyExpensesView({
                     DWTC Complex, Sheikh Zayed Road, Dubai, UAE | Commercial License No: DET-2016-01
                   </div>
                   <div style={{ fontSize: '14px', fontWeight: '800', color: '#8c5b30', marginTop: '6px' }}>
-                    OFFICIAL COMPANY OVERHEADS STATEMENT
+                    {categoryFilter !== 'all' ? `OFFICIAL OVERHEADS STATEMENT - ${categoryFilter.toUpperCase()}` : 'OFFICIAL COMPANY OVERHEADS STATEMENT'}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', fontSize: '12px', color: '#6b7280' }}>
                   <div>Date Generated: <strong style={{ color: '#111827' }}>{todayStr.split('-').reverse().join('/')}</strong></div>
-                  <div>Expense Items: <strong style={{ color: '#111827' }}>{filteredExpenses.length}</strong></div>
-                  <div>Active Sales SIMs: <strong style={{ color: '#047857' }}>{stats.activeSimCount} Lines</strong></div>
+                  <div>Report Scope: <strong style={{ color: '#8c5b30' }}>{categoryFilter === 'all' ? 'All Operating Categories' : categoryFilter}</strong></div>
+                  <div>Selected Dates: <strong style={{ color: '#111827' }}>{reportStartDate || reportEndDate ? `${(reportStartDate || 'Start').split('-').reverse().join('/')} - ${(reportEndDate || 'Present').split('-').reverse().join('/')}` : 'All Time'}</strong></div>
+                  <div>Expense Items: <strong style={{ color: '#111827' }}>{reportExpenses.length}</strong></div>
                 </div>
               </div>
 
               {/* Summary Scorecards in Report */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
                 <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>TOTAL OVERHEADS</div>
+                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>
+                    {categoryFilter !== 'all' ? `TOTAL (${categoryFilter.substring(0, 14)}...)` : 'TOTAL OVERHEADS'}
+                  </div>
                   <div style={{ fontSize: '18px', fontWeight: '900', color: '#8c5b30', marginTop: '4px' }}>
-                    {stats.totalCompanyOverheads.toLocaleString()} AED
+                    {reportTotal.toLocaleString()} AED
                   </div>
                 </div>
                 <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
                   <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>TRADE & GDRFA</div>
                   <div style={{ fontSize: '18px', fontWeight: '900', color: '#047857', marginTop: '4px' }}>
-                    {stats.licensingTotal.toLocaleString()} AED
+                    {reportLicensingTotal.toLocaleString()} AED
                   </div>
                 </div>
                 <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>OFFICE RENT / LEASE</div>
+                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>OFFICE RENT</div>
                   <div style={{ fontSize: '18px', fontWeight: '900', color: '#374151', marginTop: '4px' }}>
-                    {stats.rentEjariTotal.toLocaleString()} AED
+                    {reportRentTotal.toLocaleString()} AED
                   </div>
                 </div>
                 <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>TELECOM & SIMS</div>
+                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>TELECOM & PHONE</div>
                   <div style={{ fontSize: '18px', fontWeight: '900', color: '#1d4ed8', marginTop: '4px' }}>
-                    {(stats.telecomBillsTotal + stats.totalSimMonthlyCost).toLocaleString()} AED
+                    {reportTelecomTotal.toLocaleString()} AED
                   </div>
                 </div>
               </div>
 
-              {/* Category Breakdown Table */}
-              <div style={{ marginBottom: '24px' }}>
-                <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#543c2b', textTransform: 'uppercase', marginBottom: '8px' }}>
-                  Overheads Breakdown by Category
-                </h4>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: '1px solid #ede6d9' }}>
-                  <thead>
-                    <tr style={{ background: '#fdfbf7', borderBottom: '1.5px solid #ede6d9', textAlign: 'left' }}>
-                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>CATEGORY</th>
-                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'center' }}>ITEMS</th>
-                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>TOTAL AMOUNT (AED)</th>
-                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>% SHARE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {categories.map(cat => {
-                      const catItems = filteredExpenses.filter(e => e.category === cat);
-                      const catTotal = catItems.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
-                      const sharePct = stats.totalCompanyOverheads > 0 ? ((catTotal / stats.totalCompanyOverheads) * 100).toFixed(1) : '0.0';
+              {/* Category Breakdown Table - ONLY SHOWN IF ALL CATEGORIES SELECTED OR MULTIPLE FOUND */}
+              {categoryFilter === 'all' && (
+                <div style={{ marginBottom: '24px' }}>
+                  <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#543c2b', textTransform: 'uppercase', marginBottom: '8px' }}>
+                    Overheads Breakdown by Category ({reportStartDate || reportEndDate ? `${(reportStartDate || 'Start').split('-').reverse().join('/')} to ${(reportEndDate || 'Present').split('-').reverse().join('/')}` : 'All Dates'})
+                  </h4>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: '1px solid #ede6d9' }}>
+                    <thead>
+                      <tr style={{ background: '#fdfbf7', borderBottom: '1.5px solid #ede6d9', textAlign: 'left' }}>
+                        <th style={{ padding: '8px 10px', fontWeight: '800' }}>CATEGORY</th>
+                        <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'center' }}>ITEMS</th>
+                        <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>TOTAL AMOUNT (AED)</th>
+                        <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>% SHARE</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categories.map(cat => {
+                        const catItems = reportExpenses.filter(e => e.category === cat);
+                        const catTotal = catItems.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                        const sharePct = reportTotal > 0 ? ((catTotal / reportTotal) * 100).toFixed(1) : '0.0';
 
-                      if (catItems.length === 0 && categoryFilter !== 'all') return null;
+                        if (catItems.length === 0) return null;
 
-                      return (
-                        <tr key={cat} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                          <td style={{ padding: '8px 10px', fontWeight: '700' }}>{cat}</td>
-                          <td style={{ padding: '8px 10px', textAlign: 'center' }}>{catItems.length}</td>
-                          <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: catTotal > 0 ? '#8c5b30' : '#9ca3af' }}>
-                            {catTotal.toLocaleString()} AED
-                          </td>
-                          <td style={{ padding: '8px 10px', textAlign: 'right', color: '#6b7280' }}>
-                            {sharePct}%
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                        return (
+                          <tr key={cat} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                            <td style={{ padding: '8px 10px', fontWeight: '700' }}>{cat}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>{catItems.length}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: catTotal > 0 ? '#8c5b30' : '#9ca3af' }}>
+                              {catTotal.toLocaleString()} AED
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right', color: '#6b7280' }}>
+                              {sharePct}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
               {/* Itemized Expenses Table */}
               <div>
                 <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#543c2b', textTransform: 'uppercase', marginBottom: '8px' }}>
-                  Itemized Expenses Ledger ({filteredExpenses.length} Records)
+                  Itemized Expenses Ledger ({reportExpenses.length} Records)
                 </h4>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px', border: '1px solid #ede6d9' }}>
                   <thead>
@@ -1626,29 +1936,39 @@ export default function CompanyExpensesView({
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredExpenses.map(item => (
-                      <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                        <td style={{ padding: '7px 10px' }}>{(item.date || '').split('-').reverse().join('/')}</td>
-                        <td style={{ padding: '7px 10px', fontWeight: '700' }}>{item.category}</td>
-                        <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: '800', color: '#8c5b30' }}>
-                          {parseFloat(item.amount || 0).toLocaleString()} AED
+                    {reportExpenses.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" style={{ padding: '20px', textAlign: 'center', color: '#9ca3af' }}>
+                          No expenses recorded in the selected date range.
                         </td>
-                        <td style={{ padding: '7px 10px', color: '#4b5563' }}>{item.paymentMethod || 'Bank Transfer'}</td>
-                        <td style={{ padding: '7px 10px', color: '#6b7280' }}>
-                          {item.dueDate ? (item.dueDate.split('-').reverse().join('/')) : '—'}
-                        </td>
-                        <td style={{ padding: '7px 10px', textTransform: 'capitalize', fontWeight: '700', color: item.status === 'paid' ? '#047857' : '#b45309' }}>
-                          {item.status || 'Paid'}
-                        </td>
-                        <td style={{ padding: '7px 10px', color: '#6b7280' }}>{item.notes || '—'}</td>
                       </tr>
-                    ))}
+                    ) : (
+                      reportExpenses.map(item => (
+                        <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                          <td style={{ padding: '7px 10px' }}>{(item.date || '').split('-').reverse().join('/')}</td>
+                          <td style={{ padding: '7px 10px', fontWeight: '700' }}>{item.category}</td>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: '800', color: '#8c5b30' }}>
+                            {parseFloat(item.amount || 0).toLocaleString()} AED
+                          </td>
+                          <td style={{ padding: '7px 10px', color: '#4b5563' }}>{item.paymentMethod || 'Bank Transfer'}</td>
+                          <td style={{ padding: '7px 10px', color: '#6b7280' }}>
+                            {item.dueDate ? (item.dueDate.split('-').reverse().join('/')) : '—'}
+                          </td>
+                          <td style={{ padding: '7px 10px', textTransform: 'capitalize', fontWeight: '700', color: item.status === 'paid' ? '#047857' : '#b45309' }}>
+                            {item.status || 'Paid'}
+                          </td>
+                          <td style={{ padding: '7px 10px', color: '#6b7280' }}>{item.notes || '—'}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                   <tfoot>
                     <tr style={{ background: '#fdfbf7', borderTop: '2px solid #8c5b30', fontWeight: '800' }}>
-                      <td colSpan="2" style={{ padding: '10px', textAlign: 'right' }}>TOTAL CORPORATE OVERHEADS:</td>
+                      <td colSpan="2" style={{ padding: '10px', textAlign: 'right' }}>
+                        TOTAL ({categoryFilter !== 'all' ? categoryFilter.toUpperCase() : 'CORPORATE OVERHEADS'}):
+                      </td>
                       <td style={{ padding: '10px', textAlign: 'right', color: '#8c5b30', fontSize: '13px' }}>
-                        {stats.totalCompanyOverheads.toLocaleString()} AED
+                        {reportTotal.toLocaleString()} AED
                       </td>
                       <td colSpan="4"></td>
                     </tr>
@@ -1667,6 +1987,117 @@ export default function CompanyExpensesView({
 
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Edit Card Labels Modal */}
+      {isEditCardLabelsOpen && (
+        <div className="modal-overlay" style={{ zIndex: 2100 }}>
+          <div className="modal-content" style={{ maxWidth: '500px', borderRadius: '14px', padding: '22px', background: '#ffffff', border: '1.5px solid #ede6d9', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Layers size={18} style={{ color: 'var(--primary)' }} />
+                <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
+                  Customize 8 Overheads Card Header Labels
+                </h3>
+              </div>
+              <button onClick={() => setIsEditCardLabelsOpen(false)} className="modal-close">&times;</button>
+            </div>
+            <form onSubmit={(e) => { e.preventDefault(); setIsEditCardLabelsOpen(false); }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="form-group">
+                  <label>Card 1 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.total} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, total: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 2 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.license} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, license: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 3 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.rent} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, rent: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 4 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.telecom} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, telecom: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 5 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.sims} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, sims: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 6 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.supplies} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, supplies: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 7 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.pettyCash} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, pettyCash: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Card 8 Label</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    value={cardLabels.renewal} 
+                    onChange={(e) => setCardLabels({ ...cardLabels, renewal: e.target.value })} 
+                  />
+                </div>
+              </div>
+              <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '16px', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setCardLabels(DEFAULT_COMPANY_CARD_LABELS)} 
+                  className="btn btn-secondary"
+                  style={{ fontSize: '11px' }}
+                >
+                  Reset Defaults
+                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button type="button" onClick={() => setIsEditCardLabelsOpen(false)} className="btn btn-secondary">
+                    Close
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    Save Labels
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
