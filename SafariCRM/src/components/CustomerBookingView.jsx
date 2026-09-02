@@ -217,42 +217,44 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       return { status: 'inactive', message: '✗ Coupon code is currently inactive' };
     }
 
-    // Check if any matching active coupon matches the selected packageId or is universal
     const selectedPkgObj = activePackages.find(p => p.id === pkgId);
-    const isEveningSafari = selectedPkgObj && selectedPkgObj.category === 'Evening Desert Safari';
-    const isMorningPrivate = pkgId === 'morning_private';
+    if (!selectedPkgObj) {
+      return { status: 'none', message: '' };
+    }
 
+    // Check if any matching active coupon is strictly valid for the selected package
     const matchesPkg = activeAndNotExpired.find(c => {
+      // 1. Direct package match
       if (c.packageId === pkgId) return true;
-      if (c.packageId === 'all_safari' || c.packageId === 'all_packages') return true;
-      const isUniversal = c.code.toLowerCase() === 'roarnyofferdxb' || 
-                          c.code.toLowerCase() === 'roarsummeroffer26';
-      if (isUniversal) return true;
+
+      // 2. 'all_safari' target: only valid for safari packages with offpeak / summer discount
+      if (c.packageId === 'all_safari') {
+        const isEligibleSafari = selectedPkgObj.category === 'Evening Desert Safari' || 
+                                 (selectedPkgObj.category === 'Morning Desert Safari' && selectedPkgObj.id === 'morning_private');
+        return isEligibleSafari;
+      }
+
+      // 3. 'all_packages' target: only valid for packages with a peak vs offpeak discount
+      if (c.packageId === 'all_packages') {
+        return parseFloat(selectedPkgObj.peakRate || 0) > parseFloat(selectedPkgObj.offpeakRate || 0);
+      }
+
       return false;
     });
 
     if (!matchesPkg) {
-      return { status: 'wrong_package', message: '✗ Coupon code not valid for this package' };
+      return { status: 'wrong_package', message: '✗ Coupon not valid for this package' };
     }
 
-    const isUniversalMatch = matchesPkg.packageId === 'all_safari' || 
-                             matchesPkg.packageId === 'all_packages' ||
-                             matchesPkg.code.toLowerCase() === 'roarnyofferdxb' || 
-                             matchesPkg.code.toLowerCase() === 'roarsummeroffer26';
-
-    if (isUniversalMatch && selectedPkgObj) {
-      const offpeakRate = parseFloat(selectedPkgObj.offpeakRate) || parseFloat(selectedPkgObj.rate) || 0;
-      return {
-        status: 'valid',
-        message: '✓ Summer End Sale Discount Applied',
-        coupon: { ...matchesPkg, customPrice: offpeakRate }
-      };
-    }
+    const offpeakRate = parseFloat(selectedPkgObj.offpeakRate) || parseFloat(selectedPkgObj.rate) || 0;
+    const customPrice = matchesPkg.customPrice && parseFloat(matchesPkg.customPrice) > 0
+      ? parseFloat(matchesPkg.customPrice)
+      : offpeakRate;
 
     return { 
       status: 'valid', 
       message: '✓ Summer End Sale Discount Applied', 
-      coupon: matchesPkg 
+      coupon: { ...matchesPkg, customPrice } 
     };
   };
 
@@ -349,15 +351,14 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
     const isEveningSafari = selectedPkg.category === 'Evening Desert Safari';
     const isMorningPrivate = selectedPkg.id === 'morning_private';
 
-    let defaultRate = autoApplyOffpeakSetting
-      ? (parseFloat(selectedPkg.offpeakRate) || parseFloat(selectedPkg.rate) || 0)
-      : ((isEveningSafari || isMorningPrivate)
-        ? (parseFloat(selectedPkg.peakRate) || parseFloat(selectedPkg.rate) || 0)
-        : (parseFloat(selectedPkg.rate) || 0));
+    const standardRate = (isEveningSafari || isMorningPrivate)
+      ? (parseFloat(selectedPkg.peakRate) || parseFloat(selectedPkg.rate) || 0)
+      : (parseFloat(selectedPkg.rate) || 0);
 
-    rate = defaultRate;
     if (activeCpn) {
-      rate = parseFloat(activeCpn.customPrice) || 0;
+      rate = parseFloat(activeCpn.customPrice) || parseFloat(selectedPkg.offpeakRate) || standardRate;
+    } else {
+      rate = standardRate;
     }
 
     if (selectedPkg.type === "flat") {
@@ -591,7 +592,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
         <div className="booking-section-3col">
           
           {/* COLUMN 1: Featured Image Showcase */}
-          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", gap: "12px", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", height: "100%", boxSizing: "border-box", justifyContent: "space-between" }}>
+          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", gap: "12px", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", boxSizing: "border-box" }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", borderBottom: "1.5px solid #ede6d9", paddingBottom: "6px", marginBottom: "12px" }}>
                 <div style={{ fontSize: "14px", fontWeight: "900", color: "#543c2b" }}>Featured Tour Package</div>
@@ -626,7 +627,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
           </div>
 
           {/* COLUMN 2: Booking Book (Form) */}
-          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", height: "100%", boxSizing: "border-box", justifyContent: "space-between" }}>
+          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", boxSizing: "border-box" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "14px", borderBottom: "1.5px solid #ede6d9", paddingBottom: "6px" }}>
               <div style={{ width: "22px", height: "22px", borderRadius: "50%", background: BRAND, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "950", fontSize: "11px" }}>1</div>
               <div style={{ fontSize: "13.5px", fontWeight: "900", color: "#543c2b" }}>Tour Details</div>
@@ -779,7 +780,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
           </div>
 
           {/* COLUMN 3: Add-ons, Coupons, and Price Calculator */}
-          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", height: "100%", boxSizing: "border-box", justifyContent: "space-between" }}>
+          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", boxSizing: "border-box" }}>
             {/* Add-ons */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", borderBottom: "1.5px solid #ede6d9", paddingBottom: "6px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -819,7 +820,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
                           style={{ width: "20px", height: "20px", borderRadius: "50%", border: "1px solid #ede6d9", background: "#fff", cursor: "pointer", fontWeight: "900", color: "#ef4444", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
                         <span style={{ minWidth: "12px", textAlign: "center", fontWeight: "900", fontSize: "11.5px", color: qty > 0 ? BRAND : "#8c7361" }}>{qty}</span>
                         <button type="button" onClick={() => setAddonQty(prev => ({ ...prev, [addon.key]: (prev[addon.key]||0) + 1 }))}
-                          style={{ width: "20px", height: "20px", borderRadius: "50%", border: `1.5px solid ${BRAND}`, background: BRAND, cursor: "pointer", fontWeight: "900", color: "#fff", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                          style={{ width: "20px", height: "20px", borderRadius: "50%", border: `1px solid ${BRAND}`, background: BRAND, cursor: "pointer", fontWeight: "900", color: "#fff", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
                       </div>
                     </div>
                   </div>
@@ -890,12 +891,12 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ color: "#8c7361" }}>Base Rate:</span>
                   <span style={{ fontWeight: "700", color: "#543c2b", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                    {(activeCpn || autoApplyOffpeakSetting) && selectedPkg && (
+                    {(cpnStatus.status === 'valid') && selectedPkg && (
                       <span style={{ textDecoration: "line-through", color: "#8c7361", fontSize: "11px" }}>
                         AED {selectedPkg.peakRate || selectedPkg.rate}
                       </span>
                     )}
-                    <span style={{ color: (activeCpn || autoApplyOffpeakSetting) ? '#047857' : '#543c2b', fontWeight: '800' }}>
+                    <span style={{ color: (cpnStatus.status === 'valid') ? '#047857' : '#543c2b', fontWeight: '800' }}>
                       AED {rate} {selectedPkg?.type === 'flat' ? '/car' : '/person'}
                     </span>
                   </span>
@@ -1037,17 +1038,17 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
         
         .booking-section-3col {
           display: grid;
-          grid-template-columns: 1fr 1.15fr 1.15fr;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 16px;
-          align-items: stretch;
+          align-items: start;
         }
 
         .booking-section-3col > .glass-card {
-          height: 100% !important;
-          min-height: 100% !important;
-          display: flex !important;
-          flex-direction: column !important;
-          box-sizing: border-box !important;
+          width: 100%;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
         }
 
         .addons-grid-layout {
