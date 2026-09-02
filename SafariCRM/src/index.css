@@ -2355,25 +2355,65 @@ select.form-control {
 }
 
 @media (max-width: 768px) {
+  /* Drivers cards: explicitly 1 card per row */
   .driver-cards-grid {
     grid-template-columns: 1fr !important;
   }
+
+  /* All other cards: strictly 2 cards per row */
   .stats-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 8px !important;
   }
+  
   .stat-card {
-    padding: 10px 12px !important;
+    padding: 10px 10px !important;
+    min-width: 0 !important;
   }
+  
   .stat-card .stat-value,
   .stat-card div[style*="font-size: 18px"],
   .stat-card div[style*="font-size: 22px"] {
-    font-size: 16px !important;
+    font-size: 15px !important;
+  }
+
+  /* Modal forms: single column on mobile for clean input fields */
+  .form-grid-two-col {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  /* Tables: smooth horizontal scroll on mobile */
+  .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+  }
+
+  .table-responsive table {
+    min-width: 650px !important;
   }
 }
 
 @media (max-width: 480px) {
+  /* Enforce 2 cards per row even on narrow mobile screens */
   .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .stat-card {
+    padding: 8px 10px !important;
+  }
+
+  .stat-card div[style*="font-size: 10px"],
+  .stat-card span[style*="font-size: 10px"] {
+    font-size: 9.5px !important;
+  }
+
+  /* Driver cards remain 1 card per row */
+  .driver-cards-grid {
     grid-template-columns: 1fr !important;
   }
 }

@@ -114,9 +114,6 @@ export default function CarExpensesView({
     category: 'Oil Change',
     amount: '',
     date: todayStr,
-    workshopName: '',
-    invoiceNo: '',
-    odometer: '',
     paymentMethod: 'Cash',
     status: 'paid',
     notes: ''
@@ -131,9 +128,6 @@ export default function CarExpensesView({
       category: categories[0] || 'Oil Change',
       amount: '',
       date: todayStr,
-      workshopName: '',
-      invoiceNo: '',
-      odometer: '',
       paymentMethod: 'Cash',
       status: 'paid',
       notes: ''
@@ -149,9 +143,6 @@ export default function CarExpensesView({
       category: expense.category || 'Oil Change',
       amount: expense.amount || '',
       date: expense.date || todayStr,
-      workshopName: expense.workshopName || '',
-      invoiceNo: expense.invoiceNo || '',
-      odometer: expense.odometer || '',
       paymentMethod: expense.paymentMethod || 'Cash',
       status: expense.status || 'paid',
       notes: expense.notes || ''
@@ -213,7 +204,6 @@ export default function CarExpensesView({
     const payload = {
       ...formData,
       amount: parseFloat(formData.amount) || 0,
-      odometer: parseInt(formData.odometer) || 0,
       id: editingExpense ? editingExpense.id : `carexp-${Date.now()}`
     };
 
@@ -266,8 +256,7 @@ export default function CarExpensesView({
       const searchMatch = !searchTerm || 
         (item.plateNo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.workshopName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.invoiceNo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.paymentMethod || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
 
       const categoryMatch = categoryFilter === 'all' || item.category === categoryFilter;
@@ -369,15 +358,12 @@ export default function CarExpensesView({
   };
 
   const handleExportCSV = () => {
-    const headers = ["Date", "Plate", "Category", "Amount AED", "Workshop", "Invoice No", "Odometer", "Payment Method", "Status", "Notes"];
+    const headers = ["Date", "Plate", "Category", "Amount AED", "Payment Method", "Status", "Notes"];
     const rows = filteredExpenses.map(e => [
       e.date || '',
       e.plateNo || '',
       `"${(e.category || '').replace(/"/g, '""')}"`,
       e.amount || 0,
-      `"${(e.workshopName || '').replace(/"/g, '""')}"`,
-      e.invoiceNo || '',
-      e.odometer || '',
       e.paymentMethod || '',
       e.status || '',
       `"${(e.notes || '').replace(/"/g, '""')}"`
@@ -533,8 +519,8 @@ export default function CarExpensesView({
         </div>
       </div>
 
-      {/* 8 KPI & Report Cards Grid (Short, crisp labels for mobile) */}
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '8px' }}>
+      {/* 8 KPI & Report Cards Grid (2 cards per row on mobile) */}
+      <div className="stats-grid" style={{ marginBottom: '8px' }}>
         
         {/* 1. Total Fleet Expenses */}
         <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
@@ -762,18 +748,18 @@ export default function CarExpensesView({
         </div>
       </div>
 
-      {/* Expenses Table (Completely removed driver name column) */}
-      <div className="table-responsive card" style={{ background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px', padding: '0', overflow: 'hidden' }}>
-        <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+      {/* Expenses Table (Scrollable on mobile) */}
+      <div className="table-responsive card" style={{ background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px', padding: '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+        <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '650px' }}>
           <thead>
             <tr style={{ background: '#fdfbf7', borderBottom: '1px solid #ede6d9', textAlign: 'left' }}>
               <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>DATE</th>
               <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>PLATE</th>
               <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>CATEGORY</th>
               <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'right' }}>AMOUNT</th>
-              <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>WORKSHOP</th>
-              <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>INV / ODO</th>
+              <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>METHOD</th>
               <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>STATUS</th>
+              <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>NOTES</th>
               <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'center' }}>ACTIONS</th>
             </tr>
           </thead>
@@ -791,12 +777,12 @@ export default function CarExpensesView({
                 <tr key={exp.id} className="clickable-row" style={{ borderBottom: '1px solid #f3f4f6' }}>
                   
                   {/* Date */}
-                  <td style={{ padding: '10px 14px', fontWeight: '600', fontSize: '12.5px' }}>
+                  <td style={{ padding: '10px 14px', fontWeight: '600', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
                     {(exp.date || '').split('-').reverse().join('/')}
                   </td>
 
                   {/* Plate */}
-                  <td style={{ padding: '10px 14px' }}>
+                  <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                     <span style={{ fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'monospace', fontSize: '12.5px', background: '#f5f3f0', padding: '2px 6px', borderRadius: '4px' }}>
                       #{exp.plateNo}
                     </span>
@@ -816,36 +802,20 @@ export default function CarExpensesView({
                     >
                       {exp.category}
                     </span>
-                    {exp.notes && (
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {exp.notes}
-                      </div>
-                    )}
                   </td>
 
                   {/* Amount (AED) */}
-                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)', fontSize: '13.5px' }}>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)', fontSize: '13.5px', whiteSpace: 'nowrap' }}>
                     {parseFloat(exp.amount || 0).toLocaleString()} AED
                   </td>
 
-                  {/* Workshop / Vendor */}
-                  <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-main)' }}>
-                    {exp.workshopName || 'General Garage'}
-                    {exp.paymentMethod && (
-                      <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)' }}>
-                        via {exp.paymentMethod}
-                      </span>
-                    )}
-                  </td>
-
-                  {/* Invoice / Odometer */}
-                  <td style={{ padding: '10px 14px', fontSize: '11px', color: 'var(--text-muted)' }}>
-                    <div>Inv: <strong style={{ color: 'var(--text-dark)' }}>{exp.invoiceNo || 'N/A'}</strong></div>
-                    {exp.odometer > 0 && <div>Odo: {exp.odometer.toLocaleString()} KM</div>}
+                  {/* Method */}
+                  <td style={{ padding: '10px 14px', fontSize: '12px', color: 'var(--text-main)', whiteSpace: 'nowrap' }}>
+                    {exp.paymentMethod || 'Cash'}
                   </td>
 
                   {/* Status */}
-                  <td style={{ padding: '10px 14px' }}>
+                  <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                     <span 
                       className="badge" 
                       style={{ 
@@ -860,6 +830,11 @@ export default function CarExpensesView({
                     >
                       {exp.status || 'Paid'}
                     </span>
+                  </td>
+
+                  {/* Notes */}
+                  <td style={{ padding: '10px 14px', fontSize: '11.5px', color: 'var(--text-muted)', maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {exp.notes || '—'}
                   </td>
 
                   {/* Actions */}
@@ -904,11 +879,11 @@ export default function CarExpensesView({
             </div>
 
             <form onSubmit={handleSaveExpense}>
-              <div className="form-grid-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+              <div className="form-grid-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 
                 {/* Vehicle Plate Selection */}
                 <div className="form-group">
-                  <label>Vehicle Plate No *</label>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Plate *</label>
                   <select 
                     className="form-control"
                     required
@@ -924,7 +899,7 @@ export default function CarExpensesView({
 
                 {/* Expense Category Selection */}
                 <div className="form-group">
-                  <label>Expense Category / Type *</label>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Category *</label>
                   <select 
                     className="form-control"
                     required
@@ -940,7 +915,7 @@ export default function CarExpensesView({
 
                 {/* Amount (AED) */}
                 <div className="form-group">
-                  <label>Amount (AED) *</label>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Amount (AED) *</label>
                   <input 
                     type="number" 
                     step="0.01"
@@ -955,7 +930,7 @@ export default function CarExpensesView({
 
                 {/* Date */}
                 <div className="form-group">
-                  <label>Expense Date *</label>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Date *</label>
                   <input 
                     type="date" 
                     className="form-control" 
@@ -965,46 +940,9 @@ export default function CarExpensesView({
                   />
                 </div>
 
-                {/* Workshop / Garage Name */}
-                <div className="form-group">
-                  <label>Workshop / Garage Name</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="e.g. Tasjeel, QuickFit Auto..."
-                    value={formData.workshopName}
-                    onChange={(e) => setFormData({ ...formData, workshopName: e.target.value })}
-                  />
-                </div>
-
-                {/* Invoice / Receipt No */}
-                <div className="form-group">
-                  <label>Invoice / Receipt No</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="e.g. INV-88219"
-                    value={formData.invoiceNo}
-                    onChange={(e) => setFormData({ ...formData, invoiceNo: e.target.value })}
-                  />
-                </div>
-
-                {/* Odometer (KM) */}
-                <div className="form-group">
-                  <label>Odometer Reading (KM)</label>
-                  <input 
-                    type="number" 
-                    min="0"
-                    className="form-control" 
-                    placeholder="e.g. 142500"
-                    value={formData.odometer}
-                    onChange={(e) => setFormData({ ...formData, odometer: e.target.value })}
-                  />
-                </div>
-
                 {/* Payment Method */}
                 <div className="form-group">
-                  <label>Payment Method</label>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Method</label>
                   <select 
                     className="form-control"
                     value={formData.paymentMethod}
@@ -1018,7 +956,7 @@ export default function CarExpensesView({
 
                 {/* Payment Status */}
                 <div className="form-group">
-                  <label>Payment Status</label>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Status</label>
                   <select 
                     className="form-control"
                     value={formData.status}
@@ -1031,11 +969,11 @@ export default function CarExpensesView({
 
                 {/* Notes */}
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>Notes & Service Description</label>
+                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Notes</label>
                   <textarea 
                     className="form-control" 
                     rows="2"
-                    placeholder="Provide details about replaced parts, warranty, or inspection outcome..."
+                    placeholder="Optional details or maintenance notes..."
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     style={{ resize: 'none' }}
@@ -1291,9 +1229,9 @@ export default function CarExpensesView({
                       <th style={{ padding: '8px 10px', fontWeight: '800' }}>PLATE</th>
                       <th style={{ padding: '8px 10px', fontWeight: '800' }}>CATEGORY</th>
                       <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>AMOUNT (AED)</th>
-                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>WORKSHOP</th>
-                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>INVOICE</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>METHOD</th>
                       <th style={{ padding: '8px 10px', fontWeight: '800' }}>STATUS</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>NOTES</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1303,16 +1241,15 @@ export default function CarExpensesView({
                         <td style={{ padding: '7px 10px', fontWeight: '800', fontFamily: 'monospace' }}>#{item.plateNo}</td>
                         <td style={{ padding: '7px 10px' }}>
                           <span style={{ fontWeight: '700' }}>{item.category}</span>
-                          {item.notes && <span style={{ display: 'block', fontSize: '10px', color: '#6b7280' }}>{item.notes}</span>}
                         </td>
                         <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: '800', color: '#8c5b30' }}>
                           {parseFloat(item.amount || 0).toLocaleString()} AED
                         </td>
-                        <td style={{ padding: '7px 10px', color: '#4b5563' }}>{item.workshopName || 'N/A'}</td>
-                        <td style={{ padding: '7px 10px', color: '#6b7280' }}>{item.invoiceNo || 'N/A'}</td>
+                        <td style={{ padding: '7px 10px', color: '#4b5563' }}>{item.paymentMethod || 'Cash'}</td>
                         <td style={{ padding: '7px 10px', textTransform: 'capitalize', fontWeight: '700', color: item.status === 'paid' ? '#047857' : '#b45309' }}>
                           {item.status || 'Paid'}
                         </td>
+                        <td style={{ padding: '7px 10px', color: '#6b7280', fontSize: '10.5px' }}>{item.notes || '—'}</td>
                       </tr>
                     ))}
                   </tbody>

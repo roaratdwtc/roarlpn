@@ -3011,9 +3011,6 @@ export const initialCarExpenses = [
     category: "Car Passing",
     amount: 170,
     date: "2026-08-15",
-    workshopName: "Tasjeel Al Qusais",
-    invoiceNo: "TSJ-88219",
-    odometer: 142500,
     paymentMethod: "Card",
     status: "paid",
     notes: "Annual RTA Technical passing passed with zero defects"
@@ -3025,9 +3022,6 @@ export const initialCarExpenses = [
     category: "Tyre Change",
     amount: 1600,
     date: "2026-08-18",
-    workshopName: "Al Futtaim Auto Center",
-    invoiceNo: "AFT-40912",
-    odometer: 118400,
     paymentMethod: "Bank Transfer",
     status: "paid",
     notes: "Replaced 4x Bridgestone Desert Dueller 285/65R17 tyres"
@@ -3039,9 +3033,6 @@ export const initialCarExpenses = [
     category: "Oil Change",
     amount: 380,
     date: "2026-08-20",
-    workshopName: "QuickFit Auto Services",
-    invoiceNo: "QF-10344",
-    odometer: 95200,
     paymentMethod: "Cash",
     status: "paid",
     notes: "Mobil 1 10,000 KM synthetic oil + OEM oil filter & air filter clean"
@@ -3053,9 +3044,6 @@ export const initialCarExpenses = [
     category: "Floor Mats & Detailing",
     amount: 250,
     date: "2026-08-22",
-    workshopName: "Red Dunes Car Care",
-    invoiceNo: "RD-5512",
-    odometer: 82000,
     paymentMethod: "Cash",
     status: "paid",
     notes: "Heavy duty 7D all-weather sand floor mats and interior steam detailing"
@@ -3067,9 +3055,6 @@ export const initialCarExpenses = [
     category: "Accidents & Body Repair",
     amount: 950,
     date: "2026-08-24",
-    workshopName: "Al Quoz Precision Workshop",
-    invoiceNo: "AQW-9021",
-    odometer: 143200,
     paymentMethod: "Bank Transfer",
     status: "paid",
     notes: "Front right fender minor dune dent repair and paint touchup"
@@ -3081,9 +3066,6 @@ export const initialCarExpenses = [
     category: "Insurance Renewal",
     amount: 2450,
     date: "2026-08-25",
-    workshopName: "Orient Insurance PJSC",
-    invoiceNo: "INS-4010591",
-    odometer: 83000,
     paymentMethod: "Bank Transfer",
     status: "paid",
     notes: "Annual comprehensive commercial motor insurance policy with desert safari cover"
@@ -3095,9 +3077,6 @@ export const initialCarExpenses = [
     category: "Mulkiya Renewals",
     amount: 350,
     date: "2026-08-26",
-    workshopName: "RTA Dubai Services",
-    invoiceNo: "RTA-992140",
-    odometer: 104000,
     paymentMethod: "Card",
     status: "paid",
     notes: "Vehicle electronic Mulkiya registration card renewal fee"
@@ -3109,9 +3088,6 @@ export const initialCarExpenses = [
     category: "Battery & Brake Pads",
     amount: 580,
     date: "2026-08-28",
-    workshopName: "Arabian Automobiles Service",
-    invoiceNo: "AAS-7718",
-    odometer: 131000,
     paymentMethod: "Cash",
     status: "paid",
     notes: "Installed new AC Delco heavy battery and front ceramic brake pads"

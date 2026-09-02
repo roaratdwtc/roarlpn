@@ -469,7 +469,7 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: 'var(--text-dark)' }}>
-                    Auto-Apply Off-Peak Season Coupon (All Packages)
+                    Auto-Apply Summer End Sale Discount (All Packages)
                   </h4>
                   <span className="badge" style={{
                     background: autoApplyOffpeak ? 'rgba(5, 150, 105, 0.15)' : 'rgba(107, 114, 128, 0.15)',
@@ -479,11 +479,11 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                     padding: '3px 8px',
                     borderRadius: '12px'
                   }}>
-                    {autoApplyOffpeak ? '✓ AUTO-APPLY ACTIVE' : '○ DISABLED'}
+                    {autoApplyOffpeak ? '✓ SUMMER SALE ACTIVE' : '○ DISABLED'}
                   </span>
                 </div>
                 <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
-                  Automatically applies the off-peak discounted coupon code to all packages in Bookings and for online customers.
+                  Automatically applies the Summer End Sale discounted coupon code to all packages in Bookings and for online customers.
                 </p>
               </div>
             </div>
@@ -527,11 +527,11 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
               >
                 {autoApplyOffpeak ? (
                   <>
-                    <Check size={16} /> Auto-Apply Active (All Packages)
+                    <Check size={16} /> Summer End Sale Discount Applied (All Packages)
                   </>
                 ) : (
                   <>
-                    <Zap size={16} /> Enable Auto-Apply on All Packages
+                    <Zap size={16} /> Enable Summer End Sale Discount on All Packages
                   </>
                 )}
               </button>

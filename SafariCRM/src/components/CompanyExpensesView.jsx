@@ -563,8 +563,8 @@ export default function CompanyExpensesView({
         </button>
       </div>
 
-      {/* 8 KPI & Report Cards Grid (Short, crisp titles for mobile) */}
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '8px' }}>
+      {/* 8 KPI & Report Cards Grid (2 cards per row on mobile) */}
+      <div className="stats-grid" style={{ marginBottom: '8px' }}>
         
         {/* 1. Total Corporate Overheads */}
         <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
@@ -790,9 +790,9 @@ export default function CompanyExpensesView({
             </div>
           </div>
 
-          {/* Expenses Table (Completely removed Expense Title and Vendor per Image 1 user request) */}
-          <div className="table-responsive card" style={{ background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px', padding: '0', overflow: 'hidden' }}>
-            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          {/* Expenses Table (Scrollable on mobile to show all details) */}
+          <div className="table-responsive card" style={{ background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px', padding: '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+            <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '720px' }}>
               <thead>
                 <tr style={{ background: '#fdfbf7', borderBottom: '1px solid #ede6d9', textAlign: 'left' }}>
                   <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>DATE</th>

@@ -565,8 +565,8 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
           </div>
         )}
 
-        {/* Overview stats cards */}
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        {/* Overview stats cards (2 cards per row on mobile) */}
+        <div className="stats-grid" style={{ marginBottom: '24px' }}>
           <div className="stat-card">
             <div className="stat-header">
               <span>TOTAL REGISTERED CARS</span>

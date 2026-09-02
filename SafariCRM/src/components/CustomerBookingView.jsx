@@ -244,12 +244,16 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       const offpeakRate = parseFloat(selectedPkgObj.offpeakRate) || parseFloat(selectedPkgObj.rate) || 0;
       return {
         status: 'valid',
-        message: `✓ Off-Peak Rate Applied: AED ${offpeakRate} package price override`,
+        message: `✓ Summer End Sale Discount Applied: AED ${offpeakRate} (${matchesPkg.code})`,
         coupon: { ...matchesPkg, customPrice: offpeakRate }
       };
     }
 
-    return { status: 'valid', message: `✓ Coupon Applied: AED ${matchesPkg.customPrice} package price override`, coupon: matchesPkg };
+    return { 
+      status: 'valid', 
+      message: `✓ Summer End Sale Discount Applied: AED ${matchesPkg.customPrice} (${matchesPkg.code})`, 
+      coupon: matchesPkg 
+    };
   };
 
   // Get only the first active coupon for the promo unlock wall
@@ -457,7 +461,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       couponCode: activeCpn ? activeCpn.code : (autoApplyOffpeakSetting ? offpeakCouponCodeSetting : ""),
       pricingType: "offpeak",
       tourType: formData.tourType || 'pick_drop',
-      paymentOption: "Collection"
+      paymentOption: "Payment on Arrival"
     };
     try {
       const res = await fetch("api.php?action=save&table=bookings", {
@@ -641,10 +645,10 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
                   <Percent size={16} style={{ flexShrink: 0 }} />
                   <div>
                     <div style={{ fontSize: "11.5px", fontWeight: "800" }}>
-                      🎉 Off-Peak Season Discount Automatically Applied on All Packages!
+                      🎉 Summer End Sale Discount Applied (Coupon: {couponCode || offpeakCouponCodeSetting})
                     </div>
                     <div style={{ fontSize: "10.5px", opacity: 0.9 }}>
-                      Summer promotion code <strong>{couponCode || offpeakCouponCodeSetting}</strong> applied.
+                      Summer End Sale discount active on all packages with coupon <strong>{couponCode || offpeakCouponCodeSetting}</strong>.
                     </div>
                   </div>
                 </div>
@@ -899,8 +903,10 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
                 <div style={{ fontSize: "11px", color: BRAND, fontWeight: "700", marginTop: "1px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {selectedPkg ? (
                     activeCpn 
-                      ? `${getCleanPackageName(selectedPkg.name)} (Coupon Applied: ${activeCpn.customPrice} AED)` 
-                      : getCleanPackageName(selectedPkg.name)
+                      ? `${getCleanPackageName(selectedPkg.name)} (Summer End Sale Discount Applied: ${rate} AED - Code: ${activeCpn.code})` 
+                      : (autoApplyOffpeakSetting
+                        ? `${getCleanPackageName(selectedPkg.name)} (Summer End Sale Discount Applied: ${rate} AED - Code: ${offpeakCouponCodeSetting})`
+                        : getCleanPackageName(selectedPkg.name))
                   ) : "—"}
                 </div>
               </div>

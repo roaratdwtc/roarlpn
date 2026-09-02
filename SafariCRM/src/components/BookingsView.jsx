@@ -106,7 +106,7 @@ Location: ${booking.pickupLocation} ${booking.roomNo ? `(Room: ${booking.roomNo}
   if (booking.addonName && parseFloat(booking.addonPrice) > 0) {
     msg += `\nAddon: ${booking.addonName} (+${booking.addonPrice} AED)`;
   }
-  msg += `\nCollection on Arrival: ${parseFloat(booking.price) === 0 ? 'Online Paid / Nil' : `${booking.price} AED`}`;
+  msg += `\nPayment on Arrival: ${parseFloat(booking.price) === 0 ? 'Online Paid / Nil' : `${booking.price} AED`}`;
 
   const phoneClean = driver.whatsapp.replace(/[^0-9]/g, '');
   return `https://wa.me/${phoneClean}?text=${encodeURIComponent(msg)}`;
@@ -131,6 +131,8 @@ export function getConfirmationText(booking) {
 
   const resolvedLocation = isSelfDrive ? 'https://maps.app.goo.gl/jcACpe96sKRcmbVe6' : (booking.pickupLocation || 'Hotel Lobby');
 
+  const isPaidOnline = (booking.paymentOption && booking.paymentOption !== 'Payment on Arrival' && booking.paymentOption !== 'Collection');
+
   let lines = [
     `Thank you for choosing Roar Adventure Tourism LLC, Your booking regarding Dubai Desert Safari with Booking Reference# ${refCode} is confirmed with following details.`,
     `1. Name: ${booking.customerName}`,
@@ -141,7 +143,7 @@ export function getConfirmationText(booking) {
     isSelfDrive ? `6. Arrival time: ${resolvedPickupTime}` : `6. Pickup time: ${resolvedPickupTime}`,
     booking.addonName ? `7. Addon Service: ${booking.addonName} ${parseFloat(booking.addonPrice) > 0 ? `(+${booking.addonPrice} AED)` : ''}` : null,
     `8. Payment: ${booking.price} AED`,
-    `9. ${(booking.paymentOption || 'Collection') !== 'Collection' ? `${booking.paymentOption} (Paid)` : 'Payment on arrival (5% VAT apply on card payment) .'}`,
+    `9. ${isPaidOnline ? `${booking.paymentOption} (Paid)` : 'Payment on arrival (5% VAT apply on card payment) .'}`,
     `10. Date: ${(booking.date || '').split('-').reverse().join('/')}`
   ].filter(Boolean);
 
@@ -760,7 +762,7 @@ export default function BookingsView({
     addonPrice: 0,
     couponCode: '',
     pricingType: 'peak',
-    paymentOption: 'Collection'
+    paymentOption: 'Payment on Arrival'
   });
 
   const activePackages = packages.length > 0 ? packages : safariPackages;
@@ -818,12 +820,16 @@ export default function BookingsView({
       const offpeakRate = parseFloat(selectedPkgObj.offpeakRate) || parseFloat(selectedPkgObj.rate) || 0;
       return {
         status: 'valid',
-        message: `✓ Off-Peak Rate Applied: AED ${offpeakRate} package price override`,
+        message: `✓ Summer End Sale Discount Applied: AED ${offpeakRate} (${matchesPkg.code})`,
         coupon: { ...matchesPkg, customPrice: offpeakRate }
       };
     }
 
-    return { status: 'valid', message: `✓ Coupon Applied: AED ${matchesPkg.customPrice} package price override`, coupon: matchesPkg };
+    return { 
+      status: 'valid', 
+      message: `✓ Summer End Sale Discount Applied: AED ${matchesPkg.customPrice} (${matchesPkg.code})`, 
+      coupon: matchesPkg 
+    };
   };
 
   // Centralized helper to compute base rate and booking price
@@ -892,7 +898,7 @@ export default function BookingsView({
       couponCode: defaultCouponCode,
       pricingType: defaultPricingType,
       tourType: 'pick_drop',
-      paymentOption: 'Collection'
+      paymentOption: 'Payment on Arrival'
     });
     setIsModalOpen(true);
   };
@@ -922,7 +928,7 @@ export default function BookingsView({
       tourType: 'pick_drop',
       ...booking,
       status: initialStatus,
-      paymentOption: booking.paymentOption || (parseFloat(booking.price) === 0 ? 'Paid via stripe' : 'Collection')
+      paymentOption: booking.paymentOption === 'Collection' ? 'Payment on Arrival' : (booking.paymentOption || (parseFloat(booking.price) === 0 ? 'Paid via stripe' : 'Payment on Arrival'))
     });
     setIsModalOpen(true);
   };
@@ -1700,14 +1706,14 @@ export default function BookingsView({
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '11px' }}>PAYMENT OPTION</span>
                     <span className="badge badge-partner" style={{ textTransform: 'capitalize' }}>
-                      {viewingBooking.paymentOption || 'Collection'}
+                      {viewingBooking.paymentOption === 'Collection' ? 'Payment on Arrival' : (viewingBooking.paymentOption || 'Payment on Arrival')}
                     </span>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '11px' }}>PENDING COLLECTION</span>
-                    <span style={{ fontWeight: '700', color: (viewingBooking.paymentOption || 'Collection') === 'Collection' ? 'var(--primary)' : 'var(--text-muted)' }}>
-                      {(viewingBooking.paymentOption || 'Collection') === 'Collection' ? `${viewingBooking.price} AED` : '0 AED'}
+                    <span style={{ color: 'var(--text-muted)', fontWeight: '600', fontSize: '11px' }}>PENDING PAYMENT ON ARRIVAL</span>
+                    <span style={{ fontWeight: '700', color: (viewingBooking.paymentOption === 'Payment on Arrival' || viewingBooking.paymentOption === 'Collection' || !viewingBooking.paymentOption) ? 'var(--primary)' : 'var(--text-muted)' }}>
+                      {(viewingBooking.paymentOption === 'Payment on Arrival' || viewingBooking.paymentOption === 'Collection' || !viewingBooking.paymentOption) ? `${viewingBooking.price} AED` : '0 AED'}
                     </span>
                   </div>
 
@@ -1957,12 +1963,12 @@ export default function BookingsView({
                     <div>
                       <div style={{ fontSize: '12px', fontWeight: '800', color: (formData.pricingType === 'offpeak') ? '#047857' : 'var(--text-dark)' }}>
                         {formData.pricingType === 'offpeak' 
-                          ? `⚡ Off-Peak Season Discount Active (All Packages)` 
+                          ? `⚡ Summer End Sale Discount Applied (Coupon: ${formData.couponCode || offpeakCouponCodeSetting})` 
                           : `Peak Standard Pricing Active`}
                       </div>
                       <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         {autoApplyOffpeakSetting 
-                          ? `Auto-apply coupon is globally active (${offpeakCouponCodeSetting})`
+                          ? `Summer End Sale coupon is globally active (${offpeakCouponCodeSetting})`
                           : `Toggle to apply seasonal off-peak discounted rate overrides on this booking`}
                       </div>
                     </div>
@@ -1991,7 +1997,7 @@ export default function BookingsView({
                       cursor: 'pointer'
                     }}
                   >
-                    {formData.pricingType === 'offpeak' ? 'Switch to Peak (Standard)' : '⚡ Apply Off-Peak Discount'}
+                    {formData.pricingType === 'offpeak' ? 'Switch to Peak (Standard)' : '⚡ Apply Summer End Sale Discount'}
                   </button>
                 </div>
 
@@ -2230,24 +2236,24 @@ export default function BookingsView({
                   <label>Payment Option</label>
                   <select 
                     className="form-control"
-                    value={formData.paymentOption || 'Collection'}
+                    value={formData.paymentOption === 'Collection' ? 'Payment on Arrival' : (formData.paymentOption || 'Payment on Arrival')}
                     onChange={(e) => setFormData({ ...formData, paymentOption: e.target.value })}
                   >
+                    <option value="Payment on Arrival">Payment on Arrival</option>
                     <option value="Paid on Viator">Paid on Viator</option>
                     <option value="Paid via stripe">Paid via stripe</option>
                     <option value="Paid to Partner">Paid to Partner</option>
                     <option value="Paid via Payment Link">Paid via Payment Link</option>
                     <option value="Paid via RAK Bank">Paid via RAK Bank</option>
-                    <option value="Collection">Collection</option>
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Pending Collection (AED)</label>
+                  <label>Pending Payment on Arrival (AED)</label>
                   <input 
                     type="number" 
                     className="form-control"
-                    value={(formData.paymentOption || 'Collection') === 'Collection' ? formData.price : 0}
+                    value={(formData.paymentOption === 'Payment on Arrival' || formData.paymentOption === 'Collection' || !formData.paymentOption) ? formData.price : 0}
                     disabled
                     style={{ background: '#f3f4f6', color: '#543d2b', fontWeight: 'bold', cursor: 'not-allowed' }}
                   />
