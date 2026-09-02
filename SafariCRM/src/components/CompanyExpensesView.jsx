@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Building2, 
   Phone, 
@@ -24,10 +24,11 @@ import {
   Clock,
   Sparkles,
   Layers,
-  MessageSquare
+  MessageSquare,
+  X
 } from 'lucide-react';
 
-const COMPANY_CATEGORIES = [
+export const DEFAULT_COMPANY_CATEGORIES = [
   'Trade License Renewal',
   'Establishment Card Renewal',
   'Office Rent & Ejari',
@@ -75,23 +76,41 @@ export default function CompanyExpensesView({
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
+  // Dynamic Category management (allows adding more types later)
+  const [categories, setCategories] = useState(() => {
+    try {
+      const saved = localStorage.getItem('safari_company_expense_categories');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return DEFAULT_COMPANY_CATEGORIES;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('safari_company_expense_categories', JSON.stringify(categories));
+  }, [categories]);
+
+  // Add Category Modal State
+  const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
+  // Report Modal State
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
   // SIM specific filters
   const [simProviderFilter, setSimProviderFilter] = useState('all');
   const [simStatusFilter, setSimStatusFilter] = useState('all');
 
   const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
-  // Expense Modal State
+  // Expense Modal State (Removed Title and Vendor fields per Image 1 user request)
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [expenseFormData, setExpenseFormData] = useState({
-    category: 'Trade License Renewal',
-    title: '',
+    category: categories[0] || 'Trade License Renewal',
     amount: '',
     date: todayStr,
     dueDate: '',
     paymentMethod: 'Bank Transfer',
-    vendor: '',
     invoiceNo: '',
     status: 'paid',
     notes: ''
@@ -117,13 +136,11 @@ export default function CompanyExpensesView({
   const handleOpenAddExpense = () => {
     setEditingExpense(null);
     setExpenseFormData({
-      category: 'Trade License Renewal',
-      title: '',
+      category: categories[0] || 'Trade License Renewal',
       amount: '',
       date: todayStr,
       dueDate: '',
       paymentMethod: 'Bank Transfer',
-      vendor: 'Department of Economy & Tourism (DET)',
       invoiceNo: '',
       status: 'paid',
       notes: ''
@@ -134,18 +151,37 @@ export default function CompanyExpensesView({
   const handleOpenEditExpense = (expense) => {
     setEditingExpense(expense);
     setExpenseFormData({
-      category: expense.category || 'Trade License Renewal',
-      title: expense.title || '',
+      category: expense.category || categories[0] || 'Trade License Renewal',
       amount: expense.amount || '',
       date: expense.date || todayStr,
       dueDate: expense.dueDate || '',
       paymentMethod: expense.paymentMethod || 'Bank Transfer',
-      vendor: expense.vendor || '',
       invoiceNo: expense.invoiceNo || '',
       status: expense.status || 'paid',
       notes: expense.notes || ''
     });
     setIsExpenseModalOpen(true);
+  };
+
+  const handleCategorySelectChange = (val) => {
+    if (val === '__add_new__') {
+      setIsAddCategoryOpen(true);
+      return;
+    }
+    setExpenseFormData(prev => ({ ...prev, category: val }));
+  };
+
+  const handleAddNewCategory = (e) => {
+    e.preventDefault();
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) return;
+    if (!categories.includes(trimmed)) {
+      const updated = [...categories, trimmed];
+      setCategories(updated);
+      setExpenseFormData(prev => ({ ...prev, category: trimmed }));
+    }
+    setNewCategoryName('');
+    setIsAddCategoryOpen(false);
   };
 
   const handleSaveExpense = (e) => {
@@ -283,9 +319,7 @@ export default function CompanyExpensesView({
   const filteredExpenses = useMemo(() => {
     return companyExpenses.filter(item => {
       const searchMatch = !searchTerm || 
-        (item.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.vendor || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.invoiceNo || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.notes || '').toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -323,7 +357,7 @@ export default function CompanyExpensesView({
     });
   }, [companySims, searchTerm, simProviderFilter, simStatusFilter]);
 
-  // 8 KPI Report Calculations
+  // 8 KPI Report Calculations with short, crisp titles
   const stats = useMemo(() => {
     const totalCompanyOverheads = filteredExpenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
@@ -361,7 +395,7 @@ export default function CompanyExpensesView({
       .filter(item => (item.date || '').startsWith(currentMonthPrefix))
       .reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
-    // 8. Upcoming Critical Renewals (Check items with due dates within 90 days)
+    // 8. Upcoming Critical Renewals
     const upcomingRenewals = companyExpenses
       .filter(item => item.dueDate && item.dueDate >= todayStr)
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
@@ -381,8 +415,35 @@ export default function CompanyExpensesView({
     };
   }, [filteredExpenses, companyExpenses, companySims, currentMonthPrefix, todayStr]);
 
-  const handlePrint = () => {
+  const handleOpenReport = () => {
+    setIsReportModalOpen(true);
+  };
+
+  const handlePrintReport = () => {
     window.print();
+  };
+
+  const handleExportCSV = () => {
+    const headers = ["Date", "Category", "Amount AED", "Due Date", "Payment Method", "Invoice No", "Status", "Notes"];
+    const rows = filteredExpenses.map(e => [
+      e.date || '',
+      `"${(e.category || '').replace(/"/g, '""')}"`,
+      e.amount || 0,
+      e.dueDate || '',
+      e.paymentMethod || '',
+      e.invoiceNo || '',
+      e.status || '',
+      `"${(e.notes || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Company_Expenses_Report_${todayStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const getCategoryBadgeStyle = (category) => {
@@ -405,69 +466,79 @@ export default function CompanyExpensesView({
   };
 
   return (
-    <div className="view-content" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div className="view-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
-      {/* Top Header & Sub-Tabs Navigation */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+      {/* Top Header & Actions */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: '800', fontFamily: 'var(--font-heading)', color: 'var(--text-dark)' }}>
+          <h2 style={{ fontSize: '20px', fontWeight: '800', fontFamily: 'var(--font-heading)', color: 'var(--text-dark)' }}>
             Company Expenses & Sales SIMs
           </h2>
-          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Track trade license renewals, office rent, internet/phone bills, petty cash disbursements, and sales agent mobile SIMs.
+          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            Corporate overheads, renewals, office bills & sales mobile directory.
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button 
-            onClick={handlePrint}
+            onClick={handleOpenReport}
             className="btn btn-secondary" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 12px' }}
           >
-            <Printer size={15} /> Print Report
+            <Printer size={14} /> Print Report
           </button>
 
           {activeSubTab === 'expenses' ? (
-            <button 
-              onClick={handleOpenAddExpense}
-              className="btn btn-primary" 
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 14px rgba(140, 91, 48, 0.25)' }}
-            >
-              <Plus size={16} /> Log Company Expense
-            </button>
+            <>
+              <button 
+                onClick={() => setIsAddCategoryOpen(true)}
+                className="btn btn-secondary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 12px' }}
+              >
+                <Plus size={14} /> Add Type
+              </button>
+
+              <button 
+                onClick={handleOpenAddExpense}
+                className="btn btn-primary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 14px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
+              >
+                <Plus size={14} /> Log Expense
+              </button>
+            </>
           ) : (
             <button 
               onClick={handleOpenAddSim}
               className="btn btn-primary" 
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 14px rgba(140, 91, 48, 0.25)' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 14px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
             >
-              <Plus size={16} /> Assign Sales SIM
+              <Plus size={14} /> Assign SIM
             </button>
           )}
         </div>
       </div>
 
       {/* Sub-Tab Navigation Header */}
-      <div style={{ display: 'flex', gap: '8px', borderBottom: '2px solid #ede6d9', paddingBottom: '2px' }}>
+      <div style={{ display: 'flex', gap: '6px', borderBottom: '1.5px solid #ede6d9', paddingBottom: '2px' }}>
         <button
           onClick={() => { setActiveSubTab('expenses'); setSearchTerm(''); }}
           style={{
             background: 'none',
             border: 'none',
-            padding: '10px 18px',
-            fontSize: '14px',
+            padding: '8px 14px',
+            fontSize: '13px',
             fontWeight: '800',
             cursor: 'pointer',
             color: activeSubTab === 'expenses' ? 'var(--primary)' : 'var(--text-muted)',
-            borderBottom: activeSubTab === 'expenses' ? '3px solid var(--primary)' : '3px solid transparent',
+            borderBottom: activeSubTab === 'expenses' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
             marginBottom: '-2px',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.2s'
+            gap: '6px',
+            transition: 'all 0.15s'
           }}
         >
-          <Building2 size={16} /> Company Overheads ({companyExpenses.length})
+          <Building2 size={15} /> Overheads ({companyExpenses.length})
         </button>
 
         <button
@@ -475,167 +546,151 @@ export default function CompanyExpensesView({
           style={{
             background: 'none',
             border: 'none',
-            padding: '10px 18px',
-            fontSize: '14px',
+            padding: '8px 14px',
+            fontSize: '13px',
             fontWeight: '800',
             cursor: 'pointer',
             color: activeSubTab === 'sims' ? 'var(--primary)' : 'var(--text-muted)',
-            borderBottom: activeSubTab === 'sims' ? '3px solid var(--primary)' : '3px solid transparent',
+            borderBottom: activeSubTab === 'sims' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
             marginBottom: '-2px',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.2s'
+            gap: '6px',
+            transition: 'all 0.15s'
           }}
         >
-          <Smartphone size={16} /> Sales Agent SIMs & Numbers ({companySims.length})
+          <Smartphone size={15} /> Sales SIMs ({companySims.length})
         </button>
       </div>
 
-      {/* 8 KPI & Report Cards Grid */}
-      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+      {/* 8 KPI & Report Cards Grid (Short, crisp titles for mobile) */}
+      <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '8px' }}>
         
         {/* 1. Total Corporate Overheads */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #ede6d9', padding: '16px 18px' }}>
+        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               TOTAL OVERHEADS
             </span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(140, 91, 48, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Building2 size={16} />
-            </div>
+            <Building2 size={14} style={{ color: 'var(--primary)' }} />
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--primary)', marginTop: '8px' }}>
-            {stats.totalCompanyOverheads.toLocaleString()} <span style={{ fontSize: '13px', fontWeight: '600' }}>AED</span>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>
+            {stats.totalCompanyOverheads.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            {filteredExpenses.length} expense items recorded
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {filteredExpenses.length} items
           </div>
         </div>
 
         {/* 2. Government & Licensing */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #ede6d9', padding: '16px 18px' }}>
+        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              TRADE LICENSE & GDRFA
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              TRADE LICENSE
             </span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(5, 150, 105, 0.1)', color: '#047857', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <ShieldCheck size={16} />
-            </div>
+            <ShieldCheck size={14} style={{ color: '#047857' }} />
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: '#047857', marginTop: '8px' }}>
-            {stats.licensingTotal.toLocaleString()} <span style={{ fontSize: '13px', fontWeight: '600' }}>AED</span>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: '#047857', marginTop: '4px' }}>
+            {stats.licensingTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            DET, DTCM & MoHRE renewals
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            DET & GDRFA
           </div>
         </div>
 
         {/* 3. Office Rent & Ejari */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #ede6d9', padding: '16px 18px' }}>
+        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              OFFICE RENT & EJARI
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              OFFICE RENT
             </span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(201, 118, 42, 0.1)', color: '#c9762a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Layers size={16} />
-            </div>
+            <Layers size={14} style={{ color: '#c9762a' }} />
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '8px' }}>
-            {stats.rentEjariTotal.toLocaleString()} <span style={{ fontSize: '13px', fontWeight: '600' }}>AED</span>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
+            {stats.rentEjariTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Commercial office lease
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            DWTC lease & Ejari
           </div>
         </div>
 
         {/* 4. Internet & Main Phone Bills */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #ede6d9', padding: '16px 18px' }}>
+        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              INTERNET & MAIN LINE
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              INTERNET / PHONE
             </span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#1d4ed8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Wifi size={16} />
-            </div>
+            <Wifi size={14} style={{ color: '#1d4ed8' }} />
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: '#1d4ed8', marginTop: '8px' }}>
-            {stats.telecomBillsTotal.toLocaleString()} <span style={{ fontSize: '13px', fontWeight: '600' }}>AED</span>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: '#1d4ed8', marginTop: '4px' }}>
+            {stats.telecomBillsTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Hotline + Fiber internet
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            Hotline + Fiber
           </div>
         </div>
 
         {/* 5. Active Sales SIMs */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #ede6d9', padding: '16px 18px' }}>
+        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              SALES AGENT SIMS
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              SALES SIMS
             </span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(217, 119, 6, 0.1)', color: '#b45309', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Smartphone size={16} />
-            </div>
+            <Smartphone size={14} style={{ color: '#b45309' }} />
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '8px' }}>
-            {stats.activeSimCount} <span style={{ fontSize: '13px', fontWeight: '600' }}>Lines Active</span>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
+            {stats.activeSimCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Active Lines</span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '700', marginTop: '4px' }}>
-            {stats.totalSimMonthlyCost.toLocaleString()} AED / month plan spend
+          <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '700', marginTop: '2px' }}>
+            {stats.totalSimMonthlyCost.toLocaleString()} AED / mo
           </div>
         </div>
 
         {/* 6. Office Supplies & Consumables */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #ede6d9', padding: '16px 18px' }}>
+        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               OFFICE SUPPLIES
             </span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(201, 118, 42, 0.1)', color: '#c9762a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Coffee size={16} />
-            </div>
+            <Coffee size={14} style={{ color: '#c9762a' }} />
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '8px' }}>
-            {stats.officeSuppliesTotal.toLocaleString()} <span style={{ fontSize: '13px', fontWeight: '600' }}>AED</span>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
+            {stats.officeSuppliesTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Pantry, water & stationery
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            Stationery & pantry
           </div>
         </div>
 
         {/* 7. Petty Cash Disbursements */}
-        <div className="stat-card" style={{ background: '#ffffff', border: '1.5px solid #ede6d9', padding: '16px 18px' }}>
+        <div className="stat-card" style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              PETTY CASH SPENT
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+              PETTY CASH
             </span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(140, 91, 48, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <CreditCard size={16} />
-            </div>
+            <CreditCard size={14} style={{ color: 'var(--primary)' }} />
           </div>
-          <div style={{ fontSize: '22px', fontWeight: '800', color: 'var(--primary)', marginTop: '8px' }}>
-            {stats.pettyCashTotal.toLocaleString()} <span style={{ fontSize: '13px', fontWeight: '600' }}>AED</span>
+          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>
+            {stats.pettyCashTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            Small daily cash disbursements
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            Daily cash spent
           </div>
         </div>
 
         {/* 8. Upcoming Critical Renewals */}
-        <div className="stat-card" style={{ background: '#fdfbf7', border: '1.5px solid #ede6d9', padding: '16px 18px' }}>
+        <div className="stat-card" style={{ background: '#fdfbf7', border: '1px solid #ede6d9', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               NEXT RENEWAL
             </span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#b91c1c', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Clock size={16} />
-            </div>
+            <Clock size={14} style={{ color: '#b91c1c' }} />
           </div>
-          <div style={{ fontSize: '14px', fontWeight: '800', color: '#b91c1c', marginTop: '8px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {stats.nextRenewal ? stats.nextRenewal.title : 'All Licenses Active'}
+          <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#b91c1c', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {stats.nextRenewal ? stats.nextRenewal.category : 'Up to date'}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-            {stats.nextRenewal ? `Due on: ${(stats.nextRenewal.dueDate || '').split('-').reverse().join('/')}` : 'No renewals due within 90 days'}
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {stats.nextRenewal ? `Due: ${(stats.nextRenewal.dueDate || '').split('-').reverse().join('/')}` : 'No renewals due'}
           </div>
         </div>
 
@@ -645,30 +700,30 @@ export default function CompanyExpensesView({
       {activeSubTab === 'expenses' && (
         <>
           {/* Filters & Search */}
-          <div className="card" style={{ padding: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '12px' }}>
+          <div className="card" style={{ padding: '12px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px' }}>
             
-            <div style={{ position: 'relative', flex: '1 1 240px', minWidth: '220px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '180px' }}>
+              <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="text"
                 className="form-control"
-                placeholder="Search by title, category, vendor, invoice..."
+                placeholder="Search category, invoice, notes..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ paddingLeft: '36px' }}
+                style={{ paddingLeft: '32px', fontSize: '12.5px' }}
               />
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               
               <select 
                 className="form-control"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                style={{ width: 'auto', minWidth: '170px' }}
+                style={{ width: 'auto', minWidth: '150px', fontSize: '12px' }}
               >
                 <option value="all">All Categories</option>
-                {COMPANY_CATEGORIES.map(cat => (
+                {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
@@ -677,7 +732,7 @@ export default function CompanyExpensesView({
                 className="form-control"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                style={{ width: 'auto', minWidth: '120px' }}
+                style={{ width: 'auto', minWidth: '110px', fontSize: '12px' }}
               >
                 <option value="all">All Statuses</option>
                 <option value="paid">Paid</option>
@@ -689,7 +744,7 @@ export default function CompanyExpensesView({
                 className="form-control"
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                style={{ width: 'auto', minWidth: '130px' }}
+                style={{ width: 'auto', minWidth: '110px', fontSize: '12px' }}
               >
                 <option value="all">All Time</option>
                 <option value="this_month">This Month</option>
@@ -698,21 +753,21 @@ export default function CompanyExpensesView({
               </select>
 
               {dateFilter === 'custom' && (
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                   <input 
                     type="date" 
                     className="form-control" 
                     value={customStartDate} 
                     onChange={(e) => setCustomStartDate(e.target.value)}
-                    style={{ width: 'auto' }}
+                    style={{ width: 'auto', fontSize: '11.5px' }}
                   />
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>to</span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>to</span>
                   <input 
                     type="date" 
                     className="form-control" 
                     value={customEndDate} 
                     onChange={(e) => setCustomEndDate(e.target.value)}
-                    style={{ width: 'auto' }}
+                    style={{ width: 'auto', fontSize: '11.5px' }}
                   />
                 </div>
               )}
@@ -726,37 +781,37 @@ export default function CompanyExpensesView({
                     setDateFilter('all');
                   }}
                   className="btn btn-secondary"
-                  style={{ fontSize: '11px', padding: '6px 10px' }}
+                  style={{ fontSize: '11px', padding: '5px 8px' }}
                 >
-                  Reset Filters
+                  Reset
                 </button>
               )}
 
             </div>
           </div>
 
-          {/* Expenses Table */}
-          <div className="table-responsive card" style={{ background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '12px', padding: '0', overflow: 'hidden' }}>
+          {/* Expenses Table (Completely removed Expense Title and Vendor per Image 1 user request) */}
+          <div className="table-responsive card" style={{ background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px', padding: '0', overflow: 'hidden' }}>
             <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#fdfbf7', borderBottom: '1px solid #ede6d9', textAlign: 'left' }}>
-                  <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>DATE</th>
-                  <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>EXPENSE TITLE / DESCRIPTION</th>
-                  <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>CATEGORY</th>
-                  <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'right' }}>AMOUNT (AED)</th>
-                  <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>VENDOR / AUTHORITY</th>
-                  <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>DUE / RENEWAL</th>
-                  <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>STATUS</th>
-                  <th style={{ padding: '12px 16px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'center' }}>ACTIONS</th>
+                  <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>DATE</th>
+                  <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>CATEGORY</th>
+                  <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'right' }}>AMOUNT</th>
+                  <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>PAYMENT VIA</th>
+                  <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>DUE / RENEWAL</th>
+                  <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>STATUS</th>
+                  <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)' }}>NOTES / DETAILS</th>
+                  <th style={{ padding: '10px 14px', fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textAlign: 'center' }}>ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredExpenses.length === 0 ? (
                   <tr>
-                    <td colSpan="8" style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
-                      <Building2 size={32} style={{ opacity: 0.3, margin: '0 auto 10px', display: 'block' }} />
-                      <p style={{ fontWeight: '600', fontSize: '14px' }}>No company expenses found matching criteria.</p>
-                      <p style={{ fontSize: '12px', marginTop: '4px' }}>Click "Log Company Expense" above to record a new overhead item.</p>
+                    <td colSpan="8" style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--text-muted)' }}>
+                      <Building2 size={28} style={{ opacity: 0.3, margin: '0 auto 8px', display: 'block' }} />
+                      <p style={{ fontWeight: '600', fontSize: '13.5px' }}>No company expenses found matching criteria.</p>
+                      <p style={{ fontSize: '11.5px', marginTop: '3px' }}>Click "Log Expense" above to record a new overhead item.</p>
                     </td>
                   </tr>
                 ) : (
@@ -764,68 +819,56 @@ export default function CompanyExpensesView({
                     <tr key={exp.id} className="clickable-row" style={{ borderBottom: '1px solid #f3f4f6' }}>
                       
                       {/* Date */}
-                      <td style={{ padding: '12px 16px', fontWeight: '600', fontSize: '13px' }}>
+                      <td style={{ padding: '10px 14px', fontWeight: '600', fontSize: '12.5px' }}>
                         {(exp.date || '').split('-').reverse().join('/')}
                       </td>
 
-                      {/* Title & Notes */}
-                      <td style={{ padding: '12px 16px' }}>
-                        <div style={{ fontWeight: '700', color: 'var(--text-dark)', fontSize: '13.5px' }}>
-                          {exp.title}
-                        </div>
-                        {exp.notes && (
-                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {exp.notes}
-                          </div>
-                        )}
-                      </td>
-
                       {/* Category */}
-                      <td style={{ padding: '12px 16px' }}>
+                      <td style={{ padding: '10px 14px' }}>
                         <span 
                           className="badge" 
                           style={{ 
                             ...getCategoryBadgeStyle(exp.category), 
                             fontWeight: '700', 
                             fontSize: '11px', 
-                            padding: '4px 8px', 
-                            borderRadius: '6px' 
+                            padding: '3px 8px', 
+                            borderRadius: '5px' 
                           }}
                         >
                           {exp.category}
                         </span>
-                      </td>
-
-                      {/* Amount */}
-                      <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)', fontSize: '14px' }}>
-                        {parseFloat(exp.amount || 0).toLocaleString()} AED
-                      </td>
-
-                      {/* Vendor / Authority */}
-                      <td style={{ padding: '12px 16px', fontSize: '12.5px', color: 'var(--text-main)' }}>
-                        <div>{exp.vendor || 'N/A'}</div>
-                        {exp.paymentMethod && (
-                          <span style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
-                            via {exp.paymentMethod}
+                        {exp.invoiceNo && (
+                          <span style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            Inv: {exp.invoiceNo}
                           </span>
                         )}
                       </td>
 
+                      {/* Amount */}
+                      <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)', fontSize: '13.5px' }}>
+                        {parseFloat(exp.amount || 0).toLocaleString()} AED
+                      </td>
+
+                      {/* Payment Method */}
+                      <td style={{ padding: '10px 14px', fontSize: '11.5px', color: 'var(--text-main)' }}>
+                        {exp.paymentMethod || 'Bank Transfer'}
+                      </td>
+
                       {/* Due / Renewal Date */}
-                      <td style={{ padding: '12px 16px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                      <td style={{ padding: '10px 14px', fontSize: '11.5px', color: 'var(--text-muted)' }}>
                         {exp.dueDate ? (exp.dueDate.split('-').reverse().join('/')) : 'N/A'}
                       </td>
 
                       {/* Status */}
-                      <td style={{ padding: '12px 16px' }}>
+                      <td style={{ padding: '10px 14px' }}>
                         <span 
                           className="badge" 
                           style={{ 
                             background: exp.status === 'paid' ? 'rgba(16, 185, 129, 0.12)' : (exp.status === 'overdue' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)'), 
                             color: exp.status === 'paid' ? '#047857' : (exp.status === 'overdue' ? '#b91c1c' : '#b45309'),
                             fontWeight: '700',
-                            fontSize: '11px',
-                            padding: '3px 8px',
+                            fontSize: '10.5px',
+                            padding: '2px 7px',
                             borderRadius: '4px',
                             textTransform: 'capitalize'
                           }}
@@ -834,24 +877,35 @@ export default function CompanyExpensesView({
                         </span>
                       </td>
 
+                      {/* Notes / Details */}
+                      <td style={{ padding: '10px 14px', fontSize: '11.5px', color: 'var(--text-main)', maxWidth: '280px' }}>
+                        {exp.notes ? (
+                          <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={exp.notes}>
+                            {exp.notes}
+                          </div>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>—</span>
+                        )}
+                      </td>
+
                       {/* Actions */}
-                      <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                        <div style={{ display: 'inline-flex', gap: '6px' }}>
+                      <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', gap: '5px' }}>
                           <button 
                             onClick={() => handleOpenEditExpense(exp)}
                             className="btn btn-secondary"
-                            style={{ padding: '4px 8px', fontSize: '11px' }}
+                            style={{ padding: '3px 7px', fontSize: '11px' }}
                             title="Edit Record"
                           >
-                            <Edit2 size={13} />
+                            <Edit2 size={12} />
                           </button>
                           <button 
                             onClick={() => handleDeleteExpense(exp.id)}
                             className="btn"
-                            style={{ padding: '4px 8px', fontSize: '11px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px' }}
+                            style={{ padding: '3px 7px', fontSize: '11px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '5px' }}
                             title="Delete Record"
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={12} />
                           </button>
                         </div>
                       </td>
@@ -869,27 +923,27 @@ export default function CompanyExpensesView({
       {activeSubTab === 'sims' && (
         <>
           {/* Filters & Search */}
-          <div className="card" style={{ padding: '16px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '12px' }}>
+          <div className="card" style={{ padding: '12px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px' }}>
             
-            <div style={{ position: 'relative', flex: '1 1 240px', minWidth: '220px' }}>
-              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '180px' }}>
+              <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="text"
                 className="form-control"
-                placeholder="Search by phone, sales agent name, role, plan..."
+                placeholder="Search phone, agent, role, plan..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ paddingLeft: '36px' }}
+                style={{ paddingLeft: '32px', fontSize: '12.5px' }}
               />
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               
               <select 
                 className="form-control"
                 value={simProviderFilter}
                 onChange={(e) => setSimProviderFilter(e.target.value)}
-                style={{ width: 'auto', minWidth: '130px' }}
+                style={{ width: 'auto', minWidth: '120px', fontSize: '12px' }}
               >
                 <option value="all">All Providers</option>
                 {SIM_PROVIDERS.map(p => (
@@ -901,7 +955,7 @@ export default function CompanyExpensesView({
                 className="form-control"
                 value={simStatusFilter}
                 onChange={(e) => setSimStatusFilter(e.target.value)}
-                style={{ width: 'auto', minWidth: '120px' }}
+                style={{ width: 'auto', minWidth: '110px', fontSize: '12px' }}
               >
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
@@ -917,9 +971,9 @@ export default function CompanyExpensesView({
                     setSimStatusFilter('all');
                   }}
                   className="btn btn-secondary"
-                  style={{ fontSize: '11px', padding: '6px 10px' }}
+                  style={{ fontSize: '11px', padding: '5px 8px' }}
                 >
-                  Reset Filters
+                  Reset
                 </button>
               )}
 
@@ -927,12 +981,12 @@ export default function CompanyExpensesView({
           </div>
 
           {/* SIMs Directory Cards Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
             {filteredSims.length === 0 ? (
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 16px', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '12px', color: 'var(--text-muted)' }}>
-                <Smartphone size={36} style={{ opacity: 0.3, margin: '0 auto 10px', display: 'block' }} />
-                <p style={{ fontWeight: '700', fontSize: '15px' }}>No company SIM cards found.</p>
-                <p style={{ fontSize: '12px', marginTop: '4px' }}>Click "Assign Sales SIM" above to record a new phone line.</p>
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '36px 16px', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px', color: 'var(--text-muted)' }}>
+                <Smartphone size={32} style={{ opacity: 0.3, margin: '0 auto 8px', display: 'block' }} />
+                <p style={{ fontWeight: '700', fontSize: '14px' }}>No company SIM cards found.</p>
+                <p style={{ fontSize: '11.5px', marginTop: '3px' }}>Click "Assign SIM" above to record a new phone line.</p>
               </div>
             ) : (
               filteredSims.map((sim) => {
@@ -945,20 +999,19 @@ export default function CompanyExpensesView({
                     style={{
                       background: '#ffffff',
                       border: '1.5px solid #ede6d9',
-                      borderRadius: '14px',
-                      padding: '18px 20px',
+                      borderRadius: '12px',
+                      padding: '16px 18px',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '14px',
-                      boxShadow: '0 2px 8px rgba(140, 91, 48, 0.04)',
-                      transition: 'transform 0.2s, box-shadow 0.2s'
+                      gap: '12px',
+                      boxShadow: '0 2px 6px rgba(140, 91, 48, 0.04)'
                     }}
                   >
                     {/* Card Top: Number & Provider */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'monospace' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '15px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'monospace' }}>
                             {sim.phoneNumber}
                           </span>
                           <span 
@@ -967,16 +1020,16 @@ export default function CompanyExpensesView({
                               background: sim.provider === 'Du' ? 'rgba(59, 130, 246, 0.12)' : (sim.provider === 'Etisalat' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)'),
                               color: sim.provider === 'Du' ? '#1d4ed8' : (sim.provider === 'Etisalat' ? '#047857' : '#b91c1c'),
                               fontWeight: '700',
-                              fontSize: '10.5px',
-                              padding: '2px 6px',
+                              fontSize: '10px',
+                              padding: '2px 5px',
                               borderRadius: '4px'
                             }}
                           >
                             {sim.provider}
                           </span>
                         </div>
-                        <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                          Plan: <strong style={{ color: 'var(--text-dark)' }}>{sim.planName || 'Standard Business'}</strong> ({sim.monthlyCost} AED/mo)
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          Plan: <strong style={{ color: 'var(--text-dark)' }}>{sim.planName || 'Business'}</strong> ({sim.monthlyCost} AED/mo)
                         </div>
                       </div>
 
@@ -986,8 +1039,8 @@ export default function CompanyExpensesView({
                           background: sim.status === 'active' ? 'rgba(16, 185, 129, 0.12)' : (sim.status === 'spare' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(107, 114, 128, 0.12)'),
                           color: sim.status === 'active' ? '#047857' : (sim.status === 'spare' ? '#b45309' : '#374151'),
                           fontWeight: '700',
-                          fontSize: '11px',
-                          padding: '3px 8px',
+                          fontSize: '10.5px',
+                          padding: '2px 6px',
                           borderRadius: '4px',
                           textTransform: 'capitalize'
                         }}
@@ -997,34 +1050,34 @@ export default function CompanyExpensesView({
                     </div>
 
                     {/* Middle: Assigned Sales Agent & Role */}
-                    <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '10px 12px' }}>
+                    <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '8px 10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
-                          <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                          <div style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                             ASSIGNED SALES AGENT
                           </div>
-                          <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--primary)', marginTop: '2px' }}>
+                          <div style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--primary)', marginTop: '2px' }}>
                             {sim.assignedAgent || 'Unassigned / Company Spare'}
                           </div>
                         </div>
-                        <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(140, 91, 48, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
-                          <Users size={15} />
+                        <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(140, 91, 48, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                          <Users size={14} />
                         </div>
                       </div>
 
-                      <div style={{ fontSize: '11.5px', color: 'var(--text-main)', marginTop: '6px', fontWeight: '600' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-main)', marginTop: '4px', fontWeight: '600' }}>
                         Role: <span style={{ color: 'var(--text-dark)' }}>{sim.agentRole}</span>
                       </div>
                     </div>
 
-                    {/* Bottom: SIM Details & WhatsApp Quick Chat */}
+                    {/* Bottom: Notes & Quick WhatsApp */}
                     {sim.notes && (
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.3' }}>
                         {sim.notes}
                       </div>
                     )}
 
-                    <div style={{ display: 'flex', gap: '8px', marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid #f3f4f6' }}>
+                    <div style={{ display: 'flex', gap: '6px', marginTop: 'auto', paddingTop: '8px', borderTop: '1px solid #f3f4f6' }}>
                       {cleanPhone && (
                         <a 
                           href={waLink}
@@ -1035,13 +1088,13 @@ export default function CompanyExpensesView({
                             background: '#128c7e',
                             color: '#ffffff',
                             border: 'none',
-                            borderRadius: '8px',
-                            padding: '6px 12px',
-                            fontSize: '12px',
+                            borderRadius: '6px',
+                            padding: '5px 10px',
+                            fontSize: '11.5px',
                             fontWeight: '700',
                             display: 'inline-flex',
                             alignItems: 'center',
-                            gap: '6px',
+                            gap: '5px',
                             flex: 1,
                             justifyContent: 'center',
                             textDecoration: 'none'
@@ -1054,19 +1107,19 @@ export default function CompanyExpensesView({
                       <button 
                         onClick={() => handleOpenEditSim(sim)}
                         className="btn btn-secondary"
-                        style={{ padding: '6px 10px', fontSize: '12px' }}
+                        style={{ padding: '5px 8px', fontSize: '11px' }}
                         title="Edit SIM Details"
                       >
-                        <Edit2 size={13} />
+                        <Edit2 size={12} />
                       </button>
 
                       <button 
                         onClick={() => handleDeleteSim(sim.id)}
                         className="btn"
-                        style={{ padding: '6px 10px', fontSize: '12px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '8px' }}
+                        style={{ padding: '5px 8px', fontSize: '11px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '6px' }}
                         title="Remove SIM"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={12} />
                       </button>
                     </div>
 
@@ -1078,47 +1131,38 @@ export default function CompanyExpensesView({
         </>
       )}
 
-      {/* Add / Edit Expense Modal */}
+      {/* Add / Edit Expense Modal (Simplified per Image 1: Category, Amount, Date, Due, Method, Status, and Notes at the end) */}
       {isExpenseModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px', borderRadius: '16px', padding: '24px', background: '#ffffff', border: '1.5px solid #ede6d9' }}>
+          <div className="modal-content" style={{ maxWidth: '520px', borderRadius: '14px', padding: '20px', background: '#ffffff', border: '1.5px solid #ede6d9' }}>
             
-            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '12px', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '16.5px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
                 {editingExpense ? 'Edit Company Expense' : 'Log Company Expense'}
               </h3>
               <button onClick={() => setIsExpenseModalOpen(false)} className="modal-close">&times;</button>
             </div>
 
             <form onSubmit={handleSaveExpense}>
-              <div className="form-grid-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+              <div className="form-grid-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                 
+                {/* Category Selection */}
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>Expense Title / Description *</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    required
-                    placeholder="e.g. DET / DTCM Commercial Tourism License"
-                    value={expenseFormData.title}
-                    onChange={(e) => setExpenseFormData({ ...expenseFormData, title: e.target.value })}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Category *</label>
+                  <label>Expense Category / Type *</label>
                   <select 
                     className="form-control"
                     required
                     value={expenseFormData.category}
-                    onChange={(e) => setExpenseFormData({ ...expenseFormData, category: e.target.value })}
+                    onChange={(e) => handleCategorySelectChange(e.target.value)}
                   >
-                    {COMPANY_CATEGORIES.map(cat => (
+                    {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
+                    <option value="__add_new__">+ Add New Category / Type...</option>
                   </select>
                 </div>
 
+                {/* Amount */}
                 <div className="form-group">
                   <label>Amount (AED) *</label>
                   <input 
@@ -1133,6 +1177,7 @@ export default function CompanyExpensesView({
                   />
                 </div>
 
+                {/* Date */}
                 <div className="form-group">
                   <label>Payment Date *</label>
                   <input 
@@ -1144,6 +1189,7 @@ export default function CompanyExpensesView({
                   />
                 </div>
 
+                {/* Due Date */}
                 <div className="form-group">
                   <label>Renewal / Due Date</label>
                   <input 
@@ -1154,28 +1200,19 @@ export default function CompanyExpensesView({
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>Vendor / Authority Name</label>
-                  <input 
-                    type="text" 
-                    className="form-control" 
-                    placeholder="e.g. Department of Economy & Tourism (DET)"
-                    value={expenseFormData.vendor}
-                    onChange={(e) => setExpenseFormData({ ...expenseFormData, vendor: e.target.value })}
-                  />
-                </div>
-
+                {/* Invoice No */}
                 <div className="form-group">
                   <label>Invoice / Receipt No</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. DET-2026-8819"
+                    placeholder="e.g. INV-2026-8819"
                     value={expenseFormData.invoiceNo}
                     onChange={(e) => setExpenseFormData({ ...expenseFormData, invoiceNo: e.target.value })}
                   />
                 </div>
 
+                {/* Payment Method */}
                 <div className="form-group">
                   <label>Payment Method</label>
                   <select 
@@ -1189,6 +1226,7 @@ export default function CompanyExpensesView({
                   </select>
                 </div>
 
+                {/* Status */}
                 <div className="form-group">
                   <label>Payment Status</label>
                   <select 
@@ -1202,12 +1240,13 @@ export default function CompanyExpensesView({
                   </select>
                 </div>
 
+                {/* Note at the end of expense form for details (Exact user requirement from Image 1) */}
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>Notes & Additional Context</label>
+                  <label>Note / Description (Details)</label>
                   <textarea 
                     className="form-control" 
                     rows="2"
-                    placeholder="Reference numbers, policy details, or cheque numbers..."
+                    placeholder="Add details, policy numbers, or extra notes for this expense..."
                     value={expenseFormData.notes}
                     onChange={(e) => setExpenseFormData({ ...expenseFormData, notes: e.target.value })}
                     style={{ resize: 'none' }}
@@ -1216,7 +1255,7 @@ export default function CompanyExpensesView({
 
               </div>
 
-              <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '18px', paddingTop: '14px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '14px', paddingTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                 <button 
                   type="button" 
                   onClick={() => setIsExpenseModalOpen(false)} 
@@ -1229,7 +1268,7 @@ export default function CompanyExpensesView({
                   className="btn btn-primary"
                   style={{ boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
                 >
-                  {editingExpense ? 'Update Expense' : 'Save Expense Record'}
+                  {editingExpense ? 'Update Expense' : 'Save Expense'}
                 </button>
               </div>
 
@@ -1239,20 +1278,56 @@ export default function CompanyExpensesView({
         </div>
       )}
 
+      {/* Add New Category Modal */}
+      {isAddCategoryOpen && (
+        <div className="modal-overlay" style={{ zIndex: 2100 }}>
+          <div className="modal-content" style={{ maxWidth: '420px', borderRadius: '14px', padding: '20px', background: '#ffffff', border: '1.5px solid #ede6d9' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
+                Add Company Expense Category
+              </h3>
+              <button onClick={() => setIsAddCategoryOpen(false)} className="modal-close">&times;</button>
+            </div>
+            <form onSubmit={handleAddNewCategory}>
+              <div className="form-group">
+                <label>Category Name *</label>
+                <input 
+                  type="text" 
+                  className="form-control" 
+                  required
+                  placeholder="e.g. Software Subscriptions, Legal Consultant..."
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '14px', paddingTop: '10px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                <button type="button" onClick={() => setIsAddCategoryOpen(false)} className="btn btn-secondary">
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Add Category
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Add / Edit SIM Modal */}
       {isSimModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px', borderRadius: '16px', padding: '24px', background: '#ffffff', border: '1.5px solid #ede6d9' }}>
+          <div className="modal-content" style={{ maxWidth: '560px', borderRadius: '14px', padding: '20px', background: '#ffffff', border: '1.5px solid #ede6d9' }}>
             
-            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '12px', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
-                {editingSim ? 'Edit Sales SIM Assignment' : 'Assign New Company SIM'}
+            <div className="modal-header" style={{ borderBottom: '1px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '16.5px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
+                {editingSim ? 'Edit Sales SIM Assignment' : 'Assign New Sales SIM'}
               </h3>
               <button onClick={() => setIsSimModalOpen(false)} className="modal-close">&times;</button>
             </div>
 
             <form onSubmit={handleSaveSim}>
-              <div className="form-grid-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+              <div className="form-grid-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                 
                 <div className="form-group">
                   <label>Mobile Number *</label>
@@ -1281,7 +1356,7 @@ export default function CompanyExpensesView({
                 </div>
 
                 <div className="form-group">
-                  <label>Assigned Sales Agent / Staff *</label>
+                  <label>Assigned Sales Agent *</label>
                   <input 
                     type="text" 
                     className="form-control" 
@@ -1293,7 +1368,7 @@ export default function CompanyExpensesView({
                 </div>
 
                 <div className="form-group">
-                  <label>Agent Role & Department *</label>
+                  <label>Agent Role / Department *</label>
                   <select 
                     className="form-control"
                     required
@@ -1318,7 +1393,7 @@ export default function CompanyExpensesView({
                 </div>
 
                 <div className="form-group">
-                  <label>Monthly Plan Cost (AED)</label>
+                  <label>Monthly Cost (AED)</label>
                   <input 
                     type="number" 
                     step="0.01"
@@ -1349,17 +1424,17 @@ export default function CompanyExpensesView({
                     onChange={(e) => setSimFormData({ ...simFormData, status: e.target.value })}
                   >
                     <option value="active">Active</option>
-                    <option value="spare">Spare / Unallocated</option>
+                    <option value="spare">Spare</option>
                     <option value="suspended">Suspended</option>
                   </select>
                 </div>
 
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>Notes & SIM Allocation Details</label>
+                  <label>Notes & Allocation Details</label>
                   <textarea 
                     className="form-control" 
                     rows="2"
-                    placeholder="WhatsApp marketing target, international calling bundle, handset IMEI..."
+                    placeholder="Handset model, WhatsApp campaign target, or notes..."
                     value={simFormData.notes}
                     onChange={(e) => setSimFormData({ ...simFormData, notes: e.target.value })}
                     style={{ resize: 'none' }}
@@ -1368,7 +1443,7 @@ export default function CompanyExpensesView({
 
               </div>
 
-              <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '18px', paddingTop: '14px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <div className="modal-actions" style={{ borderTop: '1px solid #ede6d9', marginTop: '14px', paddingTop: '12px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                 <button 
                   type="button" 
                   onClick={() => setIsSimModalOpen(false)} 
@@ -1386,6 +1461,211 @@ export default function CompanyExpensesView({
               </div>
 
             </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* Dedicated View & Print Report Modal */}
+      {isReportModalOpen && (
+        <div className="modal-overlay report-modal-overlay" style={{ zIndex: 2200, padding: '20px' }}>
+          <div 
+            className="modal-content report-print-container" 
+            style={{ 
+              maxWidth: '820px', 
+              width: '100%', 
+              borderRadius: '16px', 
+              padding: '28px', 
+              background: '#ffffff', 
+              border: '1.5px solid #ede6d9',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+          >
+            {/* Modal Header / Actions */}
+            <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1.5px solid #ede6d9', paddingBottom: '14px', marginBottom: '20px' }}>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', fontFamily: 'var(--font-heading)' }}>
+                  Company Overheads & Operating Expenses Report
+                </h3>
+                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                  Scope: {categoryFilter === 'all' ? 'All Operating Categories' : categoryFilter} | {dateFilter === 'this_month' ? 'This Month' : (dateFilter === 'last_month' ? 'Last Month' : 'All Time')}
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button 
+                  onClick={handleExportCSV}
+                  className="btn btn-secondary"
+                  style={{ fontSize: '12px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Download size={14} /> Export CSV
+                </button>
+                <button 
+                  onClick={handlePrintReport}
+                  className="btn btn-primary"
+                  style={{ fontSize: '12px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Printer size={14} /> Print Statement
+                </button>
+                <button 
+                  onClick={() => setIsReportModalOpen(false)} 
+                  className="modal-close"
+                  style={{ marginLeft: '6px' }}
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Report Content */}
+            <div className="printable-report-body" style={{ color: '#374151' }}>
+              
+              {/* Report Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #8c5b30', paddingBottom: '14px', marginBottom: '20px' }}>
+                <div>
+                  <h1 style={{ fontSize: '22px', fontWeight: '900', color: '#543c2b', margin: '0 0 4px 0', letterSpacing: '0.5px' }}>
+                    ROAR ADVENTURE TOURISM LLC
+                  </h1>
+                  <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600' }}>
+                    DWTC Complex, Sheikh Zayed Road, Dubai, UAE | Commercial License No: DET-2016-01
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: '800', color: '#8c5b30', marginTop: '6px' }}>
+                    OFFICIAL COMPANY OVERHEADS STATEMENT
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', fontSize: '12px', color: '#6b7280' }}>
+                  <div>Date Generated: <strong style={{ color: '#111827' }}>{todayStr.split('-').reverse().join('/')}</strong></div>
+                  <div>Expense Items: <strong style={{ color: '#111827' }}>{filteredExpenses.length}</strong></div>
+                  <div>Active Sales SIMs: <strong style={{ color: '#047857' }}>{stats.activeSimCount} Lines</strong></div>
+                </div>
+              </div>
+
+              {/* Summary Scorecards in Report */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '20px' }}>
+                <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>TOTAL OVERHEADS</div>
+                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#8c5b30', marginTop: '4px' }}>
+                    {stats.totalCompanyOverheads.toLocaleString()} AED
+                  </div>
+                </div>
+                <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>TRADE & GDRFA</div>
+                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#047857', marginTop: '4px' }}>
+                    {stats.licensingTotal.toLocaleString()} AED
+                  </div>
+                </div>
+                <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>OFFICE RENT / LEASE</div>
+                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#374151', marginTop: '4px' }}>
+                    {stats.rentEjariTotal.toLocaleString()} AED
+                  </div>
+                </div>
+                <div style={{ background: '#fdfbf7', border: '1px solid #ede6d9', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '10.5px', fontWeight: '800', color: '#6b7280', textTransform: 'uppercase' }}>TELECOM & SIMS</div>
+                  <div style={{ fontSize: '18px', fontWeight: '900', color: '#1d4ed8', marginTop: '4px' }}>
+                    {(stats.telecomBillsTotal + stats.totalSimMonthlyCost).toLocaleString()} AED
+                  </div>
+                </div>
+              </div>
+
+              {/* Category Breakdown Table */}
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#543c2b', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Overheads Breakdown by Category
+                </h4>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', border: '1px solid #ede6d9' }}>
+                  <thead>
+                    <tr style={{ background: '#fdfbf7', borderBottom: '1.5px solid #ede6d9', textAlign: 'left' }}>
+                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>CATEGORY</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'center' }}>ITEMS</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>TOTAL AMOUNT (AED)</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>% SHARE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.map(cat => {
+                      const catItems = filteredExpenses.filter(e => e.category === cat);
+                      const catTotal = catItems.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0);
+                      const sharePct = stats.totalCompanyOverheads > 0 ? ((catTotal / stats.totalCompanyOverheads) * 100).toFixed(1) : '0.0';
+
+                      if (catItems.length === 0 && categoryFilter !== 'all') return null;
+
+                      return (
+                        <tr key={cat} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                          <td style={{ padding: '8px 10px', fontWeight: '700' }}>{cat}</td>
+                          <td style={{ padding: '8px 10px', textAlign: 'center' }}>{catItems.length}</td>
+                          <td style={{ padding: '8px 10px', textAlign: 'right', fontWeight: '700', color: catTotal > 0 ? '#8c5b30' : '#9ca3af' }}>
+                            {catTotal.toLocaleString()} AED
+                          </td>
+                          <td style={{ padding: '8px 10px', textAlign: 'right', color: '#6b7280' }}>
+                            {sharePct}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Itemized Expenses Table */}
+              <div>
+                <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#543c2b', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  Itemized Expenses Ledger ({filteredExpenses.length} Records)
+                </h4>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px', border: '1px solid #ede6d9' }}>
+                  <thead>
+                    <tr style={{ background: '#fdfbf7', borderBottom: '1.5px solid #ede6d9', textAlign: 'left' }}>
+                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>DATE</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>CATEGORY</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800', textAlign: 'right' }}>AMOUNT (AED)</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>PAYMENT VIA</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>DUE DATE</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>STATUS</th>
+                      <th style={{ padding: '8px 10px', fontWeight: '800' }}>NOTES / DETAILS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredExpenses.map(item => (
+                      <tr key={item.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                        <td style={{ padding: '7px 10px' }}>{(item.date || '').split('-').reverse().join('/')}</td>
+                        <td style={{ padding: '7px 10px', fontWeight: '700' }}>{item.category}</td>
+                        <td style={{ padding: '7px 10px', textAlign: 'right', fontWeight: '800', color: '#8c5b30' }}>
+                          {parseFloat(item.amount || 0).toLocaleString()} AED
+                        </td>
+                        <td style={{ padding: '7px 10px', color: '#4b5563' }}>{item.paymentMethod || 'Bank Transfer'}</td>
+                        <td style={{ padding: '7px 10px', color: '#6b7280' }}>
+                          {item.dueDate ? (item.dueDate.split('-').reverse().join('/')) : '—'}
+                        </td>
+                        <td style={{ padding: '7px 10px', textTransform: 'capitalize', fontWeight: '700', color: item.status === 'paid' ? '#047857' : '#b45309' }}>
+                          {item.status || 'Paid'}
+                        </td>
+                        <td style={{ padding: '7px 10px', color: '#6b7280' }}>{item.notes || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ background: '#fdfbf7', borderTop: '2px solid #8c5b30', fontWeight: '800' }}>
+                      <td colSpan="2" style={{ padding: '10px', textAlign: 'right' }}>TOTAL CORPORATE OVERHEADS:</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#8c5b30', fontSize: '13px' }}>
+                        {stats.totalCompanyOverheads.toLocaleString()} AED
+                      </td>
+                      <td colSpan="4"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              {/* Report Footer / Signature Line */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '36px', paddingTop: '16px', borderTop: '1px solid #ede6d9', fontSize: '11px', color: '#6b7280' }}>
+                <div>Roar Adventure Tourism ERP • Corporate Accounting Ledger</div>
+                <div style={{ textAlign: 'right' }}>
+                  <div>Executive Management Approval</div>
+                  <div style={{ marginTop: '20px', borderBottom: '1px solid #9ca3af', width: '180px' }}></div>
+                </div>
+              </div>
+
+            </div>
 
           </div>
         </div>

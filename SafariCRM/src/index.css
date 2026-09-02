@@ -2358,6 +2358,72 @@ select.form-control {
   .driver-cards-grid {
     grid-template-columns: 1fr !important;
   }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .stat-card {
+    padding: 10px 12px !important;
+  }
+  .stat-card .stat-value,
+  .stat-card div[style*="font-size: 18px"],
+  .stat-card div[style*="font-size: 22px"] {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Dedicated Print Media Styles for Expense Reports */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  .sidebar,
+  .topbar,
+  .navbar,
+  .btn,
+  .no-print,
+  .modal-close,
+  .sidebar-overlay {
+    display: none !important;
+  }
+  
+  .report-modal-overlay {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  
+  .report-print-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .printable-report-body {
+    display: block !important;
+  }
+  
+  table {
+    page-break-inside: auto;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
 }
 
 

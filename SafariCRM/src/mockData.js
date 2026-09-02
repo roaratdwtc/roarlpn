@@ -3011,13 +3011,12 @@ export const initialCarExpenses = [
     category: "Car Passing",
     amount: 170,
     date: "2026-08-15",
-    driverName: "Mr Adnan",
     workshopName: "Tasjeel Al Qusais",
     invoiceNo: "TSJ-88219",
     odometer: 142500,
     paymentMethod: "Card",
     status: "paid",
-    notes: "Annual RTA Technical passing passed with zero defects for Mr Adnan's vehicle"
+    notes: "Annual RTA Technical passing passed with zero defects"
   },
   {
     id: "carexp-102",
@@ -3026,13 +3025,12 @@ export const initialCarExpenses = [
     category: "Tyre Change",
     amount: 1600,
     date: "2026-08-18",
-    driverName: "Mr Afzal",
     workshopName: "Al Futtaim Auto Center",
     invoiceNo: "AFT-40912",
     odometer: 118400,
     paymentMethod: "Bank Transfer",
     status: "paid",
-    notes: "Replaced 4x Bridgestone Desert Dueller 285/65R17 tyres for Mr Afzal"
+    notes: "Replaced 4x Bridgestone Desert Dueller 285/65R17 tyres"
   },
   {
     id: "carexp-103",
@@ -3041,13 +3039,12 @@ export const initialCarExpenses = [
     category: "Oil Change",
     amount: 380,
     date: "2026-08-20",
-    driverName: "Mr Shahmir",
     workshopName: "QuickFit Auto Services",
     invoiceNo: "QF-10344",
     odometer: 95200,
     paymentMethod: "Cash",
     status: "paid",
-    notes: "Mobil 1 10,000 KM synthetic oil + OEM oil filter & air filter clean for Mr Shahmir"
+    notes: "Mobil 1 10,000 KM synthetic oil + OEM oil filter & air filter clean"
   },
   {
     id: "carexp-104",
@@ -3056,13 +3053,12 @@ export const initialCarExpenses = [
     category: "Floor Mats & Detailing",
     amount: 250,
     date: "2026-08-22",
-    driverName: "Mr Ibadat",
     workshopName: "Red Dunes Car Care",
     invoiceNo: "RD-5512",
     odometer: 82000,
     paymentMethod: "Cash",
     status: "paid",
-    notes: "Heavy duty 7D all-weather sand floor mats and interior steam detailing for Mr Ibadat"
+    notes: "Heavy duty 7D all-weather sand floor mats and interior steam detailing"
   },
   {
     id: "carexp-105",
@@ -3071,13 +3067,12 @@ export const initialCarExpenses = [
     category: "Accidents & Body Repair",
     amount: 950,
     date: "2026-08-24",
-    driverName: "Mr Shahid",
     workshopName: "Al Quoz Precision Workshop",
     invoiceNo: "AQW-9021",
     odometer: 143200,
     paymentMethod: "Bank Transfer",
     status: "paid",
-    notes: "Front right fender minor dune dent repair and paint touchup for Mr Shahid"
+    notes: "Front right fender minor dune dent repair and paint touchup"
   },
   {
     id: "carexp-106",
@@ -3086,13 +3081,12 @@ export const initialCarExpenses = [
     category: "Insurance Renewal",
     amount: 2450,
     date: "2026-08-25",
-    driverName: "Mr Ibadat",
     workshopName: "Orient Insurance PJSC",
     invoiceNo: "INS-4010591",
     odometer: 83000,
     paymentMethod: "Bank Transfer",
     status: "paid",
-    notes: "Annual comprehensive commercial motor insurance policy with desert safari cover for Mr Ibadat"
+    notes: "Annual comprehensive commercial motor insurance policy with desert safari cover"
   },
   {
     id: "carexp-107",
@@ -3101,13 +3095,12 @@ export const initialCarExpenses = [
     category: "Mulkiya Renewals",
     amount: 350,
     date: "2026-08-26",
-    driverName: "Mr Abbasi",
     workshopName: "RTA Dubai Services",
     invoiceNo: "RTA-992140",
     odometer: 104000,
     paymentMethod: "Card",
     status: "paid",
-    notes: "Vehicle electronic Mulkiya registration card renewal fee for Mr Abbasi"
+    notes: "Vehicle electronic Mulkiya registration card renewal fee"
   },
   {
     id: "carexp-108",
@@ -3116,13 +3109,12 @@ export const initialCarExpenses = [
     category: "Battery & Brake Pads",
     amount: 580,
     date: "2026-08-28",
-    driverName: "Mr Bangash",
     workshopName: "Arabian Automobiles Service",
     invoiceNo: "AAS-7718",
     odometer: 131000,
     paymentMethod: "Cash",
     status: "paid",
-    notes: "Installed new AC Delco heavy battery and front ceramic brake pads for Mr Bangash"
+    notes: "Installed new AC Delco heavy battery and front ceramic brake pads"
   }
 ];
 
@@ -3130,106 +3122,90 @@ export const initialCompanyExpenses = [
   {
     id: "compexp-201",
     category: "Trade License Renewal",
-    title: "DET / DTCM Commercial Tourism License",
     amount: 14500,
     date: "2026-08-10",
     dueDate: "2026-12-15",
     paymentMethod: "Bank Transfer",
-    vendor: "Department of Economy & Tourism (DET)",
     invoiceNo: "DET-2026-8819",
     status: "paid",
-    notes: "Annual inbound tour operator tourism trade license renewal and chamber fees"
+    notes: "DET / DTCM commercial tourism license renewal and chamber fees"
   },
   {
     id: "compexp-202",
     category: "Establishment Card Renewal",
-    title: "GDRFA Immigration Establishment Card",
     amount: 1850,
     date: "2026-08-12",
     dueDate: "2026-11-20",
     paymentMethod: "Card",
-    vendor: "General Directorate of Residency and Foreigners Affairs (GDRFA)",
     invoiceNo: "GDRFA-55219",
     status: "paid",
-    notes: "3-year company immigration establishment card fee and smart gate access"
+    notes: "GDRFA Immigration 3-year establishment card and smart gate access"
   },
   {
     id: "compexp-203",
     category: "Office Rent & Ejari",
-    title: "DWTC Commercial Office Suite - Q3 Lease",
     amount: 18500,
     date: "2026-08-01",
     dueDate: "2026-08-01",
     paymentMethod: "Bank Cheque",
-    vendor: "Dubai World Trade Centre Real Estate Management",
     invoiceNo: "DWTC-RENT-Q3",
     status: "paid",
-    notes: "Quarterly lease payment for Suite 402, DWTC Complex"
+    notes: "DWTC Complex Suite 402 commercial office Q3 quarterly lease"
   },
   {
     id: "compexp-204",
     category: "Company Main Phone Bill",
-    title: "Main Booking Hotline (+971 58 934 4077)",
     amount: 650,
     date: "2026-08-25",
     dueDate: "2026-09-05",
     paymentMethod: "Auto Debit",
-    vendor: "Du Telecom UAE",
     invoiceNo: "DU-HOTLINE-0826",
     status: "paid",
-    notes: "Monthly business postpaid plan with international calling and unlimited data"
+    notes: "Du main booking hotline (+971 58 934 4077) business postpaid plan"
   },
   {
     id: "compexp-205",
     category: "Office Internet & Telephony Bill",
-    title: "Office High-Speed Fiber Internet 500Mbps",
     amount: 899,
     date: "2026-08-25",
     dueDate: "2026-09-05",
     paymentMethod: "Card",
-    vendor: "Du Telecom UAE",
     invoiceNo: "DU-INTERNET-0826",
     status: "paid",
-    notes: "Dedicated fiber broadband line and static IP for CRM server"
+    notes: "Office high-speed fiber internet 500Mbps and static IP"
   },
   {
     id: "compexp-206",
     category: "Office Expenses & Supplies",
-    title: "Monthly Stationery, Water & Pantry Stock",
     amount: 480,
     date: "2026-08-16",
     dueDate: "2026-08-16",
     paymentMethod: "Petty Cash",
-    vendor: "OfficeOne Supplies & Masafi",
     invoiceNo: "OF-4419",
     status: "paid",
-    notes: "A4 paper reams, printer ink cartridge, bottled drinking water and espresso beans"
+    notes: "Monthly stationery, A4 reams, bottled drinking water and espresso beans"
   },
   {
     id: "compexp-207",
     category: "Petty Cash Disbursements",
-    title: "Daily Office Petty Cash Top-Up & Courier",
     amount: 350,
     date: "2026-08-20",
     dueDate: "2026-08-20",
     paymentMethod: "Cash",
-    vendor: "Petty Cash Box / Aramex",
     invoiceNo: "PC-AUG-02",
     status: "paid",
-    notes: "Document courier to partner travel agencies, stamps, and driver refreshments"
+    notes: "Daily office petty cash top-up, agency courier and office refreshments"
   },
   {
     id: "compexp-208",
     category: "Miscellaneous & Legal",
-    title: "Cloud Server, Email & Financial Auditing",
     amount: 1200,
     date: "2026-08-22",
     dueDate: "2026-08-22",
     paymentMethod: "Bank Transfer",
-    vendor: "CloudTech & HLB Auditors",
     invoiceNo: "CT-8831",
     status: "paid",
-    notes: "Google Workspace corporate emails, cloud backup hosting, and monthly accounting review"
+    notes: "Google Workspace emails, cloud server backup and financial auditing"
   }
 ];
 
