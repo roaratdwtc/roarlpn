@@ -1074,7 +1074,7 @@ export default function CarExpensesView({
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {selectedPlateFilter !== 'all' ? `TOTAL (CAR #${selectedPlateFilter})` : cardLabels.total}
+              {selectedPlateFilter !== 'all' ? `TOTAL (CAR ${selectedPlateFilter})` : cardLabels.total}
             </span>
             <Wrench size={14} style={{ color: 'var(--primary)' }} />
           </div>
@@ -1301,8 +1301,25 @@ export default function CarExpensesView({
               <tr>
                 <td colSpan="8" style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--text-muted)' }}>
                   <Wrench size={28} style={{ opacity: 0.3, margin: '0 auto 8px', display: 'block' }} />
-                  <p style={{ fontWeight: '600', fontSize: '13.5px' }}>No car expenses found.</p>
-                  <p style={{ fontSize: '11.5px', marginTop: '3px' }}>Click "Log Expense" above to record a new entry.</p>
+                  <p style={{ fontWeight: '700', fontSize: '14px', color: 'var(--text-dark)' }}>No car expenses found for this filter.</p>
+                  {(carExpenses || []).length > 0 ? (
+                    <div style={{ marginTop: '10px' }}>
+                      <button 
+                        onClick={() => {
+                          setSearchTerm('');
+                          setCategoryFilter('all');
+                          setSelectedPlateFilter('all');
+                          setDateFilter('all');
+                        }}
+                        className="btn btn-primary"
+                        style={{ fontSize: '12px', padding: '6px 14px' }}
+                      >
+                        Show All Expenses ({carExpenses.length} in database)
+                      </button>
+                    </div>
+                  ) : (
+                    <p style={{ fontSize: '11.5px', marginTop: '3px' }}>Click "Log Expense" above to record a new entry.</p>
+                  )}
                 </td>
               </tr>
             ) : (
@@ -1766,7 +1783,14 @@ export default function CarExpensesView({
               </button>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '14px' }}>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 285px), 1fr))', 
+              gap: '12px',
+              width: '100%',
+              maxWidth: '100%',
+              boxSizing: 'border-box'
+            }}>
               {filteredCarDocuments.map(doc => {
                 const expiryInfo = getDocExpiryInfo(doc.expiryDate);
                 const isCopied = copiedDocId === doc.id;
@@ -1779,13 +1803,17 @@ export default function CarExpensesView({
                       background: '#ffffff',
                       border: '1.5px solid #ede6d9',
                       borderRadius: '12px',
-                      padding: '16px',
+                      padding: '14px',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
-                      gap: '12px',
+                      gap: '10px',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.15s ease',
+                      width: '100%',
+                      maxWidth: '100%',
+                      overflow: 'hidden',
+                      boxSizing: 'border-box'
                     }}
                   >
                     {/* Top Row: Plate + Category + Expiry Status */}
@@ -1818,15 +1846,15 @@ export default function CarExpensesView({
                         </div>
 
                         <span 
-                          className="badge"
+                          className="badge" 
                           style={{ 
                             background: expiryInfo.bg, 
                             color: expiryInfo.color, 
                             border: `1px solid ${expiryInfo.border}`, 
                             fontSize: '10.5px', 
-                            fontWeight: '700',
-                            padding: '3px 7px',
-                            borderRadius: '5px'
+                            fontWeight: '700', 
+                            padding: '3px 7px', 
+                            borderRadius: '5px' 
                           }}
                         >
                           {expiryInfo.label}
@@ -1834,17 +1862,17 @@ export default function CarExpensesView({
                       </div>
 
                       {/* Title */}
-                      <h4 style={{ fontSize: '14px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px', lineHeight: '1.3' }}>
+                      <h4 style={{ fontSize: '13.5px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px', lineHeight: '1.3' }}>
                         {doc.title}
                       </h4>
 
                       {/* Car Nickname */}
-                      <div style={{ fontSize: '11px', color: '#8c5b30', fontWeight: '600', marginBottom: '8px' }}>
+                      <div style={{ fontSize: '11px', color: '#8c5b30', fontWeight: '600', marginBottom: '6px' }}>
                         {carLabels[doc.carPlate] || 'Roar Fleet Vehicle'}
                       </div>
 
                       {/* Notes / Description */}
-                      <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: '1.4', marginBottom: '10px', minHeight: '32px' }}>
+                      <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', lineHeight: '1.4', marginBottom: '8px', minHeight: '28px' }}>
                         {doc.notes || 'Official electronic vehicle compliance file.'}
                       </p>
 
@@ -1859,34 +1887,44 @@ export default function CarExpensesView({
                         flexDirection: 'column',
                         gap: '4px'
                       }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
                           <span style={{ color: 'var(--text-muted)' }}>Issue Date:</span>
                           <span style={{ fontWeight: '600', color: 'var(--text-dark)' }}>{doc.issueDate ? doc.issueDate.split('-').reverse().join('/') : '—'}</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '4px' }}>
                           <span style={{ color: 'var(--text-muted)' }}>Expiry Date:</span>
                           <span style={{ fontWeight: '700', color: expiryInfo.color }}>
                             {doc.expiryDate ? doc.expiryDate.split('-').reverse().join('/') : 'Permanent / No Expiry'}
                           </span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed #ede6d9', paddingTop: '4px', marginTop: '2px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px dashed #ede6d9', paddingTop: '4px', marginTop: '2px', flexWrap: 'wrap', gap: '4px' }}>
                           <span style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                             <FileText size={11} /> File:
                           </span>
-                          <span style={{ fontWeight: '600', color: 'var(--primary)', maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={doc.fileName}>
+                          <span style={{ fontWeight: '600', color: 'var(--primary)', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={doc.fileName}>
                             {doc.fileName || 'Attached document'} {doc.fileSize ? `(${doc.fileSize})` : ''}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Bottom Row: Actions */}
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #ede6d9', paddingTop: '10px' }}>
-                      <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                    {/* Bottom Row: Actions - Strictly wrap and fit within screen */}
+                    <div style={{ 
+                      display: 'flex', 
+                      gap: '8px', 
+                      alignItems: 'center', 
+                      justifyContent: 'space-between', 
+                      flexWrap: 'wrap', 
+                      borderTop: '1px solid #ede6d9', 
+                      paddingTop: '10px',
+                      width: '100%',
+                      boxSizing: 'border-box'
+                    }}>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <button
                           onClick={() => setPreviewingDoc(doc)}
                           className="btn btn-secondary"
-                          style={{ fontSize: '11px', padding: '5px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', height: '30px' }}
+                          style={{ fontSize: '11px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', height: '28px', whiteSpace: 'nowrap' }}
                           title="Preview document in browser"
                         >
                           <Eye size={12} /> View
@@ -1894,7 +1932,7 @@ export default function CarExpensesView({
                         <button
                           onClick={() => handleDownloadDoc(doc)}
                           className="btn btn-secondary"
-                          style={{ fontSize: '11px', padding: '5px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', height: '30px' }}
+                          style={{ fontSize: '11px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', height: '28px', whiteSpace: 'nowrap' }}
                           title="Download document file"
                         >
                           <Download size={12} /> Download
@@ -1902,18 +1940,18 @@ export default function CarExpensesView({
                         <button
                           onClick={() => handleWhatsAppShareDoc(doc)}
                           className="btn btn-secondary"
-                          style={{ fontSize: '11px', padding: '5px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#047857', height: '30px' }}
+                          style={{ fontSize: '11px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#047857', height: '28px', whiteSpace: 'nowrap' }}
                           title="Share formatted details via WhatsApp"
                         >
                           <Share2 size={12} /> Share
                         </button>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
                         <button
                           onClick={() => handleCopyDocDetails(doc)}
                           className="btn btn-secondary"
-                          style={{ padding: '5px 7px', height: '30px' }}
+                          style={{ padding: '4px 6px', height: '28px', minWidth: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                           title="Copy details to clipboard"
                         >
                           {isCopied ? <Check size={12} style={{ color: '#047857' }} /> : <Clipboard size={12} />}
@@ -1921,7 +1959,7 @@ export default function CarExpensesView({
                         <button
                           onClick={() => handleOpenEditDoc(doc)}
                           className="btn btn-secondary"
-                          style={{ padding: '5px 7px', height: '30px' }}
+                          style={{ padding: '4px 6px', height: '28px', minWidth: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                           title="Edit document details or replace file"
                         >
                           <Edit2 size={12} />
@@ -1929,7 +1967,7 @@ export default function CarExpensesView({
                         <button
                           onClick={() => handleDeleteDoc(doc.id, doc.title)}
                           className="btn btn-secondary"
-                          style={{ padding: '5px 7px', height: '30px', color: '#b91c1c' }}
+                          style={{ padding: '4px 6px', height: '28px', minWidth: '28px', color: '#b91c1c', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                           title="Delete document"
                         >
                           <Trash2 size={12} />

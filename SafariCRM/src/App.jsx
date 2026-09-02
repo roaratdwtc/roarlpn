@@ -87,58 +87,53 @@ export default function App() {
     }
   };
 
-  // central state with dynamic loading & automatic cache invalidation
+  // central state with dynamic loading & persistent cache
   const [bookings, setBookings] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_bookings', JSON.stringify(initialBookings));
-      return initialBookings;
+    const stored = getLocalStorageItemSafe('safari_bookings', null);
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      return stored;
     }
-    return getLocalStorageItemSafe('safari_bookings', initialBookings);
+    localStorage.setItem('safari_bookings', JSON.stringify(initialBookings));
+    return initialBookings;
   });
 
   const [drivers, setDrivers] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_drivers', JSON.stringify(initialDrivers));
-      return initialDrivers;
+    const stored = getLocalStorageItemSafe('safari_drivers', null);
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      return stored;
     }
-    return getLocalStorageItemSafe('safari_drivers', initialDrivers);
+    localStorage.setItem('safari_drivers', JSON.stringify(initialDrivers));
+    return initialDrivers;
   });
 
   const [expenses, setExpenses] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_expenses', JSON.stringify(initialExpenses));
-      return initialExpenses;
+    const stored = getLocalStorageItemSafe('safari_expenses', null);
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      return stored;
     }
-    return getLocalStorageItemSafe('safari_expenses', initialExpenses);
+    localStorage.setItem('safari_expenses', JSON.stringify(initialExpenses));
+    return initialExpenses;
   });
 
   const [partners, setPartners] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_partners', JSON.stringify(initialPartners));
-      return initialPartners;
+    const stored = getLocalStorageItemSafe('safari_partners', null);
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      return stored;
     }
-    return getLocalStorageItemSafe('safari_partners', initialPartners);
+    localStorage.setItem('safari_partners', JSON.stringify(initialPartners));
+    return initialPartners;
   });
 
   const [cars, setCars] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_cars', JSON.stringify(initialCars));
-      return initialCars;
+    const stored = getLocalStorageItemSafe('safari_cars', null);
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      return stored;
     }
-    return getLocalStorageItemSafe('safari_cars', initialCars);
+    localStorage.setItem('safari_cars', JSON.stringify(initialCars));
+    return initialCars;
   });
 
   const [packages, setPackages] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_packages', JSON.stringify(initialPackages));
-      return initialPackages;
-    }
     const stored = getLocalStorageItemSafe('safari_packages', initialPackages);
     const missing = initialPackages.filter(initPkg => !stored.some(p => p.id === initPkg.id));
     if (missing.length > 0) {
@@ -150,39 +145,39 @@ export default function App() {
   });
 
   const [coupons, setCoupons] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_coupons', JSON.stringify(initialCoupons));
-      return initialCoupons;
+    const stored = getLocalStorageItemSafe('safari_coupons', null);
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      return stored;
     }
-    return getLocalStorageItemSafe('safari_coupons', initialCoupons);
+    localStorage.setItem('safari_coupons', JSON.stringify(initialCoupons));
+    return initialCoupons;
   });
 
   const [carExpenses, setCarExpenses] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_car_expenses', JSON.stringify(initialCarExpenses));
-      return initialCarExpenses;
+    const stored = getLocalStorageItemSafe('safari_car_expenses', null);
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      return stored;
     }
-    return getLocalStorageItemSafe('safari_car_expenses', initialCarExpenses);
+    localStorage.setItem('safari_car_expenses', JSON.stringify(initialCarExpenses));
+    return initialCarExpenses;
   });
 
   const [companyExpenses, setCompanyExpenses] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_company_expenses', JSON.stringify(initialCompanyExpenses));
-      return initialCompanyExpenses;
+    const stored = getLocalStorageItemSafe('safari_company_expenses', null);
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      return stored;
     }
-    return getLocalStorageItemSafe('safari_company_expenses', initialCompanyExpenses);
+    localStorage.setItem('safari_company_expenses', JSON.stringify(initialCompanyExpenses));
+    return initialCompanyExpenses;
   });
 
   const [companySims, setCompanySims] = useState(() => {
-    const isNewVersion = localStorage.getItem('safari_db_version') !== DB_VERSION;
-    if (isNewVersion) {
-      localStorage.setItem('safari_company_sims', JSON.stringify(initialCompanySims));
-      return initialCompanySims;
+    const stored = getLocalStorageItemSafe('safari_company_sims', null);
+    if (stored && Array.isArray(stored) && stored.length > 0) {
+      return stored;
     }
-    return getLocalStorageItemSafe('safari_company_sims', initialCompanySims);
+    localStorage.setItem('safari_company_sims', JSON.stringify(initialCompanySims));
+    return initialCompanySims;
   });
 
   const [customers, setCustomers] = useState(() => {
@@ -196,7 +191,7 @@ export default function App() {
   const todayStrToday = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
   const [filterPartner, setFilterPartner] = useState('');
   const [filterDriver, setFilterDriver] = useState('');
-  const [filterDateRange, setFilterDateRange] = useState('monthly');
+  const [filterDateRange, setFilterDateRange] = useState('all');
   const [customStartDate, setCustomStartDate] = useState(todayStrToday);
   const [customEndDate, setCustomEndDate] = useState(todayStrToday);
   const [viewingBookingFromDashboard, setViewingBookingFromDashboard] = useState(null);
@@ -292,7 +287,7 @@ export default function App() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const result = await res.json();
         if (result.status === 'success' && result.data) {
-          const { bookings: bList, drivers: dList, expenses: eList, partners: pList, cars: cList, packages: pkgList, coupons: cpnList, customers: custList, settings: settingsList, company_details: compDetails, company_documents: docList, car_expenses: ceList, company_expenses: compExpList, company_sims: simList } = result.data;
+          const { bookings: bList, drivers: dList, expenses: eList, partners: pList, cars: cList, packages: pkgList, coupons: cpnList, customers: custList, settings: settingsList, company_details: compDetails, company_documents: docList, car_expenses: ceList, company_expenses: compExpList, company_sims: simList, car_documents: carDocList } = result.data;
           
           if (bList && bList.length > 0) {
             let processedBList = bList;
@@ -464,6 +459,14 @@ export default function App() {
           if (simList && simList.length > 0) {
             setCompanySims(simList);
             localStorage.setItem('safari_company_sims', JSON.stringify(simList));
+          }
+          if (carDocList && carDocList.length > 0) {
+            setCarDocuments(carDocList);
+            try {
+              localStorage.setItem('safari_car_documents', JSON.stringify(carDocList));
+            } catch (e) {
+              console.warn("Failed to write loaded car documents to localStorage:", e);
+            }
           }
           
           setDbStatus('success');

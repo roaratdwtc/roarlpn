@@ -1582,8 +1582,27 @@ export default function BookingsView({
 
             {filteredBookings.length === 0 && (
               <tr>
-                <td colSpan="11" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                  No bookings found matching filters.
+                <td colSpan="11" style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: '14.5px', fontWeight: '700', color: 'var(--text-dark)', marginBottom: '6px' }}>
+                    No bookings found for the selected filter.
+                  </div>
+                  {(bookings || []).length > 0 && (
+                    <div style={{ marginTop: '10px' }}>
+                      <button 
+                        onClick={() => {
+                          setSearchTerm('');
+                          setFilterPartner('');
+                          setFilterDriver('');
+                          setFilterDateRange('all');
+                          setFilterStatus('all');
+                        }}
+                        className="btn btn-primary"
+                        style={{ fontSize: '12px', padding: '6px 14px' }}
+                      >
+                        Show All Bookings ({bookings.length} in database)
+                      </button>
+                    </div>
+                  )}
                 </td>
               </tr>
             )}

@@ -3005,6 +3005,28 @@ export const initialCars = [
 
 export const initialCarExpenses = [
   {
+    id: "carexp-100",
+    carId: "car-ff79157",
+    plateNo: "FF79157",
+    category: "Oil Change",
+    amount: 420,
+    date: "2026-09-01",
+    paymentMethod: "Card",
+    status: "paid",
+    notes: "10,000 KM major oil & filter service at Al Futtaim quick lube"
+  },
+  {
+    id: "carexp-100b",
+    carId: "car-dd21596",
+    plateNo: "DD21596",
+    category: "Battery & Brake Pads",
+    amount: 680,
+    date: "2026-09-02",
+    paymentMethod: "Cash",
+    status: "paid",
+    notes: "AC Delco heavy duty battery replacement and OEM front brake pads"
+  },
+  {
     id: "carexp-101",
     carId: "car-ff79157",
     plateNo: "FF79157",

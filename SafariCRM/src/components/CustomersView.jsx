@@ -7,12 +7,14 @@ export default function CustomersView({ bookings, drivers, packages = [], regist
   const [viewingCustomer, setViewingCustomer] = useState(null);
 
   // Group bookings by customer contact (whatsapp)
-  const customerMap = bookings.reduce((acc, b) => {
-    const key = b.whatsapp.trim();
+  const customerMap = (bookings || []).reduce((acc, b) => {
+    if (!b) return acc;
+    const rawContact = (b.whatsapp || b.phone || b.customerName || b.id || 'Guest') + '';
+    const key = rawContact.trim();
     if (!acc[key]) {
       acc[key] = {
-        name: b.customerName,
-        whatsapp: b.whatsapp,
+        name: b.customerName || 'Guest Customer',
+        whatsapp: b.whatsapp || b.phone || 'N/A',
         email: b.email || '',
         bookingsCount: 0,
         totalSpent: 0,
@@ -25,19 +27,21 @@ export default function CustomersView({ bookings, drivers, packages = [], regist
     acc[key].trips.push(b);
     
     // Track latest booking by date
-    if (new Date(b.date) > new Date(acc[key].latestBooking.date)) {
+    if (!acc[key].latestBooking || !acc[key].latestBooking.date || (b.date && new Date(b.date) > new Date(acc[key].latestBooking.date))) {
       acc[key].latestBooking = b;
     }
     return acc;
   }, {});
 
   // Merge registered customers (leads from coupon unlocking)
-  registeredCustomers.forEach(rc => {
-    const key = rc.whatsapp.trim();
+  (registeredCustomers || []).forEach(rc => {
+    if (!rc) return;
+    const rawContact = (rc.whatsapp || rc.phone || rc.email || rc.name || rc.id || 'lead') + '';
+    const key = rawContact.trim();
     if (!customerMap[key]) {
       customerMap[key] = {
-        name: rc.name,
-        whatsapp: rc.whatsapp,
+        name: rc.name || 'Lead Contact',
+        whatsapp: rc.whatsapp || rc.phone || 'N/A',
         email: rc.email || '',
         bookingsCount: 0,
         totalSpent: 0,

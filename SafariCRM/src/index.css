@@ -2466,4 +2466,47 @@ select.form-control {
   }
 }
 
+/* =========================================================
+   STRICT MOBILE SCREEN BOUNDARIES & OVERFLOW-X PREVENTION
+   ========================================================= */
+html, body, #root, .app-container, .main-content, .view-container {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 768px) {
+  html, body {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  
+  .app-container {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  
+  .main-content {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  
+  .view-container {
+    padding: 10px 8px 24px 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  
+  .card, .panel-card, .stat-card {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+
 
