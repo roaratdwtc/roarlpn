@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Calendar, Edit2, Trash2, Phone, CheckCircle, Clock, Info, User, Clipboard, Send, Award, DollarSign, Copy, Database, Printer } from 'lucide-react';
+import { Plus, Search, Calendar, Edit2, Trash2, Phone, CheckCircle, Clock, Info, User, Clipboard, Send, Award, DollarSign, Copy, Database, Printer, Sparkles, Percent } from 'lucide-react';
 import { safariPackages } from '../mockData';
 
 export function cleanPhone(phone) {
@@ -798,9 +798,10 @@ export default function BookingsView({
     const matchesPkg = activeAndNotExpired.find(c => {
       if (c.packageId === pkgId) return true;
       const isUniversal = c.packageId === 'all_safari' || 
+                          c.packageId === 'all_packages' ||
                           c.code.toLowerCase() === 'roarnyofferdxb' || 
                           c.code.toLowerCase() === 'roarsummeroffer26';
-      if (isUniversal && (isEveningSafari || isMorningPrivate)) return true;
+      if (isUniversal) return true;
       return false;
     });
 
@@ -809,6 +810,7 @@ export default function BookingsView({
     }
 
     const isUniversalMatch = matchesPkg.packageId === 'all_safari' || 
+                             matchesPkg.packageId === 'all_packages' ||
                              matchesPkg.code.toLowerCase() === 'roarnyofferdxb' || 
                              matchesPkg.code.toLowerCase() === 'roarsummeroffer26';
 
@@ -816,7 +818,7 @@ export default function BookingsView({
       const offpeakRate = parseFloat(selectedPkgObj.offpeakRate) || parseFloat(selectedPkgObj.rate) || 0;
       return {
         status: 'valid',
-        message: `✓ Coupon Applied: AED ${offpeakRate} package price override`,
+        message: `✓ Off-Peak Rate Applied: AED ${offpeakRate} package price override`,
         coupon: { ...matchesPkg, customPrice: offpeakRate }
       };
     }
@@ -853,6 +855,9 @@ export default function BookingsView({
   };
   const autoPrice = calculateBookingPrice(formData.packageName, formData.pax, formData.pricingType, formData.couponCode, formData.addonPrice);
 
+  const autoApplyOffpeakSetting = (settings || []).find(s => s.setting_key === 'auto_apply_offpeak_coupon')?.setting_value === '1';
+  const offpeakCouponCodeSetting = (settings || []).find(s => s.setting_key === 'offpeak_coupon_code')?.setting_value || 'RoarSummerOffer26';
+
   // Open modal for add
   const handleAddClick = () => {
     setEditingBooking(null);
@@ -860,6 +865,15 @@ export default function BookingsView({
     const initialPkg = activePackages[0];
     const isMorning = (initialPkg?.name || '').toLowerCase().includes('morning');
     const todayDateStr = new Date().toISOString().split('T')[0];
+
+    const activeOffpeakCpn = (coupons || []).find(c => 
+      parseInt(c.isActive) !== 0 && 
+      (c.code.toLowerCase() === offpeakCouponCodeSetting.toLowerCase() || c.packageId === 'all_safari' || c.packageId === 'all_packages')
+    );
+    const defaultCouponCode = autoApplyOffpeakSetting && activeOffpeakCpn ? activeOffpeakCpn.code : '';
+    const defaultPricingType = autoApplyOffpeakSetting ? 'offpeak' : 'peak';
+    const computedPrice = calculateBookingPrice(initialPkg?.name || '', 2, defaultPricingType, defaultCouponCode, 0);
+
     setFormData({
       customerName: '',
       whatsapp: '',
@@ -870,13 +884,13 @@ export default function BookingsView({
       roomNo: '',
       pickupTime: getSeasonalPickupTime(todayDateStr, isMorning),
       pax: 2,
-      price: initialPkg ? (initialPkg.type === 'per_person' ? initialPkg.rate * 2 : initialPkg.rate) : 0,
+      price: computedPrice,
       driverId: '',
       status: 'confirmed',
       addonName: '',
       addonPrice: 0,
-      couponCode: '',
-      pricingType: 'peak',
+      couponCode: defaultCouponCode,
+      pricingType: defaultPricingType,
       tourType: 'pick_drop',
       paymentOption: 'Collection'
     });
@@ -1923,6 +1937,62 @@ export default function BookingsView({
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Seasonal Off-Peak Rate Indicator & 1-Click Toggle */}
+                <div style={{
+                  gridColumn: 'span 2',
+                  background: (formData.pricingType === 'offpeak' || (formData.couponCode && formData.couponCode.toLowerCase().includes('summer'))) ? 'rgba(5, 150, 105, 0.08)' : '#fdfbf7',
+                  border: (formData.pricingType === 'offpeak' || (formData.couponCode && formData.couponCode.toLowerCase().includes('summer'))) ? '1px solid rgba(5, 150, 105, 0.25)' : '1px solid #ede6d9',
+                  borderRadius: '8px',
+                  padding: '9px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Sparkles size={16} style={{ color: (formData.pricingType === 'offpeak') ? '#047857' : 'var(--primary)' }} />
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: '800', color: (formData.pricingType === 'offpeak') ? '#047857' : 'var(--text-dark)' }}>
+                        {formData.pricingType === 'offpeak' 
+                          ? `⚡ Off-Peak Season Discount Active (All Packages)` 
+                          : `Peak Standard Pricing Active`}
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        {autoApplyOffpeakSetting 
+                          ? `Auto-apply coupon is globally active (${offpeakCouponCodeSetting})`
+                          : `Toggle to apply seasonal off-peak discounted rate overrides on this booking`}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.pricingType === 'offpeak') {
+                        handlePricingTypeChange('peak');
+                        handleCouponCodeChange('');
+                      } else {
+                        handlePricingTypeChange('offpeak');
+                        handleCouponCodeChange(offpeakCouponCodeSetting);
+                      }
+                    }}
+                    className="btn btn-secondary"
+                    style={{
+                      fontSize: '11.5px',
+                      fontWeight: '800',
+                      padding: '4px 10px',
+                      background: formData.pricingType === 'offpeak' ? '#ffffff' : '#059669',
+                      color: formData.pricingType === 'offpeak' ? 'var(--text-dark)' : '#ffffff',
+                      border: formData.pricingType === 'offpeak' ? '1px solid #d1d5db' : 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {formData.pricingType === 'offpeak' ? 'Switch to Peak (Standard)' : '⚡ Apply Off-Peak Discount'}
+                  </button>
                 </div>
 
                 <div className="form-group">

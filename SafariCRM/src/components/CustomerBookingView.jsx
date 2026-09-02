@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { CheckCircle, Check, Send } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { CheckCircle, Check, Send, Percent, Sparkles } from "lucide-react";
 import { safariPackages } from "../mockData";
 
 // Addons definition
@@ -60,7 +60,9 @@ const inp = {
 
 export default function CustomerBookingView({ bookings, setBookings, partners = [], packages = [], coupons = [], customers = [], setCustomers, settings = [] }) {
   const activePackages = packages.length > 0 ? packages : safariPackages;
-  const showCouponsSetting = settings.find(s => s.setting_key === 'show_coupons')?.setting_value !== '0';
+  const showCouponsSetting = (settings || []).find(s => s.setting_key === 'show_coupons')?.setting_value !== '0';
+  const autoApplyOffpeakSetting = (settings || []).find(s => s.setting_key === 'auto_apply_offpeak_coupon')?.setting_value === '1';
+  const offpeakCouponCodeSetting = (settings || []).find(s => s.setting_key === 'offpeak_coupon_code')?.setting_value || 'RoarSummerOffer26';
 
   // Extract categories dynamically from packages and sort them
   const categoryOrder = {
@@ -222,7 +224,10 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
 
     const matchesPkg = activeAndNotExpired.find(c => {
       if (c.packageId === pkgId) return true;
-      if (c.packageId === 'all_safari' && (isEveningSafari || isMorningPrivate)) return true;
+      if (c.packageId === 'all_safari' || c.packageId === 'all_packages') return true;
+      const isUniversal = c.code.toLowerCase() === 'roarnyofferdxb' || 
+                          c.code.toLowerCase() === 'roarsummeroffer26';
+      if (isUniversal) return true;
       return false;
     });
 
@@ -230,11 +235,16 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       return { status: 'wrong_package', message: '✗ Coupon code not valid for this package' };
     }
 
-    if (matchesPkg.packageId === 'all_safari' && selectedPkgObj) {
+    const isUniversalMatch = matchesPkg.packageId === 'all_safari' || 
+                             matchesPkg.packageId === 'all_packages' ||
+                             matchesPkg.code.toLowerCase() === 'roarnyofferdxb' || 
+                             matchesPkg.code.toLowerCase() === 'roarsummeroffer26';
+
+    if (isUniversalMatch && selectedPkgObj) {
       const offpeakRate = parseFloat(selectedPkgObj.offpeakRate) || parseFloat(selectedPkgObj.rate) || 0;
       return {
         status: 'valid',
-        message: `✓ Coupon Applied: AED ${offpeakRate} package price override`,
+        message: `✓ Off-Peak Rate Applied: AED ${offpeakRate} package price override`,
         coupon: { ...matchesPkg, customPrice: offpeakRate }
       };
     }
@@ -245,6 +255,22 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
   // Get only the first active coupon for the promo unlock wall
   const activeCoupons = coupons.filter(c => parseInt(c.isActive) !== 0);
   const promoCoupon = activeCoupons[0];
+
+  // Auto-apply off-peak season coupon if enabled
+  useEffect(() => {
+    if (autoApplyOffpeakSetting) {
+      const targetCoupon = (coupons || []).find(c => 
+        parseInt(c.isActive) !== 0 && 
+        (c.code.toLowerCase() === offpeakCouponCodeSetting.toLowerCase() || c.packageId === 'all_safari' || c.packageId === 'all_packages')
+      ) || promoCoupon;
+
+      if (targetCoupon) {
+        setCouponCode(targetCoupon.code);
+        setTempCouponCode(targetCoupon.code);
+        setIsCouponUnlocked(true);
+      }
+    }
+  }, [autoApplyOffpeakSetting, offpeakCouponCodeSetting, coupons, promoCoupon]);
 
   const handleUnlockCoupon = async (e) => {
     e.preventDefault();
@@ -318,9 +344,11 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
     const isEveningSafari = selectedPkg.category === 'Evening Desert Safari';
     const isMorningPrivate = selectedPkg.id === 'morning_private';
 
-    let defaultRate = (isEveningSafari || isMorningPrivate)
-      ? (parseFloat(selectedPkg.peakRate) || parseFloat(selectedPkg.rate) || 0)
-      : (parseFloat(selectedPkg.rate) || 0);
+    let defaultRate = autoApplyOffpeakSetting
+      ? (parseFloat(selectedPkg.offpeakRate) || parseFloat(selectedPkg.rate) || 0)
+      : ((isEveningSafari || isMorningPrivate)
+        ? (parseFloat(selectedPkg.peakRate) || parseFloat(selectedPkg.rate) || 0)
+        : (parseFloat(selectedPkg.rate) || 0));
 
     let rate = defaultRate;
     if (activeCpn) {
@@ -426,7 +454,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       partnerId: "website",
       status: "confirmed",
       driverId: "",
-      couponCode: activeCpn ? activeCpn.code : "",
+      couponCode: activeCpn ? activeCpn.code : (autoApplyOffpeakSetting ? offpeakCouponCodeSetting : ""),
       pricingType: "offpeak",
       tourType: formData.tourType || 'pick_drop',
       paymentOption: "Collection"
@@ -598,6 +626,30 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
+              {autoApplyOffpeakSetting && (
+                <div style={{
+                  background: "rgba(5, 150, 105, 0.08)",
+                  border: "1.2px solid rgba(5, 150, 105, 0.25)",
+                  borderRadius: "10px",
+                  padding: "9px 12px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  color: "#047857",
+                  marginBottom: "4px"
+                }}>
+                  <Percent size={16} style={{ flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: "11.5px", fontWeight: "800" }}>
+                      🎉 Off-Peak Season Discount Automatically Applied on All Packages!
+                    </div>
+                    <div style={{ fontSize: "10.5px", opacity: 0.9 }}>
+                      Summer promotion code <strong>{couponCode || offpeakCouponCodeSetting}</strong> applied.
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <input style={{ ...inp, borderColor: formErrors.customerName ? "#ef4444" : "#ede6d9" }} placeholder="Full Name *" value={formData.customerName} onChange={e => { setFormData({ ...formData, customerName: e.target.value }); setFormErrors(prev => ({ ...prev, customerName: null })); }} required />
                 {formErrors.customerName && <div style={{ color: "#ef4444", fontSize: "11px", marginTop: "3px", fontWeight: "bold" }}>{formErrors.customerName}</div>}
@@ -858,13 +910,13 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ color: "#8c7361" }}>Base Rate:</span>
                   <span style={{ fontWeight: "700", color: "#543c2b", display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                    {activeCpn && (
+                    {(activeCpn || autoApplyOffpeakSetting) && selectedPkg && (
                       <span style={{ textDecoration: "line-through", color: "#8c7361", fontSize: "11px" }}>
-                        AED {selectedPkg && (selectedPkg.category === 'Evening Desert Safari' || selectedPkg.id === 'morning_private') ? selectedPkg.peakRate : selectedPkg?.rate}
+                        AED {selectedPkg.peakRate || selectedPkg.rate}
                       </span>
                     )}
-                    <span>
-                      AED {activeCpn ? activeCpn.customPrice : (selectedPkg ? ((selectedPkg.category === 'Evening Desert Safari' || selectedPkg.id === 'morning_private') ? selectedPkg.peakRate : selectedPkg.rate) : "—")} {selectedPkg?.type === 'flat' ? '/car' : '/person'}
+                    <span style={{ color: (activeCpn || autoApplyOffpeakSetting) ? '#047857' : '#543c2b', fontWeight: '800' }}>
+                      AED {rate} {selectedPkg?.type === 'flat' ? '/car' : '/person'}
                     </span>
                   </span>
                 </div>

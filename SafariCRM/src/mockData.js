@@ -118,7 +118,7 @@ export const initialPackages = [
 
 export const initialCoupons = [
   { id: 'coupon-1', code: 'RoarNYOfferDxb', packageId: 'all_safari', customPrice: 0, isActive: 1, startDate: '', endDate: '' },
-  { id: 'coupon-2', code: 'RoarSummerOffer26', packageId: 'all_safari', customPrice: 0, isActive: 1, startDate: '2026-07-09', endDate: '2026-09-30' }
+  { id: 'coupon-2', code: 'RoarSummerOffer26', packageId: 'all_safari', customPrice: 0, isActive: 1, startDate: '2026-05-01', endDate: '2026-10-31' }
 ];
 
 export const initialPartners = [

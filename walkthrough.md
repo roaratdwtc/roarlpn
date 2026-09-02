@@ -1,62 +1,62 @@
-# Walkthrough: Car Expenses & Company Expenses / Sales SIMs Modules
+# Walkthrough: Fleet Car Expenses & Company Expenses Refinements
 
-Added dedicated management views for **Car Expenses & Fleet Maintenance** and **Company Expenses & Sales Agent SIMs**, each equipped with **8 KPI & report analytics cards**, comprehensive category trackers, and instant search/filtering.
-
----
-
-## 1. Car Expenses & Fleet Maintenance (`CarExpensesView.jsx`)
-
-### 8 KPI & Report Cards:
-1. **Total Fleet Spend**: Total AED spent across all vehicle maintenance.
-2. **Oil & Lube Service**: Total spent on scheduled engine oil & filter changes + service count.
-3. **Tyres & Detailing**: Tyres replacements, puncture repairs, floor mats, and interior detailing.
-4. **RTA Passing & Mulkiya**: RTA technical inspection tests and yearly vehicle registration renewals.
-5. **Motor Insurance**: Commercial comprehensive vehicle insurance policy premiums.
-6. **Accidents & Brakes**: Body repairs, denting/painting, brake pads, and battery replacements.
-7. **Top Expensed Car**: Identifies the vehicle plate number with the highest maintenance overhead.
-8. **This Month's Maintenance**: Real-time spending total for the current active month.
-
-### Key Features:
-- **Vehicle & Driver Selection**: Choose plate numbers from the registered fleet (`48590`, `94697`, etc.) or enter custom plates.
-- **Categories**: `Car Passing`, `Tyre Change`, `Oil Change`, `Floor Mats & Detailing`, `Accidents & Body Repair`, `Insurance Renewal`, `Mulkiya Renewals`, `Battery & Brake Pads`, `Miscellaneous Car Expenses`.
-- **Filters**: Instant live search, Category filter, Plate number filter, and Date range filter (All Time, This Month, Last Month, Custom Date Range).
-- **CRUD Modals**: Add, edit, and delete maintenance records with invoice numbers, workshop names, odometer readings, and payment status.
-- **Printable Reports**: Integrated Print / Export view for fleet expense audits.
+Refined both **Fleet Car Expenses** and **Company Expenses & Sales SIMs** according to your direct annotations:
 
 ---
 
-## 2. Company Expenses & Sales SIMs (`CompanyExpensesView.jsx`)
+## 1. Fleet Car Expenses Refinements
 
-### 8 KPI & Report Cards:
-1. **Total Overheads**: Cumulative company operating expenses.
-2. **Trade License & GDRFA**: DET, DTCM, and MoHRE government licensing costs.
-3. **Office Rent & Ejari**: Commercial office leases and Ejari tenancy fees.
-4. **Internet & Main Line**: Du/Etisalat landline hotline bills + high-speed fiber internet.
-5. **Sales Agent SIMs**: Number of active sales phone lines and total monthly package spend.
-6. **Office Supplies**: Pantry consumables, drinking water, and stationery expenses.
-7. **Petty Cash Spent**: Small daily cash disbursements and miscellaneous operational expenses.
-8. **Next Critical Renewal**: Expiry countdown alert for upcoming license or office renewals.
+### Driver Names Removed:
+- Completely removed driver names from the 7 company fleet cards. Cards now cleanly display only the number plates (e.g. `#FF79157`, `#DD21596`, `#G25801`, `#D16197`, `#I49209`, `#BB23370`, `#DD50781`) and their total spent AED.
+- Removed the "ASSIGNED DRIVER" column from the expenses table.
+- Removed the driver field from the "Log Car Expense" modal.
+- Removed driver name from the "HIGHEST SPEND" KPI card (now displays plate only: e.g. `#I49209`).
 
-### Sub-Tabs:
-- **Company Overheads Ledger**: Track bills, invoices, renewal due dates, vendors/authorities, and payment methods (`Bank Transfer`, `Card`, `Bank Cheque`, `Auto Debit`, `Cash`, `Petty Cash`).
-- **Sales Agent SIMs & Numbers Directory**:
-  - Track **which sales agent has which phone number** (`Du`, `Etisalat`, `Virgin`).
-  - View agent department/role (`Inbound Sales & VIP Bookings`, `Outbound Leads & Partner Relations`, `Operations & Driver Dispatch`, etc.).
-  - Monthly plan cost and SIM serial number (ICCID).
-  - **One-click "Chat on WhatsApp"** button to directly initiate conversation with the sales agent.
+### Mobile Layout & Label Simplification:
+- Replaced congested long labels with relevant short names:
+  1. `TOTAL SPEND`
+  2. `OIL CHANGE`
+  3. `TYRES & MATS`
+  4. `PASSING / REG`
+  5. `INSURANCE`
+  6. `REPAIRS / BRAKES`
+  7. `HIGHEST SPEND`
+  8. `THIS MONTH`
+- Responsive 2-column grid on mobile screens with compact card padding.
+
+### Print Report Modal:
+- Clicking **"Print Report"** now opens an interactive **Fleet Maintenance Statement & Audit Report** modal directly on screen.
+- Features:
+  - Official Roar Adventure Tourism header and report generation date.
+  - Summary metrics and total spend.
+  - Car-by-car breakdown table with services count and percentage share of fleet.
+  - Itemized ledger table of all filtered maintenance records.
+  - Dedicated **"Print Statement"** button (formatted with `@media print` to print crisp, border-free documents without website chrome) and **"Export CSV"** button.
+
+### Dynamic Category & Plate Management:
+- Added a **"+ Add Type"** button and inline option in the dropdown so you can add custom maintenance categories at any time (e.g. `AC Gas Refill`, `Suspension Overhaul`, etc.).
+- Added an option to add new vehicle number plates to the fleet.
 
 ---
 
-## 3. Database Schema & Architecture
+## 2. Company Expenses Refinements
 
-- Added `car_expenses`, `company_expenses`, and `company_sims` tables with type casting to `SafariCRM/public/api.php` and `public/api.php`.
-- Integrated REST synchronization with auto-table generation on MySQL.
-- Full offline fallback support with `localStorage` persistence.
+### Unnecessary Columns & Fields Removed (Per Screenshot Annotations):
+- **Removed "EXPENSE TITLE / DESCRIPTION" column**: The primary identifier is now the Category itself.
+- **Removed "VENDOR / AUTHORITY" column**: Eliminated unnecessary clutter.
+- **Notes at the end of form**: In the Log Expense form, an optional "Notes / Details" text area is placed at the very end to enter extra policy numbers, cheque details, or invoice notes.
+- In the table, the columns are now streamlined:
+  `DATE | CATEGORY | AMOUNT (AED) | PAYMENT VIA | DUE / RENEWAL | STATUS | NOTES / DETAILS | ACTIONS`
+
+### Print Report Modal:
+- Clicking **"Print Report"** opens a dedicated **Company Overheads Audit Report** modal on screen with executive totals, category breakdown table, itemized ledger, and instant print/CSV export.
+
+### Dynamic Categories:
+- Added a **"+ Add Type"** button to add custom overhead categories anytime.
 
 ---
 
-## 4. Deployment Status
-
-- **React Build**: Successfully compiled with Vite in 3.54s (`0 errors`).
-- **Deployment Archive**: Updated `dist.zip` generated in the root folder ready for cPanel upload.
-- **Git Repositories**: Committed and pushed to both `GitHub` (`origin/main`) and `GitLab` (`gitlab/main`).
+## 3. Build & Deployment
+- Production bundle compiled with Vite (`0 errors`).
+- Updated deployment archive **`dist.zip`** generated in the root directory.
+- Pushed to both **GitHub** (`origin/main`) and **GitLab** (`gitlab/main`).

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit, Trash2, Tag, Compass, Layers, Percent, BadgeAlert, Check, Save, Image } from 'lucide-react';
+import { Plus, Edit, Trash2, Tag, Compass, Layers, Percent, BadgeAlert, Check, Save, Image, Sparkles, Zap } from 'lucide-react';
 
 export default function PackagesView({ packages = [], setPackages, coupons = [], setCoupons, settings = [], onSaveSetting }) {
   const [activeSubTab, setActiveSubTab] = useState('packages'); // 'packages' or 'coupons'
@@ -430,6 +430,117 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
       </div>
 
       {/* ────────────────────────────────────────────────────────────────────────
+         SEASONAL AUTO-APPLY COUPON DISCOUNT CONTROL (ALL PACKAGES)
+         ──────────────────────────────────────────────────────────────────────── */}
+      {(() => {
+        const autoApplyOffpeak = settings.find(s => s.setting_key === 'auto_apply_offpeak_coupon')?.setting_value === '1';
+        const selectedOffpeakCode = settings.find(s => s.setting_key === 'offpeak_coupon_code')?.setting_value || (coupons.find(c => c.code.toLowerCase().includes('summer') || c.packageId === 'all_safari')?.code || coupons[0]?.code || 'RoarSummerOffer26');
+
+        return (
+          <div 
+            className="card"
+            style={{
+              background: autoApplyOffpeak ? 'rgba(5, 150, 105, 0.05)' : '#ffffff',
+              border: autoApplyOffpeak ? '1.5px solid #059669' : '1.5px solid #ede6d9',
+              borderRadius: '12px',
+              padding: '16px 20px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '14px',
+              boxShadow: '0 2px 8px rgba(140, 91, 48, 0.05)'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: '1 1 320px' }}>
+              <div style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '10px',
+                background: autoApplyOffpeak ? 'rgba(5, 150, 105, 0.15)' : 'rgba(140, 91, 48, 0.1)',
+                color: autoApplyOffpeak ? '#047857' : 'var(--primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                <Percent size={22} />
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: 'var(--text-dark)' }}>
+                    Auto-Apply Off-Peak Season Coupon (All Packages)
+                  </h4>
+                  <span className="badge" style={{
+                    background: autoApplyOffpeak ? 'rgba(5, 150, 105, 0.15)' : 'rgba(107, 114, 128, 0.15)',
+                    color: autoApplyOffpeak ? '#047857' : '#4b5563',
+                    fontWeight: '800',
+                    fontSize: '11px',
+                    padding: '3px 8px',
+                    borderRadius: '12px'
+                  }}>
+                    {autoApplyOffpeak ? '✓ AUTO-APPLY ACTIVE' : '○ DISABLED'}
+                  </span>
+                </div>
+                <p style={{ margin: '4px 0 0', fontSize: '12.5px', color: 'var(--text-muted)' }}>
+                  Automatically applies the off-peak discounted coupon code to all packages in Bookings and for online customers.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)' }}>Coupon:</span>
+                <select
+                  value={selectedOffpeakCode}
+                  onChange={(e) => onSaveSetting && onSaveSetting('offpeak_coupon_code', e.target.value)}
+                  className="form-control"
+                  style={{ width: 'auto', fontSize: '12.5px', padding: '6px 10px', fontWeight: '800', color: 'var(--primary)', height: '36px' }}
+                >
+                  {coupons.filter(c => parseInt(c.isActive) !== 0).map(c => (
+                    <option key={c.id} value={c.code}>
+                      {c.code} ({c.packageId === 'all_safari' ? 'All Packages' : 'Package'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => onSaveSetting && onSaveSetting('auto_apply_offpeak_coupon', autoApplyOffpeak ? '0' : '1')}
+                className="btn"
+                style={{
+                  background: autoApplyOffpeak ? '#059669' : '#8c5b30',
+                  color: '#ffffff',
+                  fontWeight: '800',
+                  fontSize: '12.5px',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: 'pointer',
+                  height: '36px',
+                  boxShadow: autoApplyOffpeak ? '0 2px 10px rgba(5, 150, 105, 0.3)' : '0 2px 10px rgba(140, 91, 48, 0.2)'
+                }}
+              >
+                {autoApplyOffpeak ? (
+                  <>
+                    <Check size={16} /> Auto-Apply Active (All Packages)
+                  </>
+                ) : (
+                  <>
+                    <Zap size={16} /> Enable Auto-Apply on All Packages
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ────────────────────────────────────────────────────────────────────────
          TAB 1: PACKAGES
          ──────────────────────────────────────────────────────────────────────── */}
       {activeSubTab === 'packages' && (
@@ -607,7 +718,7 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                   coupons.map(cpn => {
                     const linkedPkg = packages.find(p => p.id === cpn.packageId);
                     const linkedPkgName = cpn.packageId === 'all_safari'
-                      ? 'All Evening & Morning Private (Universal)'
+                      ? 'All Packages (Universal Off-Peak Rate)'
                       : (linkedPkg ? linkedPkg.name : 'Deleted Package (Orphaned)');
                     const discountPriceStr = cpn.packageId === 'all_safari'
                       ? 'Off-Peak Rates'
@@ -896,7 +1007,7 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                     onChange={(e) => setCpnFormData({ ...cpnFormData, packageId: e.target.value })}
                     required
                   >
-                    <option value="all_safari">All Evening & Morning Private Safaris (Universal)</option>
+                    <option value="all_safari">All Packages (Universal Off-Peak Rate on Every Package)</option>
                     {packages.map(p => (
                       <option key={p.id} value={p.id}>
                         {p.name} (Base: AED {p.offpeakRate})
