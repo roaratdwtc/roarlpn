@@ -146,11 +146,11 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
 
   const handleResetAllCategoryImages = async () => {
     const defaultImages = {
-      'Evening Desert Safari': '/evening_safari.jpg',
-      'Morning Desert Safari': '/morning_safari.jpg',
-      'Self Drive Safari': '/self_drive_safari.jpg',
-      'City Tours': '/city_tours.jpg',
-      'Dune Buggy Ride': '/morning_safari.jpg'
+      'Evening Desert Safari': 'https://roarcrm.onrender.com/static/evening_safari.jpg',
+      'Morning Desert Safari': 'https://roarcrm.onrender.com/static/morning_safari.jpg',
+      'Self Drive Safari': 'https://roarcrm.onrender.com/static/self_drive_safari.jpg',
+      'City Tours': 'https://roarcrm.onrender.com/static/city_tours.jpg',
+      'Dune Buggy Ride': 'https://roarcrm.onrender.com/static/morning_safari.jpg'
     };
     if (onSaveSetting) {
       await onSaveSetting('category_images', JSON.stringify(defaultImages));
@@ -1232,18 +1232,17 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '45vh', overflowY: 'auto', paddingRight: '4px' }}>
                   {categoriesList.map(cat => {
                     const standardFlyers = [
-                      { label: 'Evening Safari Flyer', path: '/evening_safari.jpg' },
-                      { label: 'Morning Safari Flyer', path: '/morning_safari.jpg' },
-                      { label: 'Self Drive Safari Flyer', path: '/self_drive_safari.jpg' },
-                      { label: 'City Tours Flyer', path: '/city_tours.jpg' }
+                      { label: 'Evening Safari Flyer', path: 'https://roarcrm.onrender.com/static/evening_safari.jpg' },
+                      { label: 'Morning Safari Flyer', path: 'https://roarcrm.onrender.com/static/morning_safari.jpg' },
+                      { label: 'Self Drive Safari Flyer', path: 'https://roarcrm.onrender.com/static/self_drive_safari.jpg' },
+                      { label: 'City Tours Flyer', path: 'https://roarcrm.onrender.com/static/city_tours.jpg' }
                     ];
 
-                    const currentImg = categoryImages[cat] || (
-                      cat === 'City Tours' ? '/city_tours.jpg' :
-                      cat === 'Morning Desert Safari' ? '/morning_safari.jpg' :
-                      cat === 'Dune Buggy Ride' ? '/morning_safari.jpg' :
-                      cat === 'Self Drive Safari' ? '/self_drive_safari.jpg' :
-                      '/evening_safari.jpg'
+                    const currentImg = (categoryImages[cat] && !categoryImages[cat].startsWith('/')) ? categoryImages[cat] : (
+                      cat === 'City Tours' ? 'https://roarcrm.onrender.com/static/city_tours.jpg' :
+                      cat === 'Morning Desert Safari' || cat === 'Dune Buggy Ride' ? 'https://roarcrm.onrender.com/static/morning_safari.jpg' :
+                      cat === 'Self Drive Safari' ? 'https://roarcrm.onrender.com/static/self_drive_safari.jpg' :
+                      'https://roarcrm.onrender.com/static/evening_safari.jpg'
                     );
 
                     const isCustom = !standardFlyers.some(f => f.path === currentImg);
@@ -1262,7 +1261,20 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                         
                         {/* Thumbnail Preview */}
                         <div style={{ width: '80px', height: '80px', borderRadius: '6px', border: '1px solid var(--border-light)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fdfbf7', flexShrink: 0 }}>
-                          <img src={currentImg} alt={cat} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                          <img 
+                            src={currentImg} 
+                            alt={cat} 
+                            onError={(e) => {
+                              const fallback = cat === 'City Tours' ? 'https://roarcrm.onrender.com/static/city_tours.jpg' :
+                                cat === 'Morning Desert Safari' || cat === 'Dune Buggy Ride' ? 'https://roarcrm.onrender.com/static/morning_safari.jpg' :
+                                cat === 'Self Drive Safari' ? 'https://roarcrm.onrender.com/static/self_drive_safari.jpg' :
+                                'https://roarcrm.onrender.com/static/evening_safari.jpg';
+                              if (e.target.src !== fallback) {
+                                e.target.src = fallback;
+                              }
+                            }}
+                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+                          />
                         </div>
 
                         {/* Details and Inputs */}

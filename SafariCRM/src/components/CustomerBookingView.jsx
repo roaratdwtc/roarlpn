@@ -127,22 +127,21 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       }
     }
 
-    if (categoryImages[categoryKey]) {
+    if (categoryImages[categoryKey] && !categoryImages[categoryKey].startsWith('/')) {
       return categoryImages[categoryKey];
     }
 
     switch (categoryKey) {
       case 'City Tours':
-        return '/city_tours.jpg';
+        return 'https://roarcrm.onrender.com/static/city_tours.jpg';
       case 'Morning Desert Safari':
-        return '/morning_safari.jpg';
       case 'Dune Buggy Ride':
-        return '/morning_safari.jpg';
+        return 'https://roarcrm.onrender.com/static/morning_safari.jpg';
       case 'Self Drive Safari':
-        return '/self_drive_safari.jpg';
+        return 'https://roarcrm.onrender.com/static/self_drive_safari.jpg';
       case 'Evening Desert Safari':
       default:
-        return '/evening_safari.jpg';
+        return 'https://roarcrm.onrender.com/static/evening_safari.jpg';
     }
   };
 
@@ -665,6 +664,16 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
               <img 
                 src={getFeaturedImage(formData.categoryKey)} 
                 alt={formData.categoryKey} 
+                onError={(e) => {
+                  const key = formData.categoryKey;
+                  const fallback = key === 'City Tours' ? 'https://roarcrm.onrender.com/static/city_tours.jpg' :
+                    key === 'Morning Desert Safari' || key === 'Dune Buggy Ride' ? 'https://roarcrm.onrender.com/static/morning_safari.jpg' :
+                    key === 'Self Drive Safari' ? 'https://roarcrm.onrender.com/static/self_drive_safari.jpg' :
+                    'https://roarcrm.onrender.com/static/evening_safari.jpg';
+                  if (e.target.src !== fallback) {
+                    e.target.src = fallback;
+                  }
+                }}
                 style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }} 
               />
             </div>

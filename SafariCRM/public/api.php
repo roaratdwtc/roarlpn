@@ -127,7 +127,7 @@ $tables = [
     )",
     "settings" => "CREATE TABLE IF NOT EXISTS settings (
         setting_key VARCHAR(100) PRIMARY KEY,
-        setting_value VARCHAR(255)
+        setting_value LONGTEXT
     )",
     "company_details" => "CREATE TABLE IF NOT EXISTS company_details (
         id VARCHAR(100) PRIMARY KEY,
@@ -215,6 +215,7 @@ foreach ($tables as $name => $query) {
 }
 
 $conn->query("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('show_coupons', '1')");
+$conn->query("ALTER TABLE settings MODIFY COLUMN setting_value LONGTEXT");
 
 $conn->query("INSERT IGNORE INTO company_details (id, fullName, address, contactPerson, whatsapp, email, regDate, licenseNo, whatWeOffer) VALUES (
     'company_info',
