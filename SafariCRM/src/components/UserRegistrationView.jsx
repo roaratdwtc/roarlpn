@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Phone, 
   User, 
@@ -6,21 +6,14 @@ import {
   ShieldCheck, 
   CheckCircle, 
   ArrowRight, 
-  Copy, 
-  Key, 
-  QrCode, 
+  Lock, 
   AlertCircle,
-  Settings,
-  Lock,
-  Compass,
-  FileCheck
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { 
   sendPhoneOtp, 
   verifyPhoneOtp, 
-  isFirebaseConfigured, 
-  getFirebaseConfig, 
-  saveFirebaseConfig,
   formatPhoneNumber,
   syncUserToFirestore,
   markInviteUsedInFirestore
@@ -43,7 +36,8 @@ export default function UserRegistrationView({
   const [role, setRole] = useState('driver'); // 'driver' | 'freelancer' | 'operations'
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('+971');
-  const [selectedDriverId, setSelectedDriverId] = useState('');
+  const [accountPassword, setAccountPassword] = useState('');
+  const [showAccountPassword, setShowAccountPassword] = useState(false);
   const [selectedCarPlate, setSelectedCarPlate] = useState('');
   const [customDetail, setCustomDetail] = useState('');
   
@@ -54,11 +48,6 @@ export default function UserRegistrationView({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
-
-  // Firebase Config Modal State
-  const [showConfigModal, setShowConfigModal] = useState(false);
-  const [fbConfig, setFbConfig] = useState(getFirebaseConfig());
-  const [hasFirebaseConfig, setHasFirebaseConfig] = useState(() => isFirebaseConfigured());
 
   // Check URL query parameters for invite code on mount
   useEffect(() => {
@@ -97,7 +86,7 @@ export default function UserRegistrationView({
     const match = storedInvites.find(i => (i.code || '').toUpperCase() === clean);
 
     if (!match) {
-      setInviteError("Invalid invite code. Registration is invite-only by administration.");
+      setInviteError("Invalid invite code. Registration is strictly invite-only.");
       setVerifiedInvite(null);
       return false;
     }
@@ -114,7 +103,6 @@ export default function UserRegistrationView({
     if (match.targetName) setName(match.targetName);
     if (match.targetPhone) setPhone(formatPhoneNumber(match.targetPhone));
     if (match.targetPlate) setSelectedCarPlate(match.targetPlate);
-    if (match.targetDriverId) setSelectedDriverId(match.targetDriverId);
 
     return true;
   };
@@ -135,13 +123,6 @@ export default function UserRegistrationView({
     setError('');
     setStatusMessage('');
 
-    // Check Firebase configuration
-    if (!isFirebaseConfigured()) {
-      setError("Firebase Auth credentials are required. Please click 'Configure Firebase Keys' below to provide your Firebase API Key and Project ID.");
-      setShowConfigModal(true);
-      return;
-    }
-
     if (activeMode === 'register') {
       // Strict Invite-Only check
       if (!verifiedInvite) {
@@ -154,6 +135,11 @@ export default function UserRegistrationView({
 
       if (!name.trim()) {
         setError('Please provide your full name.');
+        return;
+      }
+
+      if (!accountPassword.trim() || accountPassword.trim().length < 6) {
+        setError('Please create a security password of at least 6 characters for future logins.');
         return;
       }
     }
@@ -194,16 +180,11 @@ export default function UserRegistrationView({
         const cleanPhone = formatPhoneNumber(result.phoneNumber || phone);
 
         if (activeMode === 'register') {
-          // Resolve linked profile name / ID
-          let linkedId = '';
+          // Resolve linked profile
           let linkedCarPlate = '';
           let displayName = name.trim();
 
-          if (role === 'driver') {
-            const matchedDriver = drivers.find(d => d.id === selectedDriverId);
-            linkedId = matchedDriver ? matchedDriver.id : ('drv_' + Date.now());
-            if (matchedDriver && !displayName) displayName = matchedDriver.name;
-          } else if (role === 'freelancer') {
+          if (role === 'freelancer') {
             linkedCarPlate = selectedCarPlate || customDetail.trim().toUpperCase();
           }
 
@@ -211,8 +192,9 @@ export default function UserRegistrationView({
             id: 'usr_' + Date.now(),
             name: displayName,
             phone: cleanPhone,
+            password: accountPassword.trim(),
             role,
-            linkedDriverId: linkedId,
+            linkedDriverId: role === 'driver' ? 'drv_' + cleanPhone.replace(/\D/g, '') : '',
             linkedCarPlate: linkedCarPlate,
             createdAt: new Date().toISOString(),
             status: 'active'
@@ -275,19 +257,6 @@ export default function UserRegistrationView({
     }
   };
 
-  const handleSaveFirebaseKeys = (e) => {
-    e.preventDefault();
-    if (!fbConfig.apiKey || !fbConfig.projectId) {
-      alert("Both Firebase API Key and Project ID are required.");
-      return;
-    }
-    saveFirebaseConfig(fbConfig);
-    setHasFirebaseConfig(true);
-    setShowConfigModal(false);
-    setError('');
-    alert("Firebase Auth configured successfully! Real OTP is now active.");
-  };
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -333,44 +302,6 @@ export default function UserRegistrationView({
               : 'Sign in directly using your verified WhatsApp phone number'}
           </p>
         </div>
-
-        {/* Firebase Config Notice if Keys Missing */}
-        {!hasFirebaseConfig && (
-          <div style={{
-            background: 'rgba(140, 91, 48, 0.06)',
-            border: '1.5px solid rgba(140, 91, 48, 0.25)',
-            borderRadius: '12px',
-            padding: '12px 14px',
-            marginBottom: '18px',
-            fontSize: '12px',
-            color: '#543c2b'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '800', color: '#8c5b30', marginBottom: '4px' }}>
-              <Key size={15} />
-              <span>Firebase Auth Keys Required</span>
-            </div>
-            <div style={{ fontSize: '11.5px', color: '#8c7361', lineHeight: '1.4' }}>
-              Realtime phone/WhatsApp OTP requires Firebase Web API keys. Click below to enter your keys from Firebase Console.
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowConfigModal(true)}
-              style={{
-                marginTop: '8px',
-                padding: '5px 12px',
-                borderRadius: '6px',
-                border: '1px solid #8c5b30',
-                background: '#ffffff',
-                color: '#8c5b30',
-                fontSize: '11.5px',
-                fontWeight: '800',
-                cursor: 'pointer'
-              }}
-            >
-              Configure Firebase Keys
-            </button>
-          </div>
-        )}
 
         {/* Mode Selector Tabs */}
         <div style={{
@@ -495,7 +426,7 @@ export default function UserRegistrationView({
                 {verifiedInvite ? (
                   <div style={{ fontSize: '11px', color: '#16a34a', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <CheckCircle size={12} />
-                    <span>Invite Verified: Assigned Role <strong>{verifiedInvite.role.toUpperCase()}</strong></span>
+                    <span>Invite Verified: Role <strong>{verifiedInvite.role.toUpperCase()}</strong></span>
                   </div>
                 ) : inviteError ? (
                   <div style={{ fontSize: '11px', color: '#dc2626', fontWeight: '700', marginTop: '4px' }}>
@@ -579,22 +510,43 @@ export default function UserRegistrationView({
               </div>
             )}
 
-            {activeMode === 'register' && role === 'driver' && (
+            {/* Account Password Creation */}
+            {activeMode === 'register' && (
               <div className="form-group">
-                <select
-                  className="form-control"
-                  title="Link to Driver Profile"
-                  value={selectedDriverId}
-                  onChange={(e) => setSelectedDriverId(e.target.value)}
-                  style={{ fontWeight: '700' }}
-                >
-                  <option value="">-- Link to Existing Driver Profile (Optional) --</option>
-                  {drivers.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name} ({d.phone || 'Driver'})
-                    </option>
-                  ))}
-                </select>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showAccountPassword ? 'text' : 'password'}
+                    required
+                    minLength={6}
+                    className="form-control"
+                    placeholder="Create Account Password (min 6 chars) *"
+                    title="Create Account Password"
+                    value={accountPassword}
+                    onChange={(e) => setAccountPassword(e.target.value)}
+                    style={{ paddingRight: '38px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAccountPassword(!showAccountPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#8c7361',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                  >
+                    {showAccountPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <div style={{ fontSize: '11px', color: '#8c7361', marginTop: '4px' }}>
+                  You will use your phone number and this password to sign in to the portal in the future.
+                </div>
               </div>
             )}
 
@@ -724,13 +676,13 @@ export default function UserRegistrationView({
           </form>
         )}
 
-        {/* Footer Actions */}
+        {/* Footer Action */}
         <div style={{
           marginTop: '22px',
           paddingTop: '16px',
           borderTop: '1px solid #ede6d9',
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           alignItems: 'center',
           fontSize: '12px'
         }}>
@@ -747,131 +699,8 @@ export default function UserRegistrationView({
           >
             ← Back to Admin Login
           </button>
-
-          <button
-            type="button"
-            onClick={() => setShowConfigModal(true)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#8c5b30',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              fontWeight: '700'
-            }}
-          >
-            <Settings size={13} />
-            <span>Firebase Config</span>
-          </button>
         </div>
       </div>
-
-      {/* FIREBASE CONFIGURATION MODAL */}
-      {showConfigModal && (
-        <div className="modal-overlay" style={{ zIndex: 2500 }}>
-          <div className="modal-content" style={{ maxWidth: '480px', padding: '24px' }}>
-            <div className="modal-header" style={{ borderBottom: '1.5px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '900', color: '#543c2b', margin: 0 }}>
-                Firebase Web Credentials
-              </h3>
-              <button onClick={() => setShowConfigModal(false)} className="modal-close">&times;</button>
-            </div>
-
-            <p style={{ fontSize: '12px', color: '#8c7361', margin: '0 0 14px 0', lineHeight: '1.4' }}>
-              Enter your Firebase Web App configuration from <strong>Firebase Console &gt; Project Settings &gt; General &gt; Your apps &gt; Web SDK</strong>:
-            </p>
-
-            <form onSubmit={handleSaveFirebaseKeys} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div className="form-group">
-                <input
-                  type="text"
-                  required
-                  className="form-control"
-                  placeholder="apiKey (e.g. AIzaSy...)"
-                  title="Firebase API Key"
-                  value={fbConfig.apiKey}
-                  onChange={(e) => setFbConfig({ ...fbConfig, apiKey: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <input
-                  type="text"
-                  required
-                  className="form-control"
-                  placeholder="projectId (e.g. roar-safari-crm)"
-                  title="Project ID"
-                  value={fbConfig.projectId}
-                  onChange={(e) => setFbConfig({ ...fbConfig, projectId: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="authDomain (e.g. roar-safari-crm.firebaseapp.com)"
-                  title="Auth Domain"
-                  value={fbConfig.authDomain}
-                  onChange={(e) => setFbConfig({ ...fbConfig, authDomain: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="storageBucket (e.g. roar-safari-crm.appspot.com)"
-                  title="Storage Bucket"
-                  value={fbConfig.storageBucket}
-                  onChange={(e) => setFbConfig({ ...fbConfig, storageBucket: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="messagingSenderId"
-                  title="Messaging Sender ID"
-                  value={fbConfig.messagingSenderId}
-                  onChange={(e) => setFbConfig({ ...fbConfig, messagingSenderId: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="appId (e.g. 1:123456789:web:abcdef...)"
-                  title="App ID"
-                  value={fbConfig.appId}
-                  onChange={(e) => setFbConfig({ ...fbConfig, appId: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowConfigModal(false)}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ fontWeight: '800' }}
-                >
-                  Save & Activate
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

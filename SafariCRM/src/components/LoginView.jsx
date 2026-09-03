@@ -80,8 +80,35 @@ export default function LoginView({ onLoginSuccess }) {
         onLoginSuccess('master_admin');
         return;
       }
+
+      // 2. Check Registered System Users / Staff (Drivers, Freelancers, Operations) by Phone or Email
+      const registeredUsers = JSON.parse(localStorage.getItem('safari_registered_users') || '[]');
+      const cleanInput = email.trim();
+      const inputDigits = cleanInput.replace(/\D/g, '');
+
+      const matchedStaff = registeredUsers.find(u => {
+        const uDigits = (u.phone || '').replace(/\D/g, '');
+        const phoneMatch = inputDigits.length >= 7 && (uDigits.endsWith(inputDigits) || inputDigits.endsWith(uDigits));
+        const emailMatch = u.email && u.email.toLowerCase() === email_lower;
+        return phoneMatch || emailMatch;
+      });
+
+      if (matchedStaff) {
+        if (matchedStaff.status === 'suspended') {
+          setError('This account has been suspended. Please contact operations management.');
+          setLoading(false);
+          return;
+        }
+        if (matchedStaff.password && matchedStaff.password !== password) {
+          setError('Incorrect security password for this phone number / account.');
+          setLoading(false);
+          return;
+        }
+        onLoginSuccess(matchedStaff.role, 'roar', matchedStaff);
+        return;
+      }
       
-      // 2. Check Default Roar Company
+      // 3. Check Default Roar Company
       if (email_lower === 'info@roaradventuretourism.com' && password === 'R4roar!786*') {
         onLoginSuccess('company_admin', 'roar', {
           id: 'roar',
@@ -95,7 +122,7 @@ export default function LoginView({ onLoginSuccess }) {
         return;
       }
 
-      // 3. Check Local Onboarded Companies
+      // 4. Check Local Onboarded Companies
       const cached = JSON.parse(localStorage.getItem('safari_companies') || '[]');
       const match = cached.find(c => c.email.toLowerCase() === email_lower && c.password === password);
       
@@ -107,7 +134,7 @@ export default function LoginView({ onLoginSuccess }) {
         }
         onLoginSuccess('company_admin', match.id, match);
       } else {
-        setError('Invalid email address or security password. Please try again.');
+        setError('Invalid email / phone number or security password. Please try again.');
         setLoading(false);
       }
     }
@@ -129,10 +156,10 @@ export default function LoginView({ onLoginSuccess }) {
             <img src="/logo.jpg" alt="Roar Adventure Tourism" style={{ maxHeight: '48px', objectFit: 'contain' }} />
           </div>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '22px', fontWeight: '800', color: 'var(--text-dark)' }}>
-            Admin Portal Access
+            Admin & Staff Portal Access
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '6px' }}>
-            Please authenticate to manage safari operations
+            Authenticate with your email or verified phone and security password
           </p>
         </div>
 
@@ -156,11 +183,11 @@ export default function LoginView({ onLoginSuccess }) {
             <div style={{ position: 'relative' }}>
               <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
-                type="email"
+                type="text"
                 required
                 className="form-control"
-                placeholder="Email Address *"
-                title="Email Address"
+                placeholder="Email Address or Mobile Phone Number *"
+                title="Email Address or Mobile Phone Number"
                 style={{ paddingLeft: '38px' }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -219,60 +246,7 @@ export default function LoginView({ onLoginSuccess }) {
           </button>
         </form>
 
-        {/* Driver, Freelancer & Operations Registration & Phone Login Links */}
-        <div style={{
-          marginTop: '20px',
-          paddingTop: '16px',
-          borderTop: '1px solid #ede6d9',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '10px',
-          textAlign: 'center'
-        }}>
-          <button
-            type="button"
-            onClick={() => {
-              window.location.hash = '#/register';
-            }}
-            style={{
-              padding: '10px 14px',
-              borderRadius: '10px',
-              border: '1.5px solid #8c5b30',
-              background: '#fdfbf7',
-              color: '#8c5b30',
-              fontSize: '12.5px',
-              fontWeight: '800',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              transition: 'all 0.2s'
-            }}
-          >
-            <span>📱 Register as Driver, Freelancer or Operations</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              window.location.hash = '#/register';
-            }}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#8c7361',
-              fontSize: '12px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              textDecoration: 'underline'
-            }}
-          >
-            Already registered? Sign in with WhatsApp / Phone OTP
-          </button>
-        </div>
-
-        <div style={{ marginTop: '20px', fontSize: '11px', color: 'var(--text-muted)' }}>
+        <div style={{ marginTop: '24px', fontSize: '11px', color: 'var(--text-muted)' }}>
           Secured ERP Node Connection &bull; Dubai, UAE
         </div>
       </div>
