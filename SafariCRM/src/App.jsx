@@ -39,6 +39,7 @@ import UserRegistrationView from './components/UserRegistrationView';
 import DriverPortalView from './components/DriverPortalView';
 import FreelancerPortalView from './components/FreelancerPortalView';
 import OperationsPortalView from './components/OperationsPortalView';
+import AdminInviteModal from './components/AdminInviteModal';
 // import MasterAdminView from './components/MasterAdminView';
 import { initialBookings, initialDrivers, initialExpenses, initialPartners, initialCars, initialPackages, initialCoupons, initialCarExpenses, initialCompanyExpenses, initialCompanySims, initialCarDocuments } from './mockData';
 // Database configuration layer
@@ -48,6 +49,7 @@ export default function App() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profileTab, setProfileTab] = useState('adminInfo'); // 'adminInfo' or 'companyInfo'
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   // Database version reset check
   const DB_VERSION = 'v40.0';
@@ -280,6 +282,22 @@ export default function App() {
         localStorage.setItem('safari_freelancer_receipts', JSON.stringify(next));
       } catch (e) {
         console.warn("Failed to write safari_freelancer_receipts to localStorage:", e);
+      }
+      return next;
+    });
+  };
+
+  const [invites, setInvites] = useState(() => {
+    return getLocalStorageItemSafe('safari_invites', []);
+  });
+
+  const setInvitesCustom = (valOrUpdater) => {
+    setInvites(prev => {
+      const next = typeof valOrUpdater === 'function' ? valOrUpdater(prev) : valOrUpdater;
+      try {
+        localStorage.setItem('safari_invites', JSON.stringify(next));
+      } catch (e) {
+        console.warn("Failed to write safari_invites to localStorage:", e);
       }
       return next;
     });
@@ -1257,11 +1275,7 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button
               type="button"
-              onClick={() => {
-                const regUrl = window.location.origin + window.location.pathname + '#/register';
-                navigator.clipboard.writeText(regUrl);
-                alert("Driver, Freelancer & Operations Registration Link copied to clipboard:\n\n" + regUrl + "\n\nShare this link on WhatsApp with your drivers, freelancers, or operations staff to register.");
-              }}
+              onClick={() => setIsInviteModalOpen(true)}
               className="btn btn-secondary"
               style={{
                 fontSize: '11.5px',
@@ -1275,9 +1289,9 @@ export default function App() {
                 color: '#8c5b30',
                 fontWeight: '800'
               }}
-              title="Copy staff registration link to share via WhatsApp"
+              title="Generate and manage secure invite-only codes for staff & freelancers"
             >
-              <span>📱 Share Registration Link</span>
+              <span>📱 Invite Staff / Freelancers</span>
             </button>
 
             <div 
@@ -1645,6 +1659,17 @@ export default function App() {
           }}
           drivers={drivers}
           partners={partners}
+        />
+      )}
+
+      {/* Admin Staff & Freelancer Invite Modal */}
+      {isInviteModalOpen && (
+        <AdminInviteModal 
+          onClose={() => setIsInviteModalOpen(false)}
+          drivers={drivers}
+          cars={cars}
+          invites={invites}
+          setInvites={setInvitesCustom}
         />
       )}
       </div>

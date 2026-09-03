@@ -7,7 +7,6 @@ import {
   signOut as firebaseSignOut 
 } from 'firebase/auth';
 
-// Default / fallback Firebase config (Can be overridden by Admin via localStorage 'safari_firebase_config')
 const DEFAULT_FIREBASE_CONFIG = {
   apiKey: "",
   authDomain: "",
@@ -18,17 +17,17 @@ const DEFAULT_FIREBASE_CONFIG = {
 };
 
 /**
- * Get the active Firebase config from localStorage or defaults
+ * Get active Firebase config from localStorage
  */
 export function getFirebaseConfig() {
   try {
     const saved = localStorage.getItem('safari_firebase_config');
     if (saved) {
       const parsed = JSON.parse(saved);
-      if (parsed && parsed.apiKey) return parsed;
+      if (parsed && parsed.apiKey && parsed.projectId) return parsed;
     }
   } catch (e) {
-    console.warn("Failed to read safari_firebase_config from localStorage:", e);
+    console.warn("Failed to read safari_firebase_config:", e);
   }
   return DEFAULT_FIREBASE_CONFIG;
 }
@@ -39,6 +38,8 @@ export function getFirebaseConfig() {
 export function saveFirebaseConfig(config) {
   try {
     localStorage.setItem('safari_firebase_config', JSON.stringify(config));
+    appInstance = null;
+    authInstance = null;
     return true;
   } catch (e) {
     console.error("Failed to save safari_firebase_config:", e);
@@ -47,11 +48,11 @@ export function saveFirebaseConfig(config) {
 }
 
 /**
- * Check if a valid Firebase API Key is configured
+ * Check if real Firebase API Key and Project ID are configured
  */
 export function isFirebaseConfigured() {
   const cfg = getFirebaseConfig();
-  return Boolean(cfg.apiKey && cfg.projectId);
+  return Boolean(cfg.apiKey && cfg.apiKey.trim().length > 10 && cfg.projectId && cfg.projectId.trim().length > 2);
 }
 
 let appInstance = null;
@@ -59,7 +60,7 @@ let authInstance = null;
 
 export function initFirebase() {
   const config = getFirebaseConfig();
-  if (!config.apiKey) return null;
+  if (!config.apiKey || !config.projectId) return null;
 
   try {
     if (!getApps().length) {
@@ -70,7 +71,7 @@ export function initFirebase() {
     authInstance = getAuth(appInstance);
     return authInstance;
   } catch (err) {
-    console.warn("Firebase initialization warning:", err);
+    console.error("Firebase initialization failed:", err);
     return null;
   }
 }
@@ -80,18 +81,21 @@ export function initFirebase() {
  */
 export function setupRecaptcha(containerId = 'recaptcha-container') {
   const auth = initFirebase();
-  if (!auth) return null;
+  if (!auth) {
+    throw new Error("Firebase is not configured. Real Auth keys are required.");
+  }
 
   try {
     if (window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
+      try {
+        window.recaptchaVerifier.clear();
+      } catch (e) {}
       window.recaptchaVerifier = null;
     }
 
     const container = document.getElementById(containerId);
     if (!container) {
-      console.warn(`Container with id "${containerId}" not found for reCAPTCHA.`);
-      return null;
+      throw new Error(`reCAPTCHA container #${containerId} not found in DOM.`);
     }
 
     window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
@@ -106,121 +110,114 @@ export function setupRecaptcha(containerId = 'recaptcha-container') {
 
     return window.recaptchaVerifier;
   } catch (e) {
-    console.warn("Error initializing reCAPTCHA verifier:", e);
-    return null;
+    console.error("Error setting up reCAPTCHA verifier:", e);
+    throw e;
   }
 }
 
 /**
+ * Format international phone number (+971...)
+ */
+export function formatPhoneNumber(phoneNumber) {
+  let clean = (phoneNumber || '').trim().replace(/[\s-()]/g, '');
+  if (clean.startsWith('+')) return clean;
+  if (clean.startsWith('00')) return '+' + clean.slice(2);
+  if (clean.startsWith('05')) return '+971' + clean.slice(1);
+  if (clean.startsWith('5')) return '+971' + clean;
+  return '+' + clean;
+}
+
+/**
  * Send Phone / WhatsApp OTP
- * If Firebase is configured with valid keys, uses real Firebase Phone Auth.
- * If keys are not configured yet, provides an instant simulated OTP (code 123456) with alert.
+ * STRICT: Requires real Firebase configuration. Throws error if keys are missing.
  */
 export async function sendPhoneOtp(phoneNumber, containerId = 'recaptcha-container') {
-  // Format international number (ensure starts with +)
-  let formattedPhone = (phoneNumber || '').trim().replace(/[\s-]/g, '');
-  if (!formattedPhone.startsWith('+')) {
-    if (formattedPhone.startsWith('00')) {
-      formattedPhone = '+' + formattedPhone.slice(2);
-    } else if (formattedPhone.startsWith('05') || formattedPhone.startsWith('5')) {
-      formattedPhone = '+971' + (formattedPhone.startsWith('05') ? formattedPhone.slice(1) : formattedPhone);
-    } else {
-      formattedPhone = '+' + formattedPhone;
-    }
+  if (!isFirebaseConfigured()) {
+    throw new Error("Firebase Authentication keys are missing. Please provide your real Firebase configuration keys to send OTP.");
+  }
+
+  const formattedPhone = formatPhoneNumber(phoneNumber);
+  if (!formattedPhone || formattedPhone.length < 9) {
+    throw new Error("Please enter a valid international mobile phone number (e.g. +971501234567).");
   }
 
   const auth = initFirebase();
+  if (!auth) {
+    throw new Error("Could not initialize Firebase Auth with the provided credentials. Please check your API Key and Project ID.");
+  }
 
-  if (auth && isFirebaseConfigured()) {
-    try {
-      const verifier = setupRecaptcha(containerId);
-      if (!verifier) {
-        throw new Error("reCAPTCHA could not be initialized.");
-      }
-      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, verifier);
-      return {
-        success: true,
-        mode: 'firebase',
-        confirmationResult,
-        formattedPhone,
-        message: `Verification OTP sent to ${formattedPhone} via Firebase SMS/WhatsApp.`
-      };
-    } catch (err) {
-      console.error("Firebase sendPhoneOtp error:", err);
-      // Fallback to simulated OTP if domain not whitelisted or quota exceeded
-      const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
-      sessionStorage.setItem('safari_demo_otp', fallbackCode);
-      return {
-        success: true,
-        mode: 'demo_fallback',
-        demoCode: fallbackCode,
-        formattedPhone,
-        message: `[Demo Sandbox] Verification code: ${fallbackCode} (Firebase: ${err.message})`
-      };
-    }
-  } else {
-    // Simulated OTP for immediate testing and staging
-    const demoCode = '123456';
-    sessionStorage.setItem('safari_demo_otp', demoCode);
+  const verifier = setupRecaptcha(containerId);
+  if (!verifier) {
+    throw new Error("Unable to initialize reCAPTCHA verifier.");
+  }
+
+  try {
+    const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, verifier);
     return {
       success: true,
-      mode: 'demo',
-      demoCode: '123456',
+      mode: 'firebase',
+      confirmationResult,
       formattedPhone,
-      message: `Verification OTP is: 123456 (Enter this to authenticate). Configure real Firebase credentials anytime.`
+      message: `Realtime OTP sent to ${formattedPhone}. Please check your phone for the 6-digit code.`
     };
+  } catch (err) {
+    console.error("Firebase signInWithPhoneNumber failed:", err);
+    let userMsg = err.message || "Failed to send OTP.";
+    if (err.code === 'auth/invalid-phone-number') {
+      userMsg = "The phone number format is invalid. Please include international country code (e.g. +971...).";
+    } else if (err.code === 'auth/missing-phone-number') {
+      userMsg = "Phone number is required.";
+    } else if (err.code === 'auth/quota-exceeded') {
+      userMsg = "SMS quota exceeded for this Firebase project. Check Firebase Console billing/quota.";
+    } else if (err.code === 'auth/captcha-check-failed') {
+      userMsg = "reCAPTCHA check failed. Please refresh and try again.";
+    } else if (err.code === 'auth/unauthorized-domain') {
+      userMsg = `Current domain (${window.location.hostname}) is not authorized in Firebase Console > Authentication > Settings > Authorized domains.`;
+    }
+    throw new Error(userMsg);
   }
 }
 
 /**
  * Verify OTP Code
+ * STRICT: Only accepts real Firebase confirmation result.
  */
 export async function verifyPhoneOtp(otpResponse, enteredCode) {
   const trimmed = (enteredCode || '').trim();
-
-  if (!trimmed) {
-    throw new Error("Please enter the 6-digit verification code.");
+  if (!trimmed || trimmed.length < 6) {
+    throw new Error("Please enter the complete 6-digit verification code.");
   }
 
-  // Handle Firebase confirmationResult
-  if (otpResponse?.mode === 'firebase' && otpResponse?.confirmationResult) {
-    try {
-      const userCredential = await otpResponse.confirmationResult.confirm(trimmed);
-      return {
-        success: true,
-        user: userCredential.user,
-        phoneNumber: otpResponse.formattedPhone
-      };
-    } catch (err) {
-      console.error("Firebase verifyPhoneOtp error:", err);
-      throw new Error(err.message || "Invalid verification code. Please check and try again.");
-    }
+  if (!otpResponse || !otpResponse.confirmationResult) {
+    throw new Error("Verification session expired. Please request a new OTP.");
   }
 
-  // Handle Demo / Fallback verification
-  const expectedOtp = sessionStorage.getItem('safari_demo_otp') || otpResponse?.demoCode || '123456';
-  if (trimmed === expectedOtp || trimmed === '123456') {
+  try {
+    const userCredential = await otpResponse.confirmationResult.confirm(trimmed);
     return {
       success: true,
-      user: {
-        phoneNumber: otpResponse?.formattedPhone || '+97150000000',
-        uid: 'user_' + Date.now()
-      },
-      phoneNumber: otpResponse?.formattedPhone || '+97150000000'
+      user: userCredential.user,
+      phoneNumber: otpResponse.formattedPhone || userCredential.user.phoneNumber
     };
+  } catch (err) {
+    console.error("Firebase confirm error:", err);
+    let userMsg = err.message || "Invalid verification code.";
+    if (err.code === 'auth/invalid-verification-code') {
+      userMsg = "Invalid verification code. Please check the 6-digit code sent to your phone.";
+    } else if (err.code === 'auth/code-expired') {
+      userMsg = "Verification code has expired. Please request a new OTP.";
+    }
+    throw new Error(userMsg);
   }
-
-  throw new Error("Invalid verification code. (For demo testing, use code: 123456)");
 }
 
 /**
- * Sign out from Firebase
+ * Sign Out from Firebase
  */
-export async function logoutFirebaseAuth() {
-  const auth = initFirebase();
-  if (auth) {
+export async function signOutFirebase() {
+  if (authInstance) {
     try {
-      await firebaseSignOut(auth);
+      await firebaseSignOut(authInstance);
     } catch (e) {
       console.warn("Firebase signout error:", e);
     }
