@@ -34,6 +34,7 @@ import CompanyDetailsView from './components/CompanyDetailsView';
 import CompanyDocumentsView from './components/CompanyDocumentsView';
 import CarExpensesView from './components/CarExpensesView';
 import CompanyExpensesView from './components/CompanyExpensesView';
+import BookingVerificationModal from './components/BookingVerificationModal';
 // import MasterAdminView from './components/MasterAdminView';
 import { initialBookings, initialDrivers, initialExpenses, initialPartners, initialCars, initialPackages, initialCoupons, initialCarExpenses, initialCompanyExpenses, initialCompanySims, initialCarDocuments } from './mockData';
 // Database configuration layer
@@ -64,6 +65,30 @@ export default function App() {
   });
   const [isCustomerView, setIsCustomerView] = useState(() => {
     return window.location.hash === '#/book' || window.location.search.includes('view=customer');
+  });
+
+  // Track Direct QR Scan Verification Pass from URL
+  const [verifyBookingData, setVerifyBookingData] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const verifyId = params.get('verifyBooking') || params.get('verify');
+      if (verifyId) {
+        return {
+          id: verifyId,
+          customerName: params.get('name') || 'Valued Guest',
+          whatsapp: params.get('phone') || '',
+          pax: params.get('pax') || '1',
+          packageName: params.get('pkg') || 'Dubai Desert Safari',
+          date: params.get('date') || '',
+          price: params.get('price') || '0',
+          status: params.get('status') || 'confirmed',
+          pickupLocation: params.get('loc') || '',
+          pickupTime: params.get('time') || '',
+          driverId: params.get('driver') || ''
+        };
+      }
+    } catch (e) {}
+    return null;
   });
 
   // Track Hash Route Changes for Shared Link Navigation
@@ -1461,6 +1486,29 @@ export default function App() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Direct QR Scan Booking Verification Pass Modal */}
+      {verifyBookingData && (
+        <BookingVerificationModal 
+          booking={(() => {
+            const found = (bookings || []).find(b => 
+              b.id === verifyBookingData.id || 
+              (b.id || '').replace(/^book-/, '').toLowerCase() === (verifyBookingData.id || '').replace(/^book-/, '').toLowerCase()
+            );
+            return found || verifyBookingData;
+          })()} 
+          onClose={() => {
+            setVerifyBookingData(null);
+            const cleanUrl = window.location.pathname + (window.location.hash || '');
+            window.history.replaceState({}, document.title, cleanUrl);
+          }}
+          onUpdateBookingStatus={(id, newStatus) => {
+            setBookings(prev => (prev || []).map(b => b.id === id ? { ...b, status: newStatus } : b));
+          }}
+          drivers={drivers}
+          partners={partners}
+        />
       )}
       </div>
     </div>

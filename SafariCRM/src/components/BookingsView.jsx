@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Calendar, Edit2, Trash2, Phone, CheckCircle, Clock, Info, User, Clipboard, Send, Award, DollarSign, Copy, Database, Printer, Sparkles, Percent } from 'lucide-react';
+import { Plus, Search, Calendar, Edit2, Trash2, Phone, CheckCircle, Clock, Info, User, Clipboard, Send, Award, DollarSign, Copy, Database, Printer, Sparkles, Percent, QrCode } from 'lucide-react';
 import { safariPackages } from '../mockData';
+import BookingVerificationModal from './BookingVerificationModal';
+import ScanVerifyModal from './ScanVerifyModal';
 
 export function cleanPhone(phone) {
   if (!phone) return '';
@@ -714,6 +716,8 @@ export default function BookingsView({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
   const [viewingBooking, setViewingBooking] = useState(null); // Row click details popup
+  const [viewingQrBooking, setViewingQrBooking] = useState(null);
+  const [isScanVerifyOpen, setIsScanVerifyOpen] = useState(false);
   const [discountInput, setDiscountInput] = useState(0);
 
   useEffect(() => {
@@ -1372,6 +1376,14 @@ export default function BookingsView({
 
         <div className="bookings-actions-container" style={{ display: 'flex', gap: '10px' }}>
           <button 
+            onClick={() => setIsScanVerifyOpen(true)}
+            className="btn btn-secondary" 
+            style={{ color: '#8c5b30', borderColor: 'rgba(140, 91, 48, 0.3)', background: 'rgba(140, 91, 48, 0.06)', display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: '700' }}
+            title="Scan or Verify Booking QR Code"
+          >
+            <QrCode size={15} /> Scan / Verify QR
+          </button>
+          <button 
             onClick={() => {
               const bookingLink = window.location.origin + window.location.pathname + '#/book';
               navigator.clipboard.writeText(bookingLink);
@@ -1550,6 +1562,14 @@ export default function BookingsView({
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <button 
+                        onClick={() => setViewingQrBooking(b)} 
+                        className="btn btn-secondary" 
+                        style={{ padding: '6px', color: '#8c5b30', borderColor: 'rgba(140, 91, 48, 0.3)' }}
+                        title="View & Download QR Verification Pass"
+                      >
+                        <QrCode size={14} />
+                      </button>
                       <button 
                         onClick={() => handleDuplicateClick(b)} 
                         className="btn btn-secondary" 
@@ -1853,9 +1873,18 @@ export default function BookingsView({
 
             </div>
 
-            <div className="modal-actions" style={{ borderTop: '1px solid var(--border-light)', marginTop: '20px', paddingTop: '16px' }}>
+            <div className="modal-actions" style={{ borderTop: '1px solid var(--border-light)', marginTop: '20px', paddingTop: '16px', display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
               <button onClick={() => setViewingBooking(null)} className="btn btn-secondary">
                 Close View
+              </button>
+              <button 
+                onClick={() => {
+                  setViewingQrBooking(viewingBooking);
+                }} 
+                className="btn btn-secondary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#8c5b30', borderColor: 'rgba(140, 91, 48, 0.4)' }}
+              >
+                <QrCode size={14} /> View QR Pass
               </button>
               <button 
                 onClick={() => {
@@ -1869,6 +1898,31 @@ export default function BookingsView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Booking QR Verification Pass Modal */}
+      {viewingQrBooking && (
+        <BookingVerificationModal 
+          booking={viewingQrBooking} 
+          onClose={() => setViewingQrBooking(null)} 
+          onUpdateBookingStatus={handleQuickStatusChange}
+          drivers={drivers}
+          partners={partners}
+        />
+      )}
+
+      {/* Operations Scan / Verify Booking Modal */}
+      {isScanVerifyOpen && (
+        <ScanVerifyModal 
+          isOpen={isScanVerifyOpen}
+          onClose={() => setIsScanVerifyOpen(false)}
+          bookings={bookings}
+          onUpdateBookingStatus={handleQuickStatusChange}
+          onOpenBookingQrPass={(b) => {
+            setViewingQrBooking(b);
+          }}
+          drivers={drivers}
+        />
       )}
 
       {/* Booking Dialog Modal */}

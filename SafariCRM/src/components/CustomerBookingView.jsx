@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle, Check, Send, Percent, Sparkles } from "lucide-react";
+import { CheckCircle, Check, Send, Percent, Sparkles, QrCode, Download, ShieldCheck } from "lucide-react";
+import QRCode from "qrcode";
 import { safariPackages } from "../mockData";
+import BookingVerificationModal from "./BookingVerificationModal";
 
 // Addons definition
 const ADDONS = [
@@ -147,6 +149,22 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
   const [submitted, setSubmitted] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState({});
+  const [submittedQrUrl, setSubmittedQrUrl] = useState('');
+  const [isSubmittedPassModalOpen, setIsSubmittedPassModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (submitted) {
+      const refCode = (submitted.id || '').replace(/^book-/, '').toUpperCase();
+      const verifyUrl = `${window.location.origin}${window.location.pathname}?verifyBooking=${encodeURIComponent(submitted.id)}&ref=${encodeURIComponent(refCode)}&name=${encodeURIComponent(submitted.customerName || '')}&phone=${encodeURIComponent(submitted.whatsapp || '')}&pax=${encodeURIComponent(submitted.pax || 1)}&pkg=${encodeURIComponent(submitted.packageName || '')}&date=${encodeURIComponent(submitted.date || '')}&price=${encodeURIComponent(submitted.price || 0)}&status=${encodeURIComponent(submitted.status || 'confirmed')}&loc=${encodeURIComponent(submitted.pickupLocation || '')}&time=${encodeURIComponent(submitted.pickupTime || '')}`;
+      QRCode.toDataURL(verifyUrl, {
+        width: 280,
+        margin: 1.5,
+        color: { dark: '#543c2b', light: '#ffffff' }
+      })
+        .then(url => setSubmittedQrUrl(url))
+        .catch(err => console.error('QR code error:', err));
+    }
+  }, [submitted]);
 
 
   // Sync sub-package list and active sub-package dynamically, sorted by price ascending
@@ -499,7 +517,8 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       ? (getSeasonalIsSummer(b.date) ? '4:40 PM' : '3:30 PM')
       : b.pickupTime;
       
-    const t = `Hi Roar Adventure Tourism, confirming Ref# ${ref}:\n1. Name: ${b.customerName}\n2. WhatsApp: ${b.whatsapp}\n3. Guests: ${b.pax} pax\n4. Package: ${b.packageName}\n5. Date: ${(b.date||"").split("-").reverse().join("/")}\n6. ${locationLabel}: ${locValue}\n7. ${pickupOrArrivalLabel} Time: ${timeValue}${b.addonName ? `\n8. Addons: ${b.addonName}` : ""}\n${b.addonName ? "9" : "8"}. Total: AED ${b.price} (Pay on Arrival)`;
+    const verifyUrl = `${window.location.origin}${window.location.pathname}?verifyBooking=${encodeURIComponent(b.id)}`;
+    const t = `Hi Roar Adventure Tourism, confirming Ref# ${ref}:\n1. Name: ${b.customerName}\n2. WhatsApp: ${b.whatsapp}\n3. Guests: ${b.pax} pax\n4. Package: ${b.packageName}\n5. Date: ${(b.date||"").split("-").reverse().join("/")}\n6. ${locationLabel}: ${locValue}\n7. ${pickupOrArrivalLabel} Time: ${timeValue}${b.addonName ? `\n8. Addons: ${b.addonName}` : ""}\n${b.addonName ? "9" : "8"}. Total: AED ${b.price} (Pay on Arrival)\n\n📱 Verification Pass: ${verifyUrl}`;
     return `https://wa.me/971589344077?text=${encodeURIComponent(t)}`;
   };
 
@@ -508,15 +527,68 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
     const refCode = submitted.id.replace("book-", "").toUpperCase();
     return (
       <div style={{ minHeight: "100vh", background: "#faf6f0", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", color: "#543c2b" }}>
-        <div className="glass-card" style={{ maxWidth: "520px", width: "100%", padding: "40px 36px", textAlign: "center", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", boxShadow: "0 10px 30px rgba(84, 60, 43, 0.05)" }}>
-          <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: "#f0fdf4", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-            <CheckCircle size={44} />
+        <div className="glass-card" style={{ maxWidth: "520px", width: "100%", padding: "36px 30px", textAlign: "center", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", boxShadow: "0 10px 30px rgba(84, 60, 43, 0.05)" }}>
+          <div style={{ width: "68px", height: "68px", borderRadius: "50%", background: "#f0fdf4", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+            <CheckCircle size={40} />
           </div>
-          <h2 style={{ fontSize: "24px", fontWeight: "955", color: "#543c2b", marginBottom: "6px" }}>Booking Received! 🎉</h2>
-          <p style={{ color: "#8c7361", fontSize: "14px", marginBottom: "24px" }}>
-            Reference: <strong style={{ color: BRAND, fontSize: "16px" }}>{refCode}</strong><br />WhatsApp us to confirm your slot.
+          <h2 style={{ fontSize: "22px", fontWeight: "955", color: "#543c2b", marginBottom: "4px" }}>Booking Confirmed! 🎉</h2>
+          <p style={{ color: "#8c7361", fontSize: "13.5px", marginBottom: "18px" }}>
+            Reference: <strong style={{ color: BRAND, fontSize: "16px" }}>#{refCode}</strong><br />A verified booking pass with QR code has been generated.
           </p>
-          <div style={{ background: "#fdfbf7", border: "1px solid #ede6d9", borderRadius: "12px", padding: "18px", textAlign: "left", fontSize: "13px", display: "flex", flexDirection: "column", gap: "9px", marginBottom: "22px" }}>
+
+          {/* Official Verification QR Code Pass Section */}
+          <div style={{ 
+            background: "#fdfbf7", 
+            border: "1.5px dashed #ede6d9", 
+            borderRadius: "14px", 
+            padding: "16px", 
+            marginBottom: "18px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#8c5b30", fontWeight: "800", fontSize: "12px", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <QrCode size={16} /> Official Booking Verification Pass
+            </div>
+            {submittedQrUrl ? (
+              <div style={{ background: "#ffffff", padding: "10px", borderRadius: "12px", border: "1px solid #ede6d9", boxShadow: "0 4px 12px rgba(84, 60, 43, 0.06)" }}>
+                <img src={submittedQrUrl} alt={`QR Code for Booking #${refCode}`} style={{ width: "155px", height: "155px", display: "block" }} />
+              </div>
+            ) : (
+              <div style={{ padding: "30px", color: "var(--text-muted)", fontSize: "12px" }}>
+                Generating verification QR code...
+              </div>
+            )}
+            <p style={{ margin: "10px 0 0", fontSize: "11px", color: "#8c7361", maxWidth: "340px", lineHeight: "1.4" }}>
+              Show this QR Code to your safari driver or camp reception upon arrival for instant check-in.
+            </p>
+            <div style={{ display: "flex", gap: "8px", marginTop: "12px", flexWrap: "wrap", justifyContent: "center" }}>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (!submittedQrUrl) return;
+                  const a = document.createElement('a');
+                  a.href = submittedQrUrl;
+                  a.download = `Roar_Booking_QR_${refCode}.png`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }}
+                style={{ background: "#ffffff", border: "1px solid #ede6d9", borderRadius: "8px", padding: "6px 14px", fontSize: "11.5px", fontWeight: "700", color: "#543c2b", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
+              >
+                <Download size={13} /> Save QR Code
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setIsSubmittedPassModalOpen(true)}
+                style={{ background: "rgba(140, 91, 48, 0.08)", border: "1px solid #8c5b30", borderRadius: "8px", padding: "6px 14px", fontSize: "11.5px", fontWeight: "700", color: "#8c5b30", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
+              >
+                <ShieldCheck size={13} /> View Full Pass
+              </button>
+            </div>
+          </div>
+
+          <div style={{ background: "#fdfbf7", border: "1px solid #ede6d9", borderRadius: "12px", padding: "16px", textAlign: "left", fontSize: "12.5px", display: "flex", flexDirection: "column", gap: "8px", marginBottom: "18px" }}>
             {(() => {
               const isSelf = submitted.tourType === 'self_drive' || 
                              (submitted.pickupLocation || '').toLowerCase().trim() === 'self drive' ||
@@ -555,6 +627,13 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
               ← Book Another Safari
             </button>
           </div>
+
+          {isSubmittedPassModalOpen && (
+            <BookingVerificationModal
+              booking={submitted}
+              onClose={() => setIsSubmittedPassModalOpen(false)}
+            />
+          )}
         </div>
       </div>
     );
