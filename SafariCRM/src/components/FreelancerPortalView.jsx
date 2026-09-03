@@ -15,6 +15,7 @@ import {
   Eye, 
   Receipt 
 } from 'lucide-react';
+import { syncReceiptToFirestore } from '../utils/firebaseAuth';
 
 export default function FreelancerPortalView({ 
   currentUser, 
@@ -150,6 +151,8 @@ export default function FreelancerPortalView({
       const stored = JSON.parse(localStorage.getItem('safari_freelancer_receipts') || '[]');
       localStorage.setItem('safari_freelancer_receipts', JSON.stringify([newReceipt, ...stored]));
     }
+
+    syncReceiptToFirestore(newReceipt);
 
     setUploadSuccess('Payment receipt submitted successfully! It is now pending admin review and will be credited to your car installment upon approval.');
     setReceiptForm({

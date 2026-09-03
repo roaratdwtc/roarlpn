@@ -21,7 +21,9 @@ import {
   isFirebaseConfigured, 
   getFirebaseConfig, 
   saveFirebaseConfig,
-  formatPhoneNumber 
+  formatPhoneNumber,
+  syncUserToFirestore,
+  markInviteUsedInFirestore
 } from '../utils/firebaseAuth';
 
 export default function UserRegistrationView({ 
@@ -231,11 +233,13 @@ export default function UserRegistrationView({
               return inv;
             });
             localStorage.setItem('safari_invites', JSON.stringify(updatedInvites));
+            markInviteUsedInFirestore(verifiedInvite.code, cleanPhone);
           }
 
           // Save registered user
           const updatedUsers = [...registeredUsers.filter(u => u.phone !== cleanPhone), newUser];
           localStorage.setItem('safari_registered_users', JSON.stringify(updatedUsers));
+          syncUserToFirestore(newUser);
 
           // Authenticate immediately
           sessionStorage.setItem('safari_admin_authenticated', 'true');

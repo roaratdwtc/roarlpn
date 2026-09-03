@@ -7,13 +7,14 @@ import {
   signOut as firebaseSignOut 
 } from 'firebase/auth';
 
+// Production Firebase Config provided by User
 const DEFAULT_FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyB_Q5uMNoVd1lRF02dbkSPwWwA-j7l5Mss",
+  authDomain: "roar-safari-crm.firebaseapp.com",
+  projectId: "roar-safari-crm",
+  storageBucket: "roar-safari-crm.firebasestorage.app",
+  messagingSenderId: "1036161032779",
+  appId: "1:1036161032779:web:6bbb3e26919f9798bd63ce"
 };
 
 /**
@@ -221,5 +222,90 @@ export async function signOutFirebase() {
     } catch (e) {
       console.warn("Firebase signout error:", e);
     }
+  }
+}
+
+// Firestore Realtime Tables Service
+import { 
+  getFirestore, 
+  doc, 
+  setDoc, 
+  updateDoc 
+} from 'firebase/firestore';
+
+let firestoreInstance = null;
+
+export function getFirestoreDb() {
+  const auth = initFirebase();
+  if (!auth) return null;
+  try {
+    if (!firestoreInstance && appInstance) {
+      firestoreInstance = getFirestore(appInstance);
+    }
+    return firestoreInstance;
+  } catch (e) {
+    console.warn("Firestore database initialization warning:", e);
+    return null;
+  }
+}
+
+/**
+ * Sync user profile to Firestore 'users' table
+ */
+export async function syncUserToFirestore(user) {
+  const db = getFirestoreDb();
+  if (!db || !user?.phone) return;
+  try {
+    const docId = (user.phone || '').replace(/\D/g, '');
+    const docRef = doc(db, 'users', docId);
+    await setDoc(docRef, user, { merge: true });
+  } catch (e) {
+    console.warn("syncUserToFirestore note:", e);
+  }
+}
+
+/**
+ * Sync invite code to Firestore 'invites' table
+ */
+export async function syncInviteToFirestore(invite) {
+  const db = getFirestoreDb();
+  if (!db || !invite?.code) return;
+  try {
+    const docRef = doc(db, 'invites', invite.code);
+    await setDoc(docRef, invite, { merge: true });
+  } catch (e) {
+    console.warn("syncInviteToFirestore note:", e);
+  }
+}
+
+/**
+ * Mark invite as used in Firestore
+ */
+export async function markInviteUsedInFirestore(inviteCode, phone) {
+  const db = getFirestoreDb();
+  if (!db || !inviteCode) return;
+  try {
+    const docRef = doc(db, 'invites', inviteCode);
+    await updateDoc(docRef, {
+      isUsed: true,
+      usedAt: new Date().toISOString(),
+      usedByPhone: phone
+    });
+  } catch (e) {
+    console.warn("markInviteUsedInFirestore note:", e);
+  }
+}
+
+/**
+ * Sync freelancer receipt to Firestore 'receipts' table
+ */
+export async function syncReceiptToFirestore(receipt) {
+  const db = getFirestoreDb();
+  if (!db || !receipt?.id) return;
+  try {
+    const docRef = doc(db, 'receipts', receipt.id);
+    await setDoc(docRef, receipt, { merge: true });
+  } catch (e) {
+    console.warn("syncReceiptToFirestore note:", e);
   }
 }

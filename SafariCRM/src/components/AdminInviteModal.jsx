@@ -13,7 +13,7 @@ import {
   Settings,
   AlertCircle
 } from 'lucide-react';
-import { getFirebaseConfig, saveFirebaseConfig, isFirebaseConfigured } from '../utils/firebaseAuth';
+import { getFirebaseConfig, saveFirebaseConfig, isFirebaseConfigured, syncInviteToFirestore } from '../utils/firebaseAuth';
 
 export default function AdminInviteModal({ 
   onClose, 
@@ -66,6 +66,8 @@ export default function AdminInviteModal({
       const stored = JSON.parse(localStorage.getItem('safari_invites') || '[]');
       localStorage.setItem('safari_invites', JSON.stringify([newInvite, ...stored]));
     }
+
+    syncInviteToFirestore(newInvite);
 
     setLastGeneratedInvite(newInvite);
     setTargetName('');

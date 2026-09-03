@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Car, Landmark, Receipt, Percent, Plus, Trash2, Edit2, Clipboard, DollarSign, Calendar, Search, Filter, Printer, Copy, FileText, Sparkles, CheckCircle2, XCircle, Eye, Check, Clock, Upload } from 'lucide-react';
 import DocumentOcrUploader from './DocumentOcrUploader';
+import { syncReceiptToFirestore } from '../utils/firebaseAuth';
 
 const freelancerWhatsAppMap = {
   'Jaspreen': '971551356738',
@@ -92,6 +93,12 @@ export default function CarFinanceView({
     });
 
     setCars(updatedCars);
+    syncReceiptToFirestore({
+      ...receipt,
+      status: 'approved',
+      approvedAt: new Date().toISOString(),
+      adminRemarks: 'Approved by Admin. Credited to car installment balance.'
+    });
     alert(`Receipt for AED ${receipt.amount} on vehicle ${receipt.plate} approved and credited to car installment balance!`);
   };
 
@@ -111,6 +118,12 @@ export default function CarFinanceView({
       return r;
     });
     setFreelancerReceipts(updatedReceipts);
+    syncReceiptToFirestore({
+      ...receipt,
+      status: 'rejected',
+      rejectedAt: new Date().toISOString(),
+      adminRemarks: reason || 'Rejected by Admin'
+    });
     alert(`Receipt marked rejected.`);
   };
 
