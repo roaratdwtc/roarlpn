@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Landmark, Receipt, Percent, Plus, Trash2, Edit2, Clipboard, DollarSign, Calendar, Search, Filter, Printer, Copy, FileText, Sparkles } from 'lucide-react';
+import { Car, Landmark, Receipt, Percent, Plus, Trash2, Edit2, Clipboard, DollarSign, Calendar, Search, Filter, Printer, Copy, FileText, Sparkles, CheckCircle2, XCircle, Eye, Check, Clock, Upload } from 'lucide-react';
 import DocumentOcrUploader from './DocumentOcrUploader';
 
 const freelancerWhatsAppMap = {
@@ -15,10 +15,104 @@ const freelancerWhatsAppMap = {
   'M. Aslam': '971547535622'
 };
 
-export default function CarFinanceView({ cars, setCars, drivers = [], viewMode = 'registry', carDocuments = [], setActiveTab }) {
+export default function CarFinanceView({ 
+  cars, 
+  setCars, 
+  drivers = [], 
+  viewMode = 'registry', 
+  carDocuments = [], 
+  setActiveTab,
+  freelancerReceipts = [],
+  setFreelancerReceipts
+}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterBank, setFilterBank] = useState('all');
   const [selectedCarId, setSelectedCarId] = useState(cars[0]?.id || null);
+  const [viewingReceiptPreview, setViewingReceiptPreview] = useState(null);
+
+  // Freelancer Receipts Approval Logic
+  const pendingReceipts = (freelancerReceipts || []).filter(r => r.status === 'pending_approval');
+
+  const handleApproveReceipt = (receipt) => {
+    if (!setFreelancerReceipts) return;
+    
+    // 1. Update receipt status to approved
+    const updatedReceipts = (freelancerReceipts || []).map(r => {
+      if (r.id === receipt.id) {
+        return {
+          ...r,
+          status: 'approved',
+          approvedAt: new Date().toISOString(),
+          adminRemarks: 'Approved by Admin. Credited to car installment balance.'
+        };
+      }
+      return r;
+    });
+    setFreelancerReceipts(updatedReceipts);
+
+    // 2. Locate matching car by plate
+    const targetPlate = (receipt.plate || '').toUpperCase();
+    const updatedCars = (cars || []).map(c => {
+      const cPlate = (c.plate || c.plateNo || '').toUpperCase();
+      if (cPlate === targetPlate) {
+        const currentPendingInst = Math.max(0, (parseInt(c.pendingInst) || 1) - 1);
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const pMonth = receipt.paymentDate ? monthNames[new Date(receipt.paymentDate).getMonth()] : monthNames[new Date().getMonth()];
+
+        const currentLedger = Array.isArray(c.ledger) ? [...c.ledger] : [];
+        const existingRowIndex = currentLedger.findIndex(row => row.month === pMonth);
+
+        if (existingRowIndex >= 0) {
+          const row = currentLedger[existingRowIndex];
+          currentLedger[existingRowIndex] = {
+            ...row,
+            received: (parseFloat(row.received) || 0) + parseFloat(receipt.amount),
+            installment: row.installment || receipt.amount,
+            note: (row.note ? row.note + '; ' : '') + `Freelancer Receipt Approved Ref: ${receipt.referenceNo || receipt.id}`
+          };
+        } else {
+          currentLedger.push({
+            month: pMonth,
+            salik: 0,
+            fine: 0,
+            others: 0,
+            installment: receipt.amount,
+            received: receipt.amount,
+            note: `Freelancer Receipt Approved Ref: ${receipt.referenceNo || receipt.id}`
+          });
+        }
+
+        return {
+          ...c,
+          pendingInst: currentPendingInst,
+          ledger: currentLedger
+        };
+      }
+      return c;
+    });
+
+    setCars(updatedCars);
+    alert(`Receipt for AED ${receipt.amount} on vehicle ${receipt.plate} approved and credited to car installment balance!`);
+  };
+
+  const handleRejectReceipt = (receipt) => {
+    const reason = window.prompt("Enter rejection remark for freelancer (or leave blank):", "Payment slip unreadable or amount mismatch");
+    if (reason === null) return;
+
+    const updatedReceipts = (freelancerReceipts || []).map(r => {
+      if (r.id === receipt.id) {
+        return {
+          ...r,
+          status: 'rejected',
+          rejectedAt: new Date().toISOString(),
+          adminRemarks: reason || 'Rejected by Admin'
+        };
+      }
+      return r;
+    });
+    setFreelancerReceipts(updatedReceipts);
+    alert(`Receipt marked rejected.`);
+  };
 
   // Modal states for CRUD Car
   const [isCarModalOpen, setIsCarModalOpen] = useState(false);
@@ -523,11 +617,107 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
     });
   };
 
+  const renderFreelancerReceiptsQueue = () => {
+    if (!pendingReceipts || pendingReceipts.length === 0) return null;
+
+    return (
+      <div style={{
+        background: '#ffffff',
+        border: '1.5px solid #8c5b30',
+        borderRadius: '14px',
+        padding: '16px',
+        marginBottom: '20px',
+        boxShadow: '0 4px 14px rgba(140, 91, 48, 0.08)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+          <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#543c2b', fontSize: '14px', fontWeight: '900' }}>
+            <span style={{ display: 'inline-flex', padding: '4px', background: 'rgba(140, 91, 48, 0.1)', borderRadius: '6px', color: '#8c5b30' }}>
+              <Receipt size={16} />
+            </span>
+            FREELANCER INSTALLMENT PAYMENT RECEIPTS ({pendingReceipts.length} Pending Review)
+          </h4>
+          <span style={{ fontSize: '11.5px', color: '#8c7361' }}>
+            Review payment slips & approve to automatically credit car installment balances
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {pendingReceipts.map((r) => (
+            <div
+              key={r.id}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '12px',
+                background: '#fdfbf7',
+                border: '1px solid #ede6d9',
+                borderRadius: '10px',
+                padding: '12px 14px'
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <strong style={{ fontSize: '14px', color: '#543c2b' }}>{r.freelancerName || 'Freelancer'}</strong>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#8c5b30', background: '#fff', padding: '2px 8px', borderRadius: '4px', border: '1px solid #ede6d9' }}>
+                    Car Plate: {r.plate}
+                  </span>
+                  <span style={{ fontSize: '13.5px', fontWeight: '900', color: '#16a34a' }}>
+                    AED {r.amount.toLocaleString()}
+                  </span>
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#8c7361', marginTop: '3px' }}>
+                  Date: {r.paymentDate} • Ref: <code>{r.referenceNo || '—'}</code> • Phone: {r.phone || '—'}
+                  {r.notes && <span> • <em>"{r.notes}"</em></span>}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {r.fileData && (
+                  <button
+                    type="button"
+                    onClick={() => setViewingReceiptPreview(r)}
+                    className="btn btn-secondary"
+                    style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Eye size={13} /> View Slip
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => handleRejectReceipt(r)}
+                  className="btn btn-secondary"
+                  style={{ padding: '6px 12px', fontSize: '12px', color: '#dc2626', borderColor: 'rgba(220,38,38,0.3)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <XCircle size={13} /> Reject
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleApproveReceipt(r)}
+                  className="btn btn-primary"
+                  style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <CheckCircle2 size={13} /> Approve & Credit
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (viewMode === 'registry') {
     const alerts = getExpiryAlerts();
 
     return (
       <div>
+        {/* Freelancer Receipt Approvals Queue */}
+        {renderFreelancerReceiptsQueue()}
+
         {/* Expiry Alerts Panel */}
         {alerts.length > 0 && (
           <div style={{
@@ -1040,6 +1230,7 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
   // viewMode === 'ledger'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {renderFreelancerReceiptsQueue()}
       {selectedCar ? (
         <div id="printable-area" className="premium-ledger-container">
           {/* Top Selection Row & Control Buttons */}
@@ -1647,6 +1838,78 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Freelancer Receipt Preview Modal */}
+      {viewingReceiptPreview && (
+        <div className="modal-overlay" style={{ zIndex: 2100 }}>
+          <div className="modal-content" style={{ maxWidth: '540px', padding: '24px' }}>
+            <div className="modal-header" style={{ borderBottom: '1.5px solid #ede6d9', paddingBottom: '10px', marginBottom: '14px' }}>
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: '900', color: '#543c2b', margin: 0 }}>
+                  Freelancer Payment Slip: AED {viewingReceiptPreview.amount}
+                </h3>
+                <span style={{ fontSize: '11.5px', color: '#8c7361' }}>
+                  Car: {viewingReceiptPreview.plate} • Freelancer: {viewingReceiptPreview.freelancerName} ({viewingReceiptPreview.phone})
+                </span>
+              </div>
+              <button onClick={() => setViewingReceiptPreview(null)} className="modal-close">&times;</button>
+            </div>
+
+            <div style={{ maxHeight: '420px', overflowY: 'auto', textAlign: 'center', background: '#fdfbf7', padding: '12px', borderRadius: '10px', border: '1px solid #ede6d9' }}>
+              {viewingReceiptPreview.fileData?.startsWith('data:image/') ? (
+                <img
+                  src={viewingReceiptPreview.fileData}
+                  alt="Receipt"
+                  style={{ maxWidth: '100%', maxHeight: '380px', objectFit: 'contain', borderRadius: '8px' }}
+                />
+              ) : (
+                <div style={{ padding: '30px', color: '#8c7361' }}>
+                  <FileText size={48} style={{ color: '#8c5b30', margin: '0 auto 10px' }} />
+                  <div style={{ fontWeight: '700', fontSize: '13px' }}>{viewingReceiptPreview.fileName || 'Payment Document'}</div>
+                  <a
+                    href={viewingReceiptPreview.fileData}
+                    download={viewingReceiptPreview.fileName || 'receipt.pdf'}
+                    className="btn btn-primary"
+                    style={{ marginTop: '14px', display: 'inline-flex', padding: '6px 14px', fontSize: '12px' }}
+                  >
+                    Download Document
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: '12px', color: '#8c7361' }}>
+                Ref: <code>{viewingReceiptPreview.referenceNo || '—'}</code> • Transfer Date: {viewingReceiptPreview.paymentDate}
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleRejectReceipt(viewingReceiptPreview);
+                    setViewingReceiptPreview(null);
+                  }}
+                  className="btn btn-secondary"
+                  style={{ color: '#dc2626', borderColor: 'rgba(220,38,38,0.3)', padding: '6px 12px', fontSize: '12px' }}
+                >
+                  Reject
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleApproveReceipt(viewingReceiptPreview);
+                    setViewingReceiptPreview(null);
+                  }}
+                  className="btn btn-primary"
+                  style={{ padding: '6px 14px', fontSize: '12px', fontWeight: '800' }}
+                >
+                  Approve & Credit
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

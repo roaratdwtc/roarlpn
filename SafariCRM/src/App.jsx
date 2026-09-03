@@ -35,6 +35,10 @@ import CompanyDocumentsView from './components/CompanyDocumentsView';
 import CarExpensesView from './components/CarExpensesView';
 import CompanyExpensesView from './components/CompanyExpensesView';
 import BookingVerificationModal from './components/BookingVerificationModal';
+import UserRegistrationView from './components/UserRegistrationView';
+import DriverPortalView from './components/DriverPortalView';
+import FreelancerPortalView from './components/FreelancerPortalView';
+import OperationsPortalView from './components/OperationsPortalView';
 // import MasterAdminView from './components/MasterAdminView';
 import { initialBookings, initialDrivers, initialExpenses, initialPartners, initialCars, initialPackages, initialCoupons, initialCarExpenses, initialCompanyExpenses, initialCompanySims, initialCarDocuments } from './mockData';
 // Database configuration layer
@@ -46,7 +50,7 @@ export default function App() {
   const [profileTab, setProfileTab] = useState('adminInfo'); // 'adminInfo' or 'companyInfo'
 
   // Database version reset check
-  const DB_VERSION = 'v39.0';
+  const DB_VERSION = 'v40.0';
   useEffect(() => {
     localStorage.setItem('safari_db_version', DB_VERSION);
   }, []);
@@ -63,8 +67,19 @@ export default function App() {
   const [isImpersonating, setIsImpersonating] = useState(() => {
     return sessionStorage.getItem('safari_is_impersonating') === 'true';
   });
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('safari_current_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [isCustomerView, setIsCustomerView] = useState(() => {
     return window.location.hash === '#/book' || window.location.search.includes('view=customer');
+  });
+  const [isRegisterView, setIsRegisterView] = useState(() => {
+    return window.location.hash === '#/register' || window.location.search.includes('view=register');
   });
 
   // Track Direct QR Scan Verification Pass from URL
@@ -95,6 +110,7 @@ export default function App() {
   useEffect(() => {
     const handleHashChange = () => {
       setIsCustomerView(window.location.hash === '#/book' || window.location.search.includes('view=customer'));
+      setIsRegisterView(window.location.hash === '#/register' || window.location.search.includes('view=register'));
     };
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
@@ -252,6 +268,22 @@ export default function App() {
       console.warn("Failed to write car documents to localStorage:", e);
     }
   }, [carDocuments]);
+
+  const [freelancerReceipts, setFreelancerReceipts] = useState(() => {
+    return getLocalStorageItemSafe('safari_freelancer_receipts', []);
+  });
+
+  const setFreelancerReceiptsCustom = (valOrUpdater) => {
+    setFreelancerReceipts(prev => {
+      const next = typeof valOrUpdater === 'function' ? valOrUpdater(prev) : valOrUpdater;
+      try {
+        localStorage.setItem('safari_freelancer_receipts', JSON.stringify(next));
+      } catch (e) {
+        console.warn("Failed to write safari_freelancer_receipts to localStorage:", e);
+      }
+      return next;
+    });
+  };
 
   const setCarDocumentsCustom = (newDocs) => {
     setCarDocuments(newDocs);
@@ -828,7 +860,7 @@ export default function App() {
     );
   }
 
-  const handleLoginSuccess = (role, company_id, company) => {
+  const handleLoginSuccess = (role, company_id, companyOrUser) => {
     if (role === 'register_wizard') {
       setUserRole('register_wizard');
       setIsAuthenticated(true);
@@ -840,21 +872,28 @@ export default function App() {
     setIsAuthenticated(true);
     setUserRole(role);
 
+    if (companyOrUser) {
+      setCurrentUser(companyOrUser);
+      try {
+        sessionStorage.setItem('safari_current_user', JSON.stringify(companyOrUser));
+      } catch (e) {}
+    }
+
     if (role === 'company_admin') {
       sessionStorage.setItem('safari_company_id', company_id);
       setCompanyId(company_id);
-      if (company) {
+      if (companyOrUser) {
         const mappedDetails = {
-          id: company.id,
-          fullName: company.name,
-          address: company.address,
-          contactPerson: company.contactPerson,
-          whatsapp: company.whatsapp,
-          email: company.email,
-          regDate: company.createdAt ? company.createdAt.split(' ')[0] : '2016-01-01',
+          id: companyOrUser.id,
+          fullName: companyOrUser.name,
+          address: companyOrUser.address,
+          contactPerson: companyOrUser.contactPerson,
+          whatsapp: companyOrUser.whatsapp,
+          email: companyOrUser.email,
+          regDate: companyOrUser.createdAt ? companyOrUser.createdAt.split(' ')[0] : '2016-01-01',
           licenseNo: 'DET/DTCM Licensed Tour Operator',
           whatWeOffer: 'Morning Safari, Evening Safari, VIP Safari, City Tours',
-          logo: company.logo || ''
+          logo: companyOrUser.logo || ''
         };
         setCompanyDetails(mappedDetails);
         localStorage.setItem('safari_company_details', JSON.stringify(mappedDetails));
@@ -867,9 +906,11 @@ export default function App() {
     sessionStorage.removeItem('safari_user_role');
     sessionStorage.removeItem('safari_company_id');
     sessionStorage.removeItem('safari_is_impersonating');
+    sessionStorage.removeItem('safari_current_user');
     localStorage.removeItem('safari_company_details');
     setIsAuthenticated(false);
     setUserRole(null);
+    setCurrentUser(null);
     setCompanyId('roar');
     setIsImpersonating(false);
   };
@@ -913,10 +954,78 @@ export default function App() {
     setCompanyId('roar');
   };
 
+  if (isRegisterView) {
+    return (
+      <UserRegistrationView 
+        onLoginSuccess={handleLoginSuccess}
+        drivers={drivers}
+        cars={cars}
+        onCancel={() => {
+          window.location.hash = '';
+          setIsRegisterView(false);
+        }}
+      />
+    );
+  }
+
+  if (isCustomerView) {
+    return (
+      <CustomerBookingView 
+        bookings={bookings} 
+        setBookings={setBookingsCustom} 
+        partners={partners} 
+        packages={packages}
+        coupons={coupons}
+        customers={customers}
+        setCustomers={setCustomersCustom}
+        settings={settings}
+      />
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <LoginView 
         onLoginSuccess={handleLoginSuccess}
+      />
+    );
+  }
+
+  // Scoped Role Portals
+  if (userRole === 'driver') {
+    return (
+      <DriverPortalView 
+        currentUser={currentUser}
+        bookings={bookings}
+        setBookings={setBookingsCustom}
+        expenses={expenses}
+        drivers={drivers}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  if (userRole === 'freelancer') {
+    return (
+      <FreelancerPortalView 
+        currentUser={currentUser}
+        cars={cars}
+        carExpenses={carExpenses}
+        freelancerReceipts={freelancerReceipts}
+        setFreelancerReceipts={setFreelancerReceiptsCustom}
+        onSignOut={handleSignOut}
+      />
+    );
+  }
+
+  if (userRole === 'operations') {
+    return (
+      <OperationsPortalView 
+        currentUser={currentUser}
+        bookings={bookings}
+        setBookings={setBookingsCustom}
+        drivers={drivers}
+        onSignOut={handleSignOut}
       />
     );
   }
@@ -1146,6 +1255,30 @@ export default function App() {
             <h2 className="topbar-title">{tabTitles[activeTab]}</h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                const regUrl = window.location.origin + window.location.pathname + '#/register';
+                navigator.clipboard.writeText(regUrl);
+                alert("Driver, Freelancer & Operations Registration Link copied to clipboard:\n\n" + regUrl + "\n\nShare this link on WhatsApp with your drivers, freelancers, or operations staff to register.");
+              }}
+              className="btn btn-secondary"
+              style={{
+                fontSize: '11.5px',
+                padding: '6px 12px',
+                borderRadius: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                border: '1.5px solid #ede6d9',
+                background: '#fdfbf7',
+                color: '#8c5b30',
+                fontWeight: '800'
+              }}
+              title="Copy staff registration link to share via WhatsApp"
+            >
+              <span>📱 Share Registration Link</span>
+            </button>
 
             <div 
               onClick={() => setIsProfilePopupOpen(true)}
@@ -1279,6 +1412,8 @@ export default function App() {
               carDocuments={carDocuments}
               setCarDocuments={setCarDocumentsCustom}
               setActiveTab={setActiveTab}
+              freelancerReceipts={freelancerReceipts}
+              setFreelancerReceipts={setFreelancerReceiptsCustom}
             />
           )}
 
@@ -1291,6 +1426,8 @@ export default function App() {
               carDocuments={carDocuments}
               setCarDocuments={setCarDocumentsCustom}
               setActiveTab={setActiveTab}
+              freelancerReceipts={freelancerReceipts}
+              setFreelancerReceipts={setFreelancerReceiptsCustom}
             />
           )}
 

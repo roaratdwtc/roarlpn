@@ -219,9 +219,60 @@ export default function LoginView({ onLoginSuccess }) {
           </button>
         </form>
 
+        {/* Driver, Freelancer & Operations Registration & Phone Login Links */}
+        <div style={{
+          marginTop: '20px',
+          paddingTop: '16px',
+          borderTop: '1px solid #ede6d9',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          textAlign: 'center'
+        }}>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.hash = '#/register';
+            }}
+            style={{
+              padding: '10px 14px',
+              borderRadius: '10px',
+              border: '1.5px solid #8c5b30',
+              background: '#fdfbf7',
+              color: '#8c5b30',
+              fontSize: '12.5px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              transition: 'all 0.2s'
+            }}
+          >
+            <span>📱 Register as Driver, Freelancer or Operations</span>
+          </button>
 
+          <button
+            type="button"
+            onClick={() => {
+              window.location.hash = '#/register';
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#8c7361',
+              fontSize: '12px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              textDecoration: 'underline'
+            }}
+          >
+            Already registered? Sign in with WhatsApp / Phone OTP
+          </button>
+        </div>
 
-        <div style={{ marginTop: '24px', fontSize: '11px', color: 'var(--text-muted)' }}>
+        <div style={{ marginTop: '20px', fontSize: '11px', color: 'var(--text-muted)' }}>
           Secured ERP Node Connection &bull; Dubai, UAE
         </div>
       </div>
