@@ -209,6 +209,7 @@ export default function CarExpensesView({
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [viewingExpenseSummary, setViewingExpenseSummary] = useState(null);
   const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
 
   const [formData, setFormData] = useState({
@@ -1324,7 +1325,16 @@ export default function CarExpensesView({
               </tr>
             ) : (
               filteredExpenses.map((exp) => (
-                <tr key={exp.id} className="clickable-row" style={{ borderBottom: '1px solid #f3f4f6' }}>
+                <tr 
+                  key={exp.id} 
+                  className="clickable-row" 
+                  style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
+                  onClick={(e) => {
+                    if (e.target.closest('button') || e.target.closest('a')) return;
+                    setViewingExpenseSummary(exp);
+                  }}
+                  title="Click to view expense summary"
+                >
                   
                   {/* Date */}
                   <td style={{ padding: '10px 14px', fontWeight: '600', fontSize: '12.5px', whiteSpace: 'nowrap' }}>
@@ -1909,70 +1919,33 @@ export default function CarExpensesView({
                     </div>
 
                     {/* Bottom Row: Actions - Strictly wrap and fit within screen */}
+                    {/* Bottom Row: Actions - Only Download and Edit */}
                     <div style={{ 
                       display: 'flex', 
                       gap: '8px', 
                       alignItems: 'center', 
-                      justifyContent: 'space-between', 
-                      flexWrap: 'wrap', 
+                      justifyContent: 'flex-end', 
                       borderTop: '1px solid #ede6d9', 
                       paddingTop: '10px',
                       width: '100%',
                       boxSizing: 'border-box'
                     }}>
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button
-                          onClick={() => setPreviewingDoc(doc)}
-                          className="btn btn-secondary"
-                          style={{ fontSize: '11px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', height: '28px', whiteSpace: 'nowrap' }}
-                          title="Preview document in browser"
-                        >
-                          <Eye size={12} /> View
-                        </button>
-                        <button
-                          onClick={() => handleDownloadDoc(doc)}
-                          className="btn btn-secondary"
-                          style={{ fontSize: '11px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', height: '28px', whiteSpace: 'nowrap' }}
-                          title="Download document file"
-                        >
-                          <Download size={12} /> Download
-                        </button>
-                        <button
-                          onClick={() => handleWhatsAppShareDoc(doc)}
-                          className="btn btn-secondary"
-                          style={{ fontSize: '11px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#047857', height: '28px', whiteSpace: 'nowrap' }}
-                          title="Share formatted details via WhatsApp"
-                        >
-                          <Share2 size={12} /> Share
-                        </button>
-                      </div>
-
-                      <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexShrink: 0 }}>
-                        <button
-                          onClick={() => handleCopyDocDetails(doc)}
-                          className="btn btn-secondary"
-                          style={{ padding: '4px 6px', height: '28px', minWidth: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                          title="Copy details to clipboard"
-                        >
-                          {isCopied ? <Check size={12} style={{ color: '#047857' }} /> : <Clipboard size={12} />}
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditDoc(doc)}
-                          className="btn btn-secondary"
-                          style={{ padding: '4px 6px', height: '28px', minWidth: '28px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                          title="Edit document details or replace file"
-                        >
-                          <Edit2 size={12} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteDoc(doc.id, doc.title)}
-                          className="btn btn-secondary"
-                          style={{ padding: '4px 6px', height: '28px', minWidth: '28px', color: '#b91c1c', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                          title="Delete document"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => handleDownloadDoc(doc)}
+                        className="btn btn-secondary"
+                        style={{ fontSize: '11.5px', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px', height: '30px', whiteSpace: 'nowrap' }}
+                        title="Download document file"
+                      >
+                        <Download size={13} /> Download
+                      </button>
+                      <button
+                        onClick={() => handleOpenEditDoc(doc)}
+                        className="btn btn-secondary"
+                        style={{ fontSize: '11.5px', padding: '5px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px', height: '30px', color: 'var(--primary)', whiteSpace: 'nowrap' }}
+                        title="Edit document details or replace file"
+                      >
+                        <Edit2 size={13} /> Edit
+                      </button>
                     </div>
                   </div>
                 );
@@ -1980,6 +1953,164 @@ export default function CarExpensesView({
             </div>
           )}
         </>
+      )}
+
+      {/* Car Expense Record Summary Popup */}
+      {viewingExpenseSummary && (
+        <div className="modal-overlay" style={{ zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div 
+            className="modal-content"
+            style={{ 
+              maxWidth: '480px', 
+              width: '100%', 
+              background: '#ffffff', 
+              border: '1.5px solid #ede6d9', 
+              borderRadius: '16px', 
+              padding: '24px',
+              boxShadow: '0 20px 40px rgba(84, 60, 43, 0.12)',
+              boxSizing: 'border-box'
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ede6d9', paddingBottom: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(140, 91, 48, 0.1)', color: '#8c5b30', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Wrench size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#543c2b', fontFamily: 'var(--font-heading)' }}>
+                    Car Expense Summary
+                  </h3>
+                  <span style={{ fontSize: '11px', color: '#8c7361' }}>
+                    Vehicle: <strong>{viewingExpenseSummary.plateNo}</strong> {carLabels[viewingExpenseSummary.plateNo] ? `(${carLabels[viewingExpenseSummary.plateNo]})` : ''}
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setViewingExpenseSummary(null)} 
+                className="modal-close" 
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#8c7361' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Amount Banner */}
+            <div style={{ 
+              background: '#fdfbf7', 
+              border: '1.5px solid #ede6d9', 
+              borderRadius: '12px', 
+              padding: '14px 16px', 
+              marginBottom: '16px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#8c7361', textTransform: 'uppercase' }}>Expense Amount</span>
+                <div style={{ fontSize: '22px', fontWeight: '950', color: '#8c5b30' }}>
+                  {parseFloat(viewingExpenseSummary.amount || 0).toLocaleString()} <span style={{ fontSize: '13px', fontWeight: '700' }}>AED</span>
+                </div>
+              </div>
+              <span 
+                className="badge" 
+                style={{ 
+                  background: viewingExpenseSummary.status === 'paid' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)', 
+                  color: viewingExpenseSummary.status === 'paid' ? '#047857' : '#b45309',
+                  fontWeight: '800',
+                  fontSize: '11.5px',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  textTransform: 'uppercase'
+                }}
+              >
+                {viewingExpenseSummary.status || 'Paid'}
+              </span>
+            </div>
+
+            {/* Structured Details Grid */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', 
+              gap: '12px', 
+              fontSize: '12px', 
+              marginBottom: '16px',
+              background: '#ffffff',
+              border: '1px solid #ede6d9',
+              borderRadius: '12px',
+              padding: '14px'
+            }}>
+              <div>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>DATE</span>
+                <strong style={{ color: '#543c2b', fontSize: '12.5px' }}>
+                  {(viewingExpenseSummary.date || '').split('-').reverse().join('/')}
+                </strong>
+              </div>
+
+              <div>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>CATEGORY</span>
+                <strong style={{ color: '#543c2b', fontSize: '12.5px' }}>
+                  {viewingExpenseSummary.category}
+                </strong>
+              </div>
+
+              <div>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>VEHICLE PLATE</span>
+                <strong style={{ color: '#543c2b', fontSize: '12.5px', fontFamily: 'monospace' }}>
+                  {viewingExpenseSummary.plateNo}
+                </strong>
+              </div>
+
+              <div>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>PAYMENT METHOD</span>
+                <strong style={{ color: '#543c2b', fontSize: '12.5px' }}>
+                  {viewingExpenseSummary.paymentMethod || 'Cash'}
+                </strong>
+              </div>
+
+              <div style={{ gridColumn: '1 / -1' }}>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>NOTES & PARTICULARS</span>
+                <div style={{ 
+                  color: '#543c2b', 
+                  fontSize: '12px', 
+                  lineHeight: '1.4', 
+                  marginTop: '4px',
+                  background: '#fdfbf7',
+                  padding: '8px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid #ede6d9',
+                  wordBreak: 'break-word'
+                }}>
+                  {viewingExpenseSummary.notes || 'No additional notes provided.'}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', borderTop: '1px solid #ede6d9', paddingTop: '14px' }}>
+              <button 
+                type="button" 
+                onClick={() => setViewingExpenseSummary(null)} 
+                className="btn btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 14px' }}
+              >
+                Close
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  const target = viewingExpenseSummary;
+                  setViewingExpenseSummary(null);
+                  handleOpenEditModal(target);
+                }} 
+                className="btn btn-primary"
+                style={{ fontSize: '12px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+              >
+                <Edit2 size={13} /> Edit Record
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Add / Edit Expense Modal (No driver fields, purely vehicle & maintenance) */}

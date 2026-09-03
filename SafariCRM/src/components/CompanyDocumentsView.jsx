@@ -406,55 +406,29 @@ export default function CompanyDocumentsView({ documents = [], setDocuments, set
 
               <div style={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 alignItems: 'center',
+                gap: '8px',
                 marginTop: '16px',
                 paddingTop: '12px',
                 borderTop: '1px solid var(--border-light)'
               }}>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <button 
-                    onClick={() => handleDownload(doc)} 
-                    className="btn btn-secondary" 
-                    style={{ padding: '6px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}
-                    title="Download File"
-                  >
-                    <Download size={12} /> Download
-                  </button>
-                  <button 
-                    onClick={() => handleCopyLink(doc)} 
-                    className="btn btn-secondary" 
-                    style={{ padding: '6px 10px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', borderColor: copiedDocId === doc.id ? '#059669' : '#ede6d9' }}
-                    title="Copy File Link (Base64)"
-                  >
-                    {copiedDocId === doc.id ? <Check size={12} style={{ color: '#059669' }} /> : <Link size={12} />} 
-                    {copiedDocId === doc.id ? 'Copied' : 'Copy Link'}
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  <button 
-                    onClick={() => handleWhatsAppShare(doc)}
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px', color: '#25D366' }}
-                    title="Share details via WhatsApp"
-                  >
-                    <Share2 size={14} />
-                  </button>
-                  <button 
-                    onClick={() => handleOpenEdit(doc)} 
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px', color: 'var(--primary)' }}
-                    title="Edit Document"
-                  >
-                    <Edit size={14} />
-                  </button>
-                  <button 
-                    onClick={() => handleDelete(doc.id, doc.name)} 
-                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '6px', color: '#ef4444' }}
-                    title="Delete Document"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+                <button 
+                  onClick={() => handleDownload(doc)} 
+                  className="btn btn-secondary" 
+                  style={{ padding: '6px 14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                  title="Download File"
+                >
+                  <Download size={13} /> Download
+                </button>
+                <button 
+                  onClick={() => handleOpenEdit(doc)} 
+                  className="btn btn-secondary" 
+                  style={{ padding: '6px 14px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px', color: 'var(--primary)', borderColor: 'rgba(140, 91, 48, 0.3)' }}
+                  title="Edit Document"
+                >
+                  <Edit size={13} /> Edit
+                </button>
               </div>
             </div>
           );

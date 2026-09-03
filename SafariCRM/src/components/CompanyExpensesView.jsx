@@ -75,6 +75,7 @@ export default function CompanyExpensesView({
   const [dateFilter, setDateFilter] = useState('all');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [viewingExpenseSummary, setViewingExpenseSummary] = useState(null);
 
   // Report date range state (Per Image 2 user request: allow option to select dates)
   const [reportStartDate, setReportStartDate] = useState('');
@@ -1045,7 +1046,16 @@ export default function CompanyExpensesView({
                   </tr>
                 ) : (
                   filteredExpenses.map((exp) => (
-                    <tr key={exp.id} className="clickable-row" style={{ borderBottom: '1px solid #f3f4f6' }}>
+                    <tr 
+                      key={exp.id} 
+                      className="clickable-row" 
+                      style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }}
+                      onClick={(e) => {
+                        if (e.target.closest('button') || e.target.closest('a')) return;
+                        setViewingExpenseSummary(exp);
+                      }}
+                      title="Click to view expense summary"
+                    >
                       
                       {/* Date */}
                       <td style={{ padding: '10px 14px', fontWeight: '600', fontSize: '12.5px' }}>
@@ -1369,6 +1379,164 @@ export default function CompanyExpensesView({
             )}
           </div>
         </>
+      )}
+
+      {/* Company Expense Record Summary Popup */}
+      {viewingExpenseSummary && (
+        <div className="modal-overlay" style={{ zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div 
+            className="modal-content"
+            style={{ 
+              maxWidth: '480px', 
+              width: '100%', 
+              background: '#ffffff', 
+              border: '1.5px solid #ede6d9', 
+              borderRadius: '16px', 
+              padding: '24px',
+              boxShadow: '0 20px 40px rgba(84, 60, 43, 0.12)',
+              boxSizing: 'border-box'
+            }}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ede6d9', paddingBottom: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(140, 91, 48, 0.1)', color: '#8c5b30', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '900', color: '#543c2b', fontFamily: 'var(--font-heading)' }}>
+                    Company Expense Summary
+                  </h3>
+                  <span style={{ fontSize: '11px', color: '#8c7361' }}>
+                    {viewingExpenseSummary.category}
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setViewingExpenseSummary(null)} 
+                className="modal-close" 
+                style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#8c7361' }}
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Amount Banner */}
+            <div style={{ 
+              background: '#fdfbf7', 
+              border: '1.5px solid #ede6d9', 
+              borderRadius: '12px', 
+              padding: '14px 16px', 
+              marginBottom: '16px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <div>
+                <span style={{ fontSize: '10.5px', fontWeight: '800', color: '#8c7361', textTransform: 'uppercase' }}>Overhead Amount</span>
+                <div style={{ fontSize: '22px', fontWeight: '950', color: '#8c5b30' }}>
+                  {parseFloat(viewingExpenseSummary.amount || 0).toLocaleString()} <span style={{ fontSize: '13px', fontWeight: '700' }}>AED</span>
+                </div>
+              </div>
+              <span 
+                className="badge" 
+                style={{ 
+                  background: viewingExpenseSummary.status === 'paid' ? 'rgba(16, 185, 129, 0.12)' : (viewingExpenseSummary.status === 'overdue' ? 'rgba(239, 68, 68, 0.12)' : 'rgba(245, 158, 11, 0.12)'), 
+                  color: viewingExpenseSummary.status === 'paid' ? '#047857' : (viewingExpenseSummary.status === 'overdue' ? '#b91c1c' : '#b45309'),
+                  fontWeight: '800',
+                  fontSize: '11.5px',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  textTransform: 'uppercase'
+                }}
+              >
+                {viewingExpenseSummary.status || 'Paid'}
+              </span>
+            </div>
+
+            {/* Structured Details Grid */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', 
+              gap: '12px', 
+              fontSize: '12px', 
+              marginBottom: '16px',
+              background: '#ffffff',
+              border: '1px solid #ede6d9',
+              borderRadius: '12px',
+              padding: '14px'
+            }}>
+              <div>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>EXPENSE DATE</span>
+                <strong style={{ color: '#543c2b', fontSize: '12.5px' }}>
+                  {(viewingExpenseSummary.date || '').split('-').reverse().join('/')}
+                </strong>
+              </div>
+
+              <div>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>CATEGORY</span>
+                <strong style={{ color: '#543c2b', fontSize: '12.5px' }}>
+                  {viewingExpenseSummary.category}
+                </strong>
+              </div>
+
+              <div>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>PAYMENT VIA</span>
+                <strong style={{ color: '#543c2b', fontSize: '12.5px' }}>
+                  {viewingExpenseSummary.paymentMethod || 'Bank Transfer'}
+                </strong>
+              </div>
+
+              <div>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>DUE / RENEWAL DATE</span>
+                <strong style={{ color: '#543c2b', fontSize: '12.5px' }}>
+                  {viewingExpenseSummary.dueDate ? viewingExpenseSummary.dueDate.split('-').reverse().join('/') : 'N/A'}
+                </strong>
+              </div>
+
+              <div style={{ gridColumn: '1 / -1' }}>
+                <span style={{ color: '#8c7361', fontSize: '10.5px', fontWeight: '700', display: 'block' }}>NOTES & DETAILS</span>
+                <div style={{ 
+                  color: '#543c2b', 
+                  fontSize: '12px', 
+                  lineHeight: '1.4', 
+                  marginTop: '4px',
+                  background: '#fdfbf7',
+                  padding: '8px 10px',
+                  borderRadius: '8px',
+                  border: '1px solid #ede6d9',
+                  wordBreak: 'break-word'
+                }}>
+                  {viewingExpenseSummary.notes || 'No notes or invoice description recorded.'}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', borderTop: '1px solid #ede6d9', paddingTop: '14px' }}>
+              <button 
+                type="button" 
+                onClick={() => setViewingExpenseSummary(null)} 
+                className="btn btn-secondary"
+                style={{ fontSize: '12px', padding: '6px 14px' }}
+              >
+                Close
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  const target = viewingExpenseSummary;
+                  setViewingExpenseSummary(null);
+                  handleOpenEditExpense(target);
+                }} 
+                className="btn btn-primary"
+                style={{ fontSize: '12px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+              >
+                <Edit2 size={13} /> Edit Record
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Add / Edit Expense Modal (Simplified per Image 1: Category, Amount, Date, Due, Method, Status, and Notes at the end) */}
