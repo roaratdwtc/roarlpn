@@ -519,7 +519,7 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
       
     const verifyUrl = `${window.location.origin}${window.location.pathname}?verifyBooking=${encodeURIComponent(b.id)}`;
     const t = `Hi Roar Adventure Tourism, confirming Ref# ${ref}:\n1. Name: ${b.customerName}\n2. WhatsApp: ${b.whatsapp}\n3. Guests: ${b.pax} pax\n4. Package: ${b.packageName}\n5. Date: ${(b.date||"").split("-").reverse().join("/")}\n6. ${locationLabel}: ${locValue}\n7. ${pickupOrArrivalLabel} Time: ${timeValue}${b.addonName ? `\n8. Addons: ${b.addonName}` : ""}\n${b.addonName ? "9" : "8"}. Total: AED ${b.price} (Pay on Arrival)\n\n📱 Verification Pass: ${verifyUrl}`;
-    return `https://wa.me/971589344077?text=${encodeURIComponent(t)}`;
+    return `https://wa.me/97145578679?text=${encodeURIComponent(t)}`;
   };
 
   /* ── Success Screen ──────────────────────────────────────────────────── */
