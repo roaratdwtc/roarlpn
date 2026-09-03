@@ -1657,6 +1657,7 @@ export default function App() {
           onUpdateBookingStatus={(id, newStatus) => {
             setBookings(prev => (prev || []).map(b => b.id === id ? { ...b, status: newStatus } : b));
           }}
+          isStaff={Boolean(isAuthenticated && ['master_admin', 'company_admin', 'admin', 'operations', 'driver'].includes(userRole))}
           drivers={drivers}
           partners={partners}
         />

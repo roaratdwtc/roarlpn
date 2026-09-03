@@ -11,6 +11,7 @@ export default function DocumentOcrUploader({
   const [progressMsg, setProgressMsg] = useState('');
   const [scanPercent, setScanPercent] = useState(0);
   const [lastExtractedSummary, setLastExtractedSummary] = useState(null);
+  const [attachedFileName, setAttachedFileName] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const fileInputRef = useRef(null);
 
@@ -28,8 +29,27 @@ export default function DocumentOcrUploader({
     setIsScanning(true);
     setErrorMsg('');
     setLastExtractedSummary(null);
-    setProgressMsg('Loading document...');
+    setProgressMsg('Reading file...');
     setScanPercent(10);
+
+    // 1. Read file as Base64 Data URL to preserve attachment with original filename
+    const fileSizeFormatted = file.size > 1024 * 1024
+      ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+      : `${Math.round(file.size / 1024)} KB`;
+
+    let fileData = '';
+    try {
+      fileData = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    } catch (readErr) {
+      console.warn("FileReader error:", readErr);
+    }
+
+    setAttachedFileName(file.name);
 
     try {
       const result = await performDocumentOCR(file, ({ status, progress }) => {
@@ -37,35 +57,49 @@ export default function DocumentOcrUploader({
         setScanPercent(progress);
       });
 
-      if (result.success && result.data) {
-        const d = result.data;
-        // Build readable summary of what was found
-        const foundList = [];
-        if (d.plateNo) foundList.push(`Plate: ${d.plateNo}`);
-        if (d.brand) foundList.push(`Brand: ${d.brand}`);
-        if (d.model) foundList.push(`Model: ${d.model}`);
-        if (d.owner) foundList.push(`Owner: ${d.owner}`);
-        if (d.licenseNo) foundList.push(`License #: ${d.licenseNo}`);
-        if (d.regDate) foundList.push(`Reg Date: ${d.regDate}`);
-        if (d.expDate) foundList.push(`Expiry Date: ${d.expDate}`);
-        if (d.insCompany) foundList.push(`Insurer: ${d.insCompany}`);
-        if (d.insExp) foundList.push(`Ins Exp: ${d.insExp}`);
+      const d = (result && result.data) ? result.data : {};
+      
+      // Build readable summary of what was found
+      const foundList = [];
+      if (d.plateNo) foundList.push(`Plate: ${d.plateNo}`);
+      if (d.brand) foundList.push(`Brand: ${d.brand}`);
+      if (d.model) foundList.push(`Model: ${d.model}`);
+      if (d.owner) foundList.push(`Owner: ${d.owner}`);
+      if (d.licenseNo) foundList.push(`License #: ${d.licenseNo}`);
+      if (d.regDate) foundList.push(`Reg Date: ${d.regDate}`);
+      if (d.expDate) foundList.push(`Expiry Date: ${d.expDate}`);
+      if (d.insCompany) foundList.push(`Insurer: ${d.insCompany}`);
+      if (d.insExp) foundList.push(`Ins Exp: ${d.insExp}`);
 
-        setLastExtractedSummary({
-          type: d.detectedDocumentType || 'Document',
-          items: foundList
-        });
+      setLastExtractedSummary({
+        fileName: file.name,
+        fileSize: fileSizeFormatted,
+        type: d.detectedDocumentType || (isPdf ? 'PDF Document' : 'Image Document'),
+        items: foundList
+      });
 
-        // Pass to parent handler
-        if (onExtracted) {
-          onExtracted(d, file);
-        }
-      } else {
-        setErrorMsg('Could not detect readable text from this image. You can still fill the fields manually.');
+      // Pass complete payload including original file name and fileData to parent handler
+      if (onExtracted) {
+        onExtracted({
+          ...d,
+          fileName: file.name,
+          fileData: fileData,
+          fileType: file.type || (isPdf ? 'application/pdf' : 'image/jpeg'),
+          fileSize: fileSizeFormatted
+        }, file);
       }
     } catch (err) {
       console.error('OCR Error:', err);
-      setErrorMsg('OCR processing encountered an error. Please fill details manually.');
+      setErrorMsg('Could not read all text fields automatically, but the file has been attached. You can review and save.');
+      // Even if OCR has an issue, attach the file!
+      if (onExtracted) {
+        onExtracted({
+          fileName: file.name,
+          fileData: fileData,
+          fileType: file.type || (isPdf ? 'application/pdf' : 'image/jpeg'),
+          fileSize: fileSizeFormatted
+        }, file);
+      }
     } finally {
       setIsScanning(false);
     }
@@ -83,7 +117,7 @@ export default function DocumentOcrUploader({
       <input 
         ref={fileInputRef}
         type="file" 
-        accept="image/*,.pdf" 
+        accept="image/*,.pdf,.PDF,application/pdf" 
         style={{ display: 'none' }}
         onChange={(e) => {
           if (e.target.files && e.target.files[0]) {
@@ -97,10 +131,10 @@ export default function DocumentOcrUploader({
         onDrop={onDrop}
         onClick={() => !isScanning && fileInputRef.current?.click()}
         style={{
-          border: '1.8px dashed #8c5b30',
+          border: attachedFileName ? '1.8px solid #16a34a' : '1.8px dashed #8c5b30',
           borderRadius: '12px',
           padding: '14px 16px',
-          background: isScanning ? 'rgba(140, 91, 48, 0.04)' : '#fdfbf7',
+          background: isScanning ? 'rgba(140, 91, 48, 0.04)' : (attachedFileName ? '#f0fdf4' : '#fdfbf7'),
           cursor: isScanning ? 'wait' : 'pointer',
           textAlign: 'center',
           transition: 'all 0.2s ease',
@@ -118,6 +152,29 @@ export default function DocumentOcrUploader({
               <div style={{ width: `${scanPercent}%`, height: '100%', background: '#8c5b30', transition: 'width 0.3s ease' }} />
             </div>
           </div>
+        ) : attachedFileName ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(22, 163, 74, 0.15)', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: '800', color: '#166534' }}>
+                  ✓ {attachedFileName} Attached
+                </div>
+                <div style={{ fontSize: '11px', color: '#15803d' }}>
+                  File uploaded & scanned • All matching details auto-filled below (Click to replace)
+                </div>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              className="btn btn-secondary"
+              style={{ fontSize: '11px', padding: '4px 10px', pointerEvents: 'none', background: '#ffffff', color: '#166534', borderColor: '#bbf7d0' }}
+            >
+              Replace File
+            </button>
+          </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap' }}>
             <div style={{ width: '34px', height: '34px', borderRadius: '50%', background: 'rgba(140, 91, 48, 0.12)', color: '#8c5b30', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -128,7 +185,7 @@ export default function DocumentOcrUploader({
                 {label}
               </div>
               <div style={{ fontSize: '11px', color: '#8c7361' }}>
-                Upload or drag & drop Mulkiya, Insurance policy, or Trade License image
+                Upload or drag & drop PDF document, Mulkiya, Insurance policy, or Trade License
               </div>
             </div>
             <button 
@@ -136,7 +193,7 @@ export default function DocumentOcrUploader({
               className="btn btn-secondary"
               style={{ fontSize: '11px', padding: '4px 10px', marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '4px', pointerEvents: 'none' }}
             >
-              <UploadCloud size={13} /> Browse File
+              <UploadCloud size={13} /> Select File
             </button>
           </div>
         )}
@@ -166,7 +223,7 @@ export default function DocumentOcrUploader({
               ))}
             </div>
           ) : (
-            <div style={{ fontSize: '11px' }}>Document analyzed. Review fields below.</div>
+            <div style={{ fontSize: '11px' }}>Document analyzed & attached. Review and modify fields as needed.</div>
           )}
         </div>
       )}

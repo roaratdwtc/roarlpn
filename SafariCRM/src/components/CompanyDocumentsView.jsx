@@ -475,18 +475,9 @@ export default function CompanyDocumentsView({ documents = [], setDocuments, set
               <DocumentOcrUploader 
                 label="Scan Company Document (Auto-Fill License #, Expiry & Details)"
                 onExtracted={(extracted, file) => {
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        fileName: file.name,
-                        fileType: file.type,
-                        fileData: event.target.result
-                      }));
-                    };
-                    reader.readAsDataURL(file);
-                  }
+                  const originalFileName = extracted.fileName || file?.name || 'CompanyDocument.pdf';
+                  const originalFileData = extracted.fileData || '';
+                  const originalFileType = extracted.fileType || file?.type || 'application/pdf';
 
                   setFormData(prev => {
                     let suggestedName = prev.name;
@@ -501,10 +492,15 @@ export default function CompanyDocumentsView({ documents = [], setDocuments, set
                     } else if (extracted.category === 'Insurance') {
                       suggestedName = `${extracted.insCompany || 'Commercial Insurance'} Policy`;
                       suggestedCat = categories.includes('Insurance') ? 'Insurance' : prev.category;
+                    } else if (!suggestedName) {
+                      suggestedName = originalFileName.replace(/\.[^/.]+$/, "");
                     }
 
                     return {
                       ...prev,
+                      fileName: originalFileName,
+                      fileData: originalFileData || prev.fileData,
+                      fileType: originalFileType || prev.fileType,
                       name: suggestedName || prev.name,
                       category: suggestedCat,
                       expiryDate: extracted.expDate || prev.expiryDate,
@@ -554,17 +550,42 @@ export default function CompanyDocumentsView({ documents = [], setDocuments, set
               </div>
 
               <div className="form-group">
-                <input 
-                  type="file" 
-                  className="form-control"
-                  title={editingDoc ? 'Replace Document File (Optional)' : 'Select Document File *'}
-                  style={{ padding: '6px' }}
-                  onChange={handleFileChange}
-                />
-                {formData.fileName && (
-                  <p style={{ margin: '4px 0 0 0', fontSize: '10.5px', color: 'var(--primary)' }}>
-                    Selected: <strong>{formData.fileName}</strong>
-                  </p>
+                {formData.fileData ? (
+                  <div style={{
+                    border: '1.5px solid #16a34a',
+                    borderRadius: '10px',
+                    padding: '10px 14px',
+                    background: '#f0fdf4',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '10px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CheckCircle2 size={16} style={{ color: '#16a34a' }} />
+                      <div>
+                        <strong style={{ fontSize: '12px', color: '#166534', display: 'block' }}>{formData.fileName}</strong>
+                        <span style={{ fontSize: '10.5px', color: '#15803d' }}>✓ Attached from scan • Saved with original name</span>
+                      </div>
+                    </div>
+                    <label style={{ fontSize: '11px', color: '#8c5b30', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline' }}>
+                      Replace
+                      <input 
+                        type="file" 
+                        accept=".pdf,.PDF,application/pdf,image/*" 
+                        style={{ display: 'none' }}
+                        onChange={handleFileChange}
+                      />
+                    </label>
+                  </div>
+                ) : (
+                  <input 
+                    type="file" 
+                    className="form-control" 
+                    title={editingDoc ? 'Replace Document File (Optional)' : 'Select Document File *'}
+                    style={{ padding: '6px' }}
+                    onChange={handleFileChange}
+                  />
                 )}
               </div>
 

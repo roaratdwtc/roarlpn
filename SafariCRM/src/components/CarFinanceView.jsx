@@ -1005,10 +1005,18 @@ export default function CarFinanceView({
                       insExp: extracted.insExp ? extracted.insExp.split('-').reverse().join('-') : prev.insExp,
                       chassisNo: extracted.chassisNo || prev.chassisNo,
                       color: extracted.color || prev.color,
-                      passengers: extracted.passengers || prev.passengers
+                      passengers: extracted.passengers || prev.passengers,
+                      documentFileName: extracted.fileName || prev.documentFileName,
+                      documentFileData: extracted.fileData || prev.documentFileData
                     }));
                   }}
                 />
+                {carFormData.documentFileName && (
+                  <div style={{ fontSize: '11.5px', color: '#166534', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <CheckCircle2 size={14} style={{ color: '#16a34a' }} />
+                    <span>✓ Attached file: <strong>{carFormData.documentFileName}</strong></span>
+                  </div>
+                )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group">

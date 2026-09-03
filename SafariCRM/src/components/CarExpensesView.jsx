@@ -2719,23 +2719,10 @@ export default function CarExpensesView({
               <DocumentOcrUploader 
                 label="Scan Vehicle Document (Auto-Fill Plate, Dates & Details)"
                 onExtracted={(extracted, file) => {
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      const fileSizeFormatted = file.size > 1024 * 1024
-                        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
-                        : `${Math.round(file.size / 1024)} KB`;
-
-                      setDocFormData(prev => ({
-                        ...prev,
-                        fileName: file.name,
-                        fileType: file.type || 'application/octet-stream',
-                        fileSize: fileSizeFormatted,
-                        fileData: event.target.result
-                      }));
-                    };
-                    reader.readAsDataURL(file);
-                  }
+                  const originalFileName = extracted.fileName || file?.name || 'Document.pdf';
+                  const originalFileData = extracted.fileData || '';
+                  const originalFileType = extracted.fileType || file?.type || 'application/pdf';
+                  const originalFileSize = extracted.fileSize || '';
 
                   setDocFormData(prev => {
                     const matchedPlate = fleetPlates.find(p => 
@@ -2751,14 +2738,20 @@ export default function CarExpensesView({
                       suggestedTitle = `Mulkiya Registration Card - ${extracted.plateNo || matchedPlate}`;
                     } else if (extracted.category === 'Insurance') {
                       suggestedTitle = `${extracted.insCompany || 'Motor Insurance'} Policy - ${extracted.plateNo || matchedPlate}`;
-                    } else if (extracted.category === 'Passing') {
+                    } else if (extracted.category === 'Passing' || extracted.category === 'RTA Passing') {
                       suggestedTitle = `RTA Technical Passing Test - ${extracted.plateNo || matchedPlate}`;
-                    } else if (extracted.category === 'Tracker') {
+                    } else if (extracted.category === 'Tracker' || extracted.category === 'Tracker Passing') {
                       suggestedTitle = `GPS Tracker Certificate - ${extracted.plateNo || matchedPlate}`;
+                    } else if (!suggestedTitle) {
+                      suggestedTitle = originalFileName.replace(/\.[^/.]+$/, "");
                     }
 
                     return {
                       ...prev,
+                      fileName: originalFileName,
+                      fileData: originalFileData || prev.fileData,
+                      fileType: originalFileType || prev.fileType,
+                      fileSize: originalFileSize || prev.fileSize,
                       carPlate: matchedPlate,
                       category: (extracted.category && extracted.category !== 'Other' && CAR_DOCUMENT_CATEGORIES.includes(extracted.category)) ? extracted.category : prev.category,
                       title: suggestedTitle || prev.title,
@@ -2871,36 +2864,72 @@ export default function CarExpensesView({
 
                 {/* File Upload Area */}
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <div style={{
-                    border: '2px dashed #ede6d9',
-                    borderRadius: '10px',
-                    padding: '16px',
-                    textAlign: 'center',
-                    background: '#fdfbf7',
-                    position: 'relative'
-                  }}>
-                    <input 
-                      type="file"
-                      accept=".pdf,.png,.jpg,.jpeg,.webp,.svg"
-                      onChange={handleDocFileUpload}
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        opacity: 0,
-                        cursor: 'pointer'
-                      }}
-                    />
-                    <UploadCloud size={28} style={{ color: 'var(--primary)', margin: '0 auto 6px' }} />
-                    <p style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-dark)', margin: 0 }}>
-                      {docFormData.fileName ? docFormData.fileName : 'Click or Drag & Drop to Upload Document (PDF, JPG, PNG)'}
-                    </p>
-                    <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
-                      {docFormData.fileSize ? `File Size: ${docFormData.fileSize} • Click to replace` : 'Supports PDF, PNG, JPG, SVG up to 8MB'}
-                    </p>
-                  </div>
+                  {docFormData.fileData ? (
+                    <div style={{
+                      border: '1.5px solid #16a34a',
+                      borderRadius: '10px',
+                      padding: '12px 16px',
+                      background: '#f0fdf4',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '10px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(22, 163, 74, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a', flexShrink: 0 }}>
+                          <CheckCircle2 size={20} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: '800', color: '#166534' }}>
+                            {docFormData.fileName}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#15803d' }}>
+                            ✓ Document auto-attached from scan ({docFormData.fileSize || 'Attached'}) • Saved with original name
+                          </div>
+                        </div>
+                      </div>
+                      <label style={{ fontSize: '11.5px', color: '#8c5b30', fontWeight: '700', cursor: 'pointer', textDecoration: 'underline', flexShrink: 0 }}>
+                        Replace File
+                        <input 
+                          type="file"
+                          accept=".pdf,.PDF,application/pdf,.png,.jpg,.jpeg,.webp,.svg"
+                          onChange={handleDocFileUpload}
+                          style={{ display: 'none' }}
+                        />
+                      </label>
+                    </div>
+                  ) : (
+                    <div style={{
+                      border: '2px dashed #ede6d9',
+                      borderRadius: '10px',
+                      padding: '16px',
+                      textAlign: 'center',
+                      background: '#fdfbf7',
+                      position: 'relative'
+                    }}>
+                      <input 
+                        type="file"
+                        accept=".pdf,.PDF,application/pdf,.png,.jpg,.jpeg,.webp,.svg"
+                        onChange={handleDocFileUpload}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          opacity: 0,
+                          cursor: 'pointer'
+                        }}
+                      />
+                      <UploadCloud size={28} style={{ color: 'var(--primary)', margin: '0 auto 6px' }} />
+                      <p style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-dark)', margin: 0 }}>
+                        Click or Drag & Drop Document (PDF, JPG, PNG)
+                      </p>
+                      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+                        Supports PDF, PNG, JPG, SVG up to 8MB
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Notes */}

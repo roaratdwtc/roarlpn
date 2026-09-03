@@ -24,11 +24,14 @@ export default function BookingVerificationModal({
   onClose, 
   onUpdateBookingStatus, 
   drivers = [],
-  partners = [] 
+  partners = [],
+  isStaff: isStaffProp = null
 }) {
+  const isStaff = isStaffProp !== null ? isStaffProp : (sessionStorage.getItem('safari_admin_authenticated') === 'true');
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [qrFormat, setQrFormat] = useState('url'); // 'url' (smart camera link) or 'text' (raw scanner payload)
+  const [checkInDone, setCheckInDone] = useState(false);
   const printableRef = useRef(null);
 
   if (!booking) return null;
@@ -40,7 +43,7 @@ export default function BookingVerificationModal({
     .filter(Boolean)
     .join(' / ') || 'Unassigned';
 
-  const partnerName = (partners || []).find(p => p.id === booking.partnerId)?.name || booking.partnerId || 'Direct';
+  const isCompleted = checkInDone || booking.status === 'completed' || booking.status === 'verified';
 
   // Format the URL for camera scanners (opens the verification screen with full payload embedded)
   const verifyUrl = `${window.location.origin}${window.location.pathname}?verifyBooking=${encodeURIComponent(booking.id)}&ref=${encodeURIComponent(refCode)}&name=${encodeURIComponent(booking.customerName || '')}&phone=${encodeURIComponent(booking.whatsapp || '')}&pax=${booking.pax || 1}&pkg=${encodeURIComponent(booking.packageName || '')}&date=${encodeURIComponent(booking.date || '')}&price=${encodeURIComponent(booking.price || 0)}&status=${encodeURIComponent(booking.status || 'confirmed')}&loc=${encodeURIComponent(booking.pickupLocation || '')}&time=${encodeURIComponent(booking.pickupTime || '')}&driver=${encodeURIComponent(assignedDriverNames)}`;
@@ -58,9 +61,9 @@ export default function BookingVerificationModal({
     `Pickup: ${booking.pickupLocation || 'Hotel Lobby'}`,
     `Pickup Time: ${booking.pickupTime || 'N/A'}`,
     booking.addonName ? `Addons: ${booking.addonName} (+AED ${booking.addonPrice || 0})` : null,
-    `Driver: ${assignedDriverNames}`,
+    isStaff ? `Driver: ${assignedDriverNames}` : null,
     `Total: AED ${booking.price || 0} (${booking.paymentOption || 'Payment on Arrival'})`,
-    `Status: ${(booking.status || 'confirmed').toUpperCase()}`,
+    `Status: ${isCompleted ? 'CHECKED-IN' : (booking.status || 'confirmed').toUpperCase()}`,
     `Security Code: ROAR-${refCode}-${(booking.date || '').replace(/-/g, '')}`
   ].filter(Boolean).join('\n');
 
@@ -71,7 +74,7 @@ export default function BookingVerificationModal({
       width: 320,
       margin: 1.5,
       color: {
-        dark: '#543c2b', // luxury warm deep brown
+        dark: '#543c2b',
         light: '#ffffff'
       },
       errorCorrectionLevel: 'M'
@@ -101,32 +104,57 @@ export default function BookingVerificationModal({
   };
 
   const handleWhatsAppShare = () => {
-    const text = `*ROAR ADVENTURE TOURISM - BOOKING PASS*\n\n` +
-      `*Reference:* #${refCode}\n` +
-      `*Guest:* ${booking.customerName}\n` +
-      `*Tour Date:* ${(booking.date || '').split('-').reverse().join('/')}\n` +
-      `*Package:* ${booking.packageName}\n` +
-      `*Guests:* ${booking.pax} Pax\n` +
-      `*Pickup:* ${booking.pickupLocation || 'Hotel Lobby'} at ${booking.pickupTime || '3:30 PM'}\n` +
-      `*Total Price:* AED ${booking.price} (${booking.paymentOption || 'Pay on Arrival'})\n` +
-      `*Status:* ${(booking.status || 'confirmed').toUpperCase()}\n\n` +
-      `*Verify Online Pass:* ${verifyUrl}`;
-
-    const url = `https://wa.me/${(booking.whatsapp || '').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+    const msg = encodeURIComponent(
+      `Hello ${booking.customerName || 'Guest'}!\n\nHere is your verified Safari Booking Pass from Roar Adventure Tourism:\n\n` +
+      `📌 Booking Reference: #${refCode}\n` +
+      `📅 Date: ${(booking.date || '').split('-').reverse().join('/')}\n` +
+      `⏰ Pickup Time: ${booking.pickupTime || '3:30 PM'}\n` +
+      `📍 Pickup: ${booking.pickupLocation || 'Hotel Lobby'}\n` +
+      `🎟 Package: ${booking.packageName} (${booking.pax} Pax)\n` +
+      `💵 Total: AED ${booking.price} (${booking.paymentOption || 'Pay on Arrival'})\n\n` +
+      `🔗 Digital Pass & Verification QR:\n${verifyUrl}`
+    );
+    window.open(`https://wa.me/?text=${msg}`, '_blank');
   };
 
-  const isConfirmed = (booking.status || 'confirmed').toLowerCase() === 'confirmed';
-  const isCompleted = (booking.status || '').toLowerCase() === 'completed';
+  const handleCustomerConcierge = () => {
+    const msg = encodeURIComponent(`Hello Roar Adventure Tourism! I have an inquiry regarding my booking #${refCode}.`);
+    window.open(`https://wa.me/97145578679?text=${msg}`, '_blank');
+  };
+
+  const handleProcessCheckIn = () => {
+    if (onUpdateBookingStatus) {
+      onUpdateBookingStatus(booking.id, 'completed');
+    }
+    setCheckInDone(true);
+  };
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+    <div 
+      className="modal-overlay" 
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(30, 20, 10, 0.65)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        padding: '16px'
+      }}
+    >
       <div 
-        className="modal-content" 
         ref={printableRef}
-        style={{ 
-          maxWidth: '560px', 
+        className="modal-content printable-card" 
+        onClick={(e) => e.stopPropagation()}
+        style={{
           width: '100%', 
+          maxWidth: '520px', 
           maxHeight: '92vh', 
           overflowY: 'auto', 
           background: '#ffffff', 
@@ -145,10 +173,10 @@ export default function BookingVerificationModal({
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '900', color: '#543c2b', fontFamily: 'var(--font-heading)' }}>
-                Booking QR Verification Pass
+                {isStaff ? 'Operations Booking Verification' : 'Confirmed Safari Booking Pass'}
               </h3>
               <span style={{ fontSize: '11.5px', color: '#8c7361' }}>
-                Ref #{refCode} • For Operations & Camp Verification
+                Ref #{refCode} • {isStaff ? 'Authorized Operations Processing' : 'Official Customer Confirmation'}
               </span>
             </div>
           </div>
@@ -178,10 +206,10 @@ export default function BookingVerificationModal({
             <ShieldCheck size={20} style={{ color: isCompleted ? '#059669' : '#8c5b30' }} />
             <div>
               <div style={{ fontSize: '12px', fontWeight: '900', color: isCompleted ? '#059669' : '#8c5b30', letterSpacing: '0.5px' }}>
-                {isCompleted ? 'VERIFIED & CHECKED-IN' : 'OFFICIAL VERIFIED BOOKING PASS'}
+                {isCompleted ? 'VERIFIED & CHECKED-IN' : 'OFFICIAL CONFIRMED BOOKING'}
               </div>
               <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>
-                Roar Adventure Tourism LLC • Dubai, UAE
+                Roar Adventure Tourism LLC • Dubai World Trade Centre (DWTC)
               </div>
             </div>
           </div>
@@ -194,7 +222,7 @@ export default function BookingVerificationModal({
             fontWeight: '800',
             textTransform: 'uppercase'
           }}>
-            {booking.status || 'Confirmed'}
+            {isCompleted ? 'Checked-In' : (booking.status || 'Confirmed')}
           </span>
         </div>
 
@@ -234,48 +262,52 @@ export default function BookingVerificationModal({
 
           <div style={{ marginTop: '10px' }}>
             <span style={{ fontSize: '12px', fontWeight: '800', color: '#543c2b', letterSpacing: '0.5px' }}>
-              SCAN TO VERIFY DETAILS
+              {isStaff ? 'SCAN TO VERIFY DETAILS' : 'PRESENT UPON PICKUP'}
             </span>
             <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#8c7361' }}>
-              Operations team can scan with any phone camera to verify and acknowledge this booking.
+              {isStaff 
+                ? 'Operations team can scan to verify guest identity and process check-in.'
+                : 'Show this QR code to your safari captain or camp reception upon arrival.'}
             </p>
           </div>
 
-          {/* Toggle Format (URL vs Text) */}
-          <div className="no-print" style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
-            <button 
-              type="button"
-              onClick={() => setQrFormat('url')}
-              style={{
-                background: qrFormat === 'url' ? '#8c5b30' : '#ffffff',
-                color: qrFormat === 'url' ? '#ffffff' : '#8c5b30',
-                border: '1px solid #8c5b30',
-                borderRadius: '20px',
-                padding: '3px 10px',
-                fontSize: '10.5px',
-                fontWeight: '700',
-                cursor: 'pointer'
-              }}
-            >
-              📱 Smart Camera Link
-            </button>
-            <button 
-              type="button"
-              onClick={() => setQrFormat('text')}
-              style={{
-                background: qrFormat === 'text' ? '#8c5b30' : '#ffffff',
-                color: qrFormat === 'text' ? '#ffffff' : '#8c5b30',
-                border: '1px solid #8c5b30',
-                borderRadius: '20px',
-                padding: '3px 10px',
-                fontSize: '10.5px',
-                fontWeight: '700',
-                cursor: 'pointer'
-              }}
-            >
-              📄 Raw Data Text
-            </button>
-          </div>
+          {/* Format Toggle: Staff Only */}
+          {isStaff && (
+            <div className="no-print" style={{ display: 'flex', gap: '6px', marginTop: '10px' }}>
+              <button 
+                type="button"
+                onClick={() => setQrFormat('url')}
+                style={{
+                  background: qrFormat === 'url' ? '#8c5b30' : '#ffffff',
+                  color: qrFormat === 'url' ? '#ffffff' : '#8c5b30',
+                  border: '1px solid #8c5b30',
+                  borderRadius: '20px',
+                  padding: '3px 10px',
+                  fontSize: '10.5px',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                📱 Smart Camera Link
+              </button>
+              <button 
+                type="button"
+                onClick={() => setQrFormat('text')}
+                style={{
+                  background: qrFormat === 'text' ? '#8c5b30' : '#ffffff',
+                  color: qrFormat === 'text' ? '#ffffff' : '#8c5b30',
+                  border: '1px solid #8c5b30',
+                  borderRadius: '20px',
+                  padding: '3px 10px',
+                  fontSize: '10.5px',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                📄 Raw Data Text
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Structured Booking Details Grid */}
@@ -292,7 +324,7 @@ export default function BookingVerificationModal({
         }}>
           <div>
             <span style={{ color: '#8c7361', display: 'block', fontSize: '10.5px', fontWeight: '700' }}>GUEST NAME</span>
-            <strong style={{ color: '#543c2b', fontSize: '13px' }}>{booking.customerName || 'N/A'}</strong>
+            <strong style={{ color: '#543c2b', fontSize: '13px' }}>{booking.customerName || 'Valued Guest'}</strong>
           </div>
 
           <div>
@@ -338,10 +370,13 @@ export default function BookingVerificationModal({
             </div>
           )}
 
-          <div>
-            <span style={{ color: '#8c7361', display: 'block', fontSize: '10.5px', fontWeight: '700' }}>ASSIGNED DRIVER(S)</span>
-            <strong style={{ color: '#543c2b', fontSize: '12px' }}>{assignedDriverNames}</strong>
-          </div>
+          {/* Assigned Driver: Staff View Only */}
+          {isStaff && (
+            <div>
+              <span style={{ color: '#8c7361', display: 'block', fontSize: '10.5px', fontWeight: '700' }}>ASSIGNED DRIVER(S)</span>
+              <strong style={{ color: '#543c2b', fontSize: '12px' }}>{assignedDriverNames}</strong>
+            </div>
+          )}
 
           <div>
             <span style={{ color: '#8c7361', display: 'block', fontSize: '10.5px', fontWeight: '700' }}>TOTAL AMOUNT</span>
@@ -375,37 +410,58 @@ export default function BookingVerificationModal({
             >
               <Printer size={13} /> Print
             </button>
-            <button 
-              type="button"
-              onClick={handleCopyDetails}
-              className="btn btn-secondary"
-              style={{ fontSize: '11.5px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
-              title="Copy Summary Text"
-            >
-              {copied ? <Check size={13} style={{ color: '#059669' }} /> : <Copy size={13} />}
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-            <button 
-              type="button"
-              onClick={handleWhatsAppShare}
-              className="btn btn-secondary"
-              style={{ fontSize: '11.5px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#047857' }}
-              title="Share Pass via WhatsApp"
-            >
-              <Share2 size={13} /> WhatsApp
-            </button>
+            {isStaff && (
+              <button 
+                type="button"
+                onClick={handleCopyDetails}
+                className="btn btn-secondary"
+                style={{ fontSize: '11.5px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+                title="Copy Summary Text"
+              >
+                {copied ? <Check size={13} style={{ color: '#059669' }} /> : <Copy size={13} />}
+                {copied ? 'Copied!' : 'Copy'}
+              </button>
+            )}
+            {isStaff ? (
+              <button 
+                type="button"
+                onClick={handleWhatsAppShare}
+                className="btn btn-secondary"
+                style={{ fontSize: '11.5px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#047857' }}
+                title="Share Pass via WhatsApp"
+              >
+                <Share2 size={13} /> WhatsApp
+              </button>
+            ) : (
+              <button 
+                type="button"
+                onClick={handleCustomerConcierge}
+                className="btn btn-secondary"
+                style={{ fontSize: '11.5px', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#047857' }}
+                title="Chat with Safari Concierge"
+              >
+                <Phone size={13} /> Contact Support
+              </button>
+            )}
           </div>
 
-          {onUpdateBookingStatus && !isCompleted && (
+          {/* Operations Check-In Button (Staff Only) */}
+          {isStaff && !isCompleted && (
             <button 
               type="button"
-              onClick={() => onUpdateBookingStatus(booking.id, 'completed')}
+              onClick={handleProcessCheckIn}
               className="btn btn-primary"
-              style={{ fontSize: '11.5px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#059669', borderColor: '#059669', color: '#ffffff' }}
+              style={{ fontSize: '11.5px', padding: '6px 14px', display: 'inline-flex', alignItems: 'center', gap: '5px', background: '#059669', borderColor: '#059669', color: '#ffffff', fontWeight: '800' }}
               title="Mark booking as verified and checked-in"
             >
               <CheckCircle size={14} /> Verify & Check-In
             </button>
+          )}
+
+          {isStaff && isCompleted && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#059669', fontWeight: '800', fontSize: '12px' }}>
+              <CheckCircle size={16} /> Guest Checked In
+            </div>
           )}
         </div>
       </div>
