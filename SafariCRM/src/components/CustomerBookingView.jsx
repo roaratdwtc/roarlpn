@@ -642,47 +642,31 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
   return (
     <div style={{ minHeight: "100vh", background: "#faf6f0", color: "#543c2b" }}>
       {/* Outer wrapper */}
-      <div style={{ maxWidth: "1320px", margin: "0 auto", padding: "20px 20px 100px", display: "flex", flexDirection: "column", gap: "20px" }}>
+      <div className="booking-view-container">
         
-        {/* Simple elegant header */}
-        <div style={{ textAlign: "center", marginBottom: "10px", padding: "10px 0" }}>
+        {/* Header: Logo on left, heading next to it in one line */}
+        <div className="booking-top-header">
           <img 
             src="/logo.jpg" 
             alt="Roar Adventure Tourism" 
-            style={{ 
-              maxHeight: "64px", 
-              objectFit: "contain", 
-              marginBottom: "8px", 
-              borderRadius: "5px", 
-              backgroundColor: "#ffffff", 
-              padding: "4px",
-              boxShadow: "0 2px 8px rgba(84, 60, 43, 0.05)"
-            }} 
+            className="booking-header-logo"
           />
-          <h1 style={{ fontSize: "28px", fontWeight: "900", color: "#543c2b", margin: "0 0 4px" }}>
+          <h1 className="booking-header-title">
             Dubai Desert Safari Booking
           </h1>
-          <p style={{ color: "#8c7361", fontSize: "14px", margin: 0 }}>
-            Fill out the booking details below to lock your slot. Pay cash directly on pickup.
-          </p>
         </div>
 
         {/* ══ 3-Column Booking area ══════════════════ */}
         <div className="booking-section-3col">
           
           {/* COLUMN 1: Featured Image Showcase */}
-          <div className="glass-card" style={{ padding: "18px", display: "flex", flexDirection: "column", gap: "12px", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", boxSizing: "border-box" }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", borderBottom: "1.5px solid #ede6d9", paddingBottom: "6px", marginBottom: "12px" }}>
-                <div style={{ fontSize: "14px", fontWeight: "900", color: "#543c2b" }}>Featured Tour Package</div>
-              </div>
-              <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid #ede6d9" }}>
-                <img 
-                  src={getFeaturedImage(formData.categoryKey)} 
-                  alt={formData.categoryKey} 
-                  style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }} 
-                />
-              </div>
+          <div className="glass-card" style={{ padding: "14px", display: "flex", flexDirection: "column", gap: "10px", background: "#ffffff", border: "1.5px solid #ede6d9", borderRadius: "16px", boxSizing: "border-box" }}>
+            <div style={{ borderRadius: "10px", overflow: "hidden", border: "1px solid #ede6d9" }}>
+              <img 
+                src={getFeaturedImage(formData.categoryKey)} 
+                alt={formData.categoryKey} 
+                style={{ width: "100%", height: "auto", display: "block", objectFit: "cover" }} 
+              />
             </div>
             <div style={{ fontSize: "12px", color: "#8c7361", lineHeight: "1.4" }}>
               <p style={{ margin: "0 0 8px 0" }}>
@@ -1095,19 +1079,19 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
         </div>
       )}
 
-      {/* Floating Action Buttons */}
+      {/* Sticky Bottom Action Buttons */}
       <div className="floating-actions-bar">
         <a href="tel:+971589344077" className="floating-action-btn check-avail-btn">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
           </svg>
-          <span>Check Availability</span>
+          <span className="btn-label-text">Availability</span>
         </a>
         <a href="https://wa.me/971589344077?text=I%20want%20to%20Book%20Desert%20Safari%20at%20RoarAdventures%2C%20please%20assist%2C%20Thanks" target="_blank" rel="noopener noreferrer" className="floating-action-btn whatsapp-chat-btn">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style={{ flexShrink: 0 }}>
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" style={{ flexShrink: 0 }}>
             <path d="M12.012 2C6.48 2 2 6.48 2 12.012c0 1.764.468 3.42 1.284 4.884L2 22l5.244-1.26c1.416.768 3.012 1.212 4.768 1.212 5.532 0 10.012-4.48 10.012-10.012C22.024 6.48 17.544 2 12.012 2zm.006 17.172c-1.572 0-3.12-.42-4.488-1.224l-.324-.192-3.324.804.816-3.216-.216-.336c-.888-1.428-1.356-3.096-1.356-4.8 0-4.944 4.02-8.964 8.964-8.964 4.944 0 8.964 4.02 8.964 8.964 0 4.956-4.008 8.964-8.964 8.964zm4.908-6.72c-.276-.132-1.608-.792-1.86-.888-.252-.096-.432-.144-.612.132-.18.276-.696.888-.852 1.068-.156.18-.312.204-.588.072-.276-.132-1.164-.432-2.22-1.368-.816-.732-1.368-1.632-1.524-1.908-.156-.276-.012-.42.12-.552.12-.12.276-.324.408-.48.132-.156.18-.276.264-.456.096-.18.048-.336-.024-.48-.072-.144-.612-1.476-.84-2.016-.216-.528-.444-.456-.612-.456-.156 0-.336-.024-.516-.024-.18 0-.48.072-.732.348-.252.276-.96.936-.96 2.28 0 1.344.984 2.64 1.104 2.808.12.168 1.932 2.952 4.692 4.14 1.548.66 2.196.756 2.988.648.516-.072 1.608-.66 1.836-1.296.228-.636.228-1.188.156-1.296-.072-.108-.264-.168-.54-.3z"/>
           </svg>
-          <span>WhatsApp Live Chat</span>
+          <span className="btn-label-text">WhatsApp Chat</span>
         </a>
       </div>
 
@@ -1115,10 +1099,51 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
         @keyframes fIn { from { opacity:0; transform:scale(1.02); } to { opacity:1; transform:scale(1); } }
         input:focus, select:focus { border-color: #c9762a !important; box-shadow: 0 0 0 3px rgba(201,118,42,0.15) !important; }
         
+        .booking-view-container {
+          max-width: 1320px;
+          margin: 0 auto;
+          padding: 16px 16px 90px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          box-sizing: border-box;
+          width: 100%;
+        }
+
+        .booking-top-header {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          margin-bottom: 2px;
+          padding: 4px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .booking-header-logo {
+          max-height: 48px;
+          object-fit: contain;
+          border-radius: 6px;
+          background-color: #ffffff;
+          padding: 3px;
+          box-shadow: 0 2px 8px rgba(84, 60, 43, 0.05);
+          flex-shrink: 0;
+        }
+
+        .booking-header-title {
+          font-size: 23px;
+          font-weight: 900;
+          color: #543c2b;
+          margin: 0;
+          white-space: nowrap;
+          line-height: 1.2;
+        }
+
         .booking-section-3col {
           display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 16px;
+          grid-template-columns: 1fr 1.15fr 0.95fr;
+          gap: 14px;
           align-items: start;
         }
 
@@ -1141,19 +1166,19 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
 
         .floating-actions-bar {
           position: fixed;
-          bottom: 20px;
+          bottom: 10px;
           left: 50%;
           transform: translateX(-50%);
           display: flex;
-          gap: 12px;
+          gap: 8px;
           z-index: 1000;
-          width: calc(100% - 40px);
-          max-width: 500px;
-          background: rgba(255, 255, 255, 0.95);
+          width: calc(100% - 16px);
+          max-width: 440px;
+          background: rgba(255, 255, 255, 0.96);
           backdrop-filter: blur(10px);
-          padding: 8px;
-          border-radius: 40px;
-          box-shadow: 0 10px 30px rgba(84, 60, 43, 0.12);
+          padding: 6px 8px;
+          border-radius: 35px;
+          box-shadow: 0 8px 24px rgba(84, 60, 43, 0.15);
           border: 1.5px solid #ede6d9;
           justify-content: center;
           box-sizing: border-box;
@@ -1165,13 +1190,21 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
           align-items: center;
           justify-content: center;
           gap: 6px;
-          padding: 11px 14px;
-          border-radius: 30px;
+          padding: 9px 10px;
+          border-radius: 25px;
           text-decoration: none;
           font-weight: 800;
-          font-size: 13px;
+          font-size: 12.5px;
           transition: all 0.2s ease;
           font-family: inherit;
+          box-sizing: border-box;
+          min-width: 0;
+        }
+
+        .btn-label-text {
+          white-space: nowrap !important;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .check-avail-btn {
@@ -1195,16 +1228,48 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
         @media (max-width: 1024px) {
           .booking-section-3col {
             grid-template-columns: 1fr !important;
+            gap: 12px !important;
           }
         }
 
         @media (max-width: 640px) {
-          .floating-actions-bar {
-            bottom: 12px;
+          .booking-view-container {
+            padding: 8px 2px 85px !important;
+            gap: 10px !important;
+          }
+          .booking-view-container .glass-card,
+          .booking-section-3col > .glass-card {
+            padding: 10px 8px !important;
+            border-radius: 12px !important;
+          }
+          .booking-top-header {
+            gap: 8px;
+            padding: 4px 2px;
+          }
+          .booking-header-logo {
+            max-height: 38px;
+          }
+          .booking-header-title {
+            font-size: 16px;
+            letter-spacing: -0.2px;
           }
           .floating-action-btn {
             font-size: 12px;
-            padding: 10px 12px;
+            padding: 8px 8px;
+            gap: 4px;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .booking-header-logo {
+            max-height: 30px;
+          }
+          .booking-header-title {
+            font-size: 14px;
+          }
+          .floating-action-btn {
+            font-size: 11px;
+            padding: 8px 4px;
           }
         }
       `}</style>
