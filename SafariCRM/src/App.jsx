@@ -1291,7 +1291,7 @@ export default function App() {
               }}
               title="Generate and manage secure invite-only codes for staff & freelancers"
             >
-              <span>📱 Invite Staff / Freelancers</span>
+              <span>📱 Invite</span>
             </button>
 
             <div 
@@ -1498,11 +1498,15 @@ export default function App() {
       {isProfilePopupOpen && (
         <div className="modal-overlay" style={{ zIndex: 2000 }}>
           <div 
-            className="modal-content" 
+            className="modal-content profile-popup-modal" 
             style={{ 
-              maxWidth: profileTab === 'companyInfo' ? '900px' : '450px', 
+              width: '100%',
+              maxWidth: profileTab === 'companyInfo' ? '780px' : '450px', 
               textAlign: 'center', 
-              padding: '24px 32px 32px 32px',
+              padding: '20px 16px 24px 16px',
+              boxSizing: 'border-box',
+              maxHeight: '92vh',
+              overflowY: 'auto',
               transition: 'max-width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
@@ -1628,7 +1632,7 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              <div style={{ maxHeight: 'calc(90vh - 120px)', overflowY: 'auto', paddingRight: '4px', textAlign: 'left' }}>
+              <div style={{ width: '100%', maxHeight: 'calc(90vh - 100px)', overflowY: 'auto', overflowX: 'hidden', textAlign: 'left', boxSizing: 'border-box' }}>
                 <CompanyDetailsView 
                   companyDetails={companyDetails}
                   onSave={updateCompanyDetails}
