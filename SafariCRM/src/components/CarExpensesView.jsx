@@ -33,6 +33,7 @@ import {
   FileUp,
   FileSpreadsheet
 } from 'lucide-react';
+import DocumentOcrUploader from './DocumentOcrUploader';
 
 // The 7 Official Roar Company Fleet Vehicles (Plates only, no driver details)
 export const DEFAULT_ROAR_PLATES = [
@@ -2726,6 +2727,66 @@ export default function CarExpensesView({
             </div>
 
             <form onSubmit={handleSaveDoc}>
+              {/* Document OCR Auto-Fill Zone */}
+              <DocumentOcrUploader 
+                label="Scan Vehicle Document (Auto-Fill Plate, Dates & Details)"
+                onExtracted={(extracted, file) => {
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const fileSizeFormatted = file.size > 1024 * 1024
+                        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+                        : `${Math.round(file.size / 1024)} KB`;
+
+                      setDocFormData(prev => ({
+                        ...prev,
+                        fileName: file.name,
+                        fileType: file.type || 'application/octet-stream',
+                        fileSize: fileSizeFormatted,
+                        fileData: event.target.result
+                      }));
+                    };
+                    reader.readAsDataURL(file);
+                  }
+
+                  setDocFormData(prev => {
+                    const matchedPlate = fleetPlates.find(p => 
+                      extracted.plateNo && (
+                        p.toLowerCase() === extracted.plateNo.toLowerCase() ||
+                        extracted.plateNo.toLowerCase().includes(p.toLowerCase()) ||
+                        p.toLowerCase().includes(extracted.plateNo.toLowerCase())
+                      )
+                    ) || prev.carPlate;
+
+                    let suggestedTitle = prev.title;
+                    if (extracted.category === 'Mulkiya') {
+                      suggestedTitle = `Mulkiya Registration Card - ${extracted.plateNo || matchedPlate}`;
+                    } else if (extracted.category === 'Insurance') {
+                      suggestedTitle = `${extracted.insCompany || 'Motor Insurance'} Policy - ${extracted.plateNo || matchedPlate}`;
+                    } else if (extracted.category === 'Passing') {
+                      suggestedTitle = `RTA Technical Passing Test - ${extracted.plateNo || matchedPlate}`;
+                    } else if (extracted.category === 'Tracker') {
+                      suggestedTitle = `GPS Tracker Certificate - ${extracted.plateNo || matchedPlate}`;
+                    }
+
+                    return {
+                      ...prev,
+                      carPlate: matchedPlate,
+                      category: (extracted.category && extracted.category !== 'Other' && CAR_DOCUMENT_CATEGORIES.includes(extracted.category)) ? extracted.category : prev.category,
+                      title: suggestedTitle || prev.title,
+                      issueDate: extracted.regDate || prev.issueDate,
+                      expiryDate: extracted.expDate || prev.expiryDate,
+                      notes: [
+                        extracted.owner ? `Owner: ${extracted.owner}` : null,
+                        extracted.chassisNo ? `Chassis: ${extracted.chassisNo}` : null,
+                        extracted.policyNo ? `Policy: ${extracted.policyNo}` : null,
+                        extracted.brand ? `Vehicle: ${extracted.brand} ${extracted.model || ''}` : null
+                      ].filter(Boolean).join(' • ') || prev.notes
+                    };
+                  });
+                }}
+              />
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                 
                 {/* Car Plate */}

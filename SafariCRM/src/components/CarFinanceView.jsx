@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Car, Landmark, Receipt, Percent, Plus, Trash2, Edit2, Clipboard, DollarSign, Calendar, Search, Filter, Printer, Copy, FileText } from 'lucide-react';
+import { Car, Landmark, Receipt, Percent, Plus, Trash2, Edit2, Clipboard, DollarSign, Calendar, Search, Filter, Printer, Copy, FileText, Sparkles } from 'lucide-react';
+import DocumentOcrUploader from './DocumentOcrUploader';
 
 const freelancerWhatsAppMap = {
   'Jaspreen': '971551356738',
@@ -784,6 +785,28 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
               </div>
 
               <form onSubmit={handleSaveCar} style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
+                {/* Document OCR Auto-Fill Zone */}
+                <DocumentOcrUploader 
+                  label="Scan Mulkiya / Insurance (Auto-Fill Vehicle Details)"
+                  onExtracted={(extracted) => {
+                    setCarFormData(prev => ({
+                      ...prev,
+                      plateNo: extracted.plateNo || prev.plateNo,
+                      brand: extracted.brand || prev.brand,
+                      model: extracted.model || prev.model,
+                      owner: extracted.owner || prev.owner,
+                      regDate: extracted.regDate ? extracted.regDate.split('-').reverse().join('-') : prev.regDate,
+                      expDate: extracted.expDate ? extracted.expDate.split('-').reverse().join('-') : prev.expDate,
+                      insCompany: extracted.insCompany || prev.insCompany,
+                      policyNo: extracted.policyNo || prev.policyNo,
+                      insExp: extracted.insExp ? extracted.insExp.split('-').reverse().join('-') : prev.insExp,
+                      chassisNo: extracted.chassisNo || prev.chassisNo,
+                      color: extracted.color || prev.color,
+                      passengers: extracted.passengers || prev.passengers
+                    }));
+                  }}
+                />
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group">
                     <label>Plate Number *</label>

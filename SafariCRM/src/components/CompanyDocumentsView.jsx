@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FileText, Plus, Search, Filter, Share2, Download, Trash2, Edit, Calendar, AlertTriangle, Link, Check, Clipboard, Folder, Save } from 'lucide-react';
+import { FileText, Plus, Search, Filter, Share2, Download, Trash2, Edit, Calendar, AlertTriangle, Link, Check, Clipboard, Folder, Save, Sparkles } from 'lucide-react';
+import DocumentOcrUploader from './DocumentOcrUploader';
 
 export default function CompanyDocumentsView({ documents = [], setDocuments, settings = [], onSaveSetting }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -470,6 +471,53 @@ export default function CompanyDocumentsView({ documents = [], setDocuments, set
             </h3>
 
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {/* Document OCR Auto-Fill Zone */}
+              <DocumentOcrUploader 
+                label="Scan Company Document (Auto-Fill License #, Expiry & Details)"
+                onExtracted={(extracted, file) => {
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        fileName: file.name,
+                        fileType: file.type,
+                        fileData: event.target.result
+                      }));
+                    };
+                    reader.readAsDataURL(file);
+                  }
+
+                  setFormData(prev => {
+                    let suggestedName = prev.name;
+                    let suggestedCat = prev.category;
+
+                    if (extracted.category === 'License' || extracted.licenseNo) {
+                      suggestedName = `Trade License${extracted.licenseNo ? ` #${extracted.licenseNo}` : ''}`;
+                      suggestedCat = categories.includes('License') ? 'License' : prev.category;
+                    } else if (extracted.category === 'Lease') {
+                      suggestedName = `Ejari Tenancy Agreement`;
+                      suggestedCat = categories.includes('Lease') ? 'Lease' : (categories.includes('Agreement') ? 'Agreement' : prev.category);
+                    } else if (extracted.category === 'Insurance') {
+                      suggestedName = `${extracted.insCompany || 'Commercial Insurance'} Policy`;
+                      suggestedCat = categories.includes('Insurance') ? 'Insurance' : prev.category;
+                    }
+
+                    return {
+                      ...prev,
+                      name: suggestedName || prev.name,
+                      category: suggestedCat,
+                      expiryDate: extracted.expDate || prev.expiryDate,
+                      notes: [
+                        extracted.licenseNo ? `License No: ${extracted.licenseNo}` : null,
+                        extracted.owner ? `Entity: ${extracted.owner}` : null,
+                        extracted.regDate ? `Issue Date: ${extracted.regDate}` : null
+                      ].filter(Boolean).join(' • ') || prev.notes
+                    };
+                  });
+                }}
+              />
+
               <div className="form-group">
                 <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px', display: 'block' }}>Document Name *</label>
                 <input 
