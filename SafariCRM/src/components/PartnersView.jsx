@@ -489,70 +489,70 @@ export default function PartnersView({ partners, setPartners, bookings, packages
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div className="form-group">
-                  <label>Select Partner Channel</label>
                   <select 
                     className="form-control"
+                    title="Select Partner Channel"
                     value={invoicePartnerId}
                     onChange={(e) => setInvoicePartnerId(e.target.value)}
                   >
                     {partners.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
+                      <option key={p.id} value={p.id}>Partner: {p.name}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Invoice Type / Period</label>
                   <select 
                     className="form-control"
+                    title="Invoice Type / Period"
                     value={invoicePeriod}
                     onChange={(e) => setInvoicePeriod(e.target.value)}
                   >
-                    <option value="weekly">Weekly Invoice (7 Days)</option>
-                    <option value="monthly">Monthly Invoice (Calendar)</option>
-                    <option value="custom">Choose Custom Dates</option>
+                    <option value="weekly">Period: Weekly Invoice (7 Days)</option>
+                    <option value="monthly">Period: Monthly Invoice (Calendar)</option>
+                    <option value="custom">Period: Custom Dates</option>
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Start Date</label>
                   <input 
                     type="date" 
                     className="form-control" 
+                    title="Start Date"
                     value={invoiceStartDate} 
                     onChange={(e) => setInvoiceStartDate(e.target.value)} 
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>End Date</label>
                   <input 
                     type="date" 
                     className="form-control" 
+                    title="End Date"
                     value={invoiceEndDate} 
                     onChange={(e) => setInvoiceEndDate(e.target.value)} 
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Previous Month's Pending Balance (AED)</label>
                   <input 
                     type="number" 
                     min="0"
                     className="form-control" 
-                    placeholder="0"
+                    placeholder="Previous Month's Pending Balance (AED)"
+                    title="Previous Month's Pending Balance (AED)"
                     value={prevPendingBalance || ''} 
                     onChange={(e) => setPrevPendingBalance(parseFloat(e.target.value) || 0)} 
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Amount Received This Month (AED)</label>
                   <input 
                     type="number" 
                     min="0"
                     className="form-control" 
-                    placeholder="0"
+                    placeholder="Amount Received This Month (AED)"
+                    title="Amount Received This Month (AED)"
                     value={amountReceived || ''} 
                     onChange={(e) => setAmountReceived(parseFloat(e.target.value) || 0)} 
                   />
@@ -762,23 +762,23 @@ export default function PartnersView({ partners, setPartners, bookings, packages
 
             <form onSubmit={handleSavePartner} style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
               <div className="form-group">
-                <label>Company / Channel Name *</label>
                 <input 
                   type="text" 
                   className="form-control"
                   required
-                  placeholder="e.g. Desert Safari Deals LLC"
+                  placeholder="Company / Channel Name * (e.g. Desert Safari Deals LLC)"
+                  title="Company / Channel Name *"
                   value={partnerFormData.name}
                   onChange={(e) => setPartnerFormData({ ...partnerFormData, name: e.target.value })}
                 />
               </div>
 
               <div className="form-group">
-                <label>Channel Code / Unique ID</label>
                 <input 
                   type="text" 
                   className="form-control"
-                  placeholder="e.g. desert-safari-deals (auto-generated if empty)"
+                  placeholder="Channel Code / Unique ID (auto-generated if empty)"
+                  title="Channel Code / Unique ID"
                   disabled={editingPartner ? true : false}
                   value={partnerFormData.id}
                   onChange={(e) => setPartnerFormData({ ...partnerFormData, id: e.target.value })}
@@ -787,21 +787,21 @@ export default function PartnersView({ partners, setPartners, bookings, packages
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label>Contact Person</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="Representative name"
+                    placeholder="Contact Person (Representative)"
+                    title="Contact Person"
                     value={partnerFormData.contactPerson}
                     onChange={(e) => setPartnerFormData({ ...partnerFormData, contactPerson: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
-                  <label>WhatsApp Contact</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="e.g. +97150..."
+                    placeholder="WhatsApp Contact (+971...)"
+                    title="WhatsApp Contact"
                     value={partnerFormData.whatsapp}
                     onChange={(e) => setPartnerFormData({ ...partnerFormData, whatsapp: e.target.value })}
                   />
@@ -810,22 +810,22 @@ export default function PartnersView({ partners, setPartners, bookings, packages
 
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label>Email Address</label>
                   <input 
                     type="email" 
                     className="form-control"
-                    placeholder="finance@partner.com"
+                    placeholder="Email Address (finance@partner.com)"
+                    title="Email Address"
                     value={partnerFormData.email}
                     onChange={(e) => setPartnerFormData({ ...partnerFormData, email: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Default Commission %</label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                     <input 
                       type="number" 
                       className="form-control"
-                      placeholder="10"
+                      placeholder="Default Commission % (e.g. 10)"
+                      title="Default Commission %"
                       style={{ paddingRight: '20px' }}
                       value={partnerFormData.commissionRate}
                       onChange={(e) => setPartnerFormData({ ...partnerFormData, commissionRate: parseFloat(e.target.value) || 0 })}
@@ -836,11 +836,11 @@ export default function PartnersView({ partners, setPartners, bookings, packages
               </div>
 
               <div className="form-group">
-                <label>Physical Address / Office</label>
                 <textarea 
                   className="form-control" 
                   rows="2"
-                  placeholder="Street address office location"
+                  placeholder="Physical Address / Office Location"
+                  title="Physical Address / Office Location"
                   style={{ resize: 'none' }}
                   value={partnerFormData.address}
                   onChange={(e) => setPartnerFormData({ ...partnerFormData, address: e.target.value })}

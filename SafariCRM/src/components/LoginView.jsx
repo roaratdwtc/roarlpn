@@ -153,13 +153,14 @@ export default function LoginView({ onLoginSuccess }) {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px', textAlign: 'left' }}>
           <div className="form-group">
-            <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Email Address</label>
             <div style={{ position: 'relative' }}>
               <Mail size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
                 type="email"
                 required
                 className="form-control"
+                placeholder="Email Address *"
+                title="Email Address"
                 style={{ paddingLeft: '38px' }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -168,13 +169,14 @@ export default function LoginView({ onLoginSuccess }) {
           </div>
 
           <div className="form-group">
-            <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Security Password</label>
             <div style={{ position: 'relative' }}>
               <Lock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
                 className="form-control"
+                placeholder="Security Password *"
+                title="Security Password"
                 style={{ paddingLeft: '38px', paddingRight: '38px' }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

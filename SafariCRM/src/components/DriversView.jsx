@@ -1042,45 +1042,45 @@ export default function DriversView({ drivers, setDrivers, bookings, expenses, p
             <form onSubmit={handleSave}>
               <div className="form-grid">
                 <div className="form-grid col-span-2">
-                  <label>Driver Full Name *</label>
                   <input 
                     type="text" 
                     className="form-control"
                     required
-                    placeholder="e.g. Adnan"
+                    placeholder="Driver Full Name *"
+                    title="Driver Full Name *"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>WhatsApp Number</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="e.g. +971505556666"
+                    placeholder="WhatsApp Number (+971...)"
+                    title="WhatsApp Number"
                     value={formData.whatsapp}
                     onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Car Plate Number *</label>
                   <input 
                     type="text" 
                     className="form-control"
                     required
-                    placeholder="e.g. DXB-30291"
+                    placeholder="Car Plate Number * (e.g. DXB-30291)"
+                    title="Car Plate Number *"
                     value={formData.carPlate}
                     onChange={(e) => setFormData({ ...formData, carPlate: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Registration Date</label>
                   <input 
                     type="date" 
                     className="form-control"
+                    title="Registration Date"
                     value={formData.regDate}
                     onChange={(e) => setFormData({ ...formData, regDate: e.target.value })}
                   />

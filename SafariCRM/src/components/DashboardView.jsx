@@ -472,36 +472,36 @@ export default function DashboardView({
             </h4>
             <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Meta & Google Ads Budget Reporting</span>
           </div>
-          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', alignItems: 'center' }}>
             <div className="form-group" style={{ marginBottom: 0, width: '150px' }}>
-              <label style={{ fontSize: '11px', fontWeight: '800', display: 'block', marginBottom: '4px' }}>Select Month</label>
               <input 
                 type="month" 
                 className="form-control" 
+                title="Select Month"
                 style={{ height: '36px', fontSize: '13px', border: '1.5px solid #ede6d9', borderRadius: '8px', background: '#fff' }}
                 value={adSpendMonth}
                 onChange={(e) => setAdSpendMonth(e.target.value)}
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0, width: '150px' }}>
-              <label style={{ fontSize: '11px', fontWeight: '800', display: 'block', marginBottom: '4px' }}>Meta Ads (AED)</label>
               <input 
                 type="number" 
-                min="0"
+                min="0" 
                 className="form-control" 
-                placeholder="0"
+                placeholder="Meta Ads (AED)"
+                title="Meta Ads (AED)"
                 style={{ height: '36px', fontSize: '13px', border: '1.5px solid #ede6d9', borderRadius: '8px', background: '#fff' }}
                 value={metaBudget}
                 onChange={(e) => setMetaBudget(e.target.value)}
               />
             </div>
             <div className="form-group" style={{ marginBottom: 0, width: '150px' }}>
-              <label style={{ fontSize: '11px', fontWeight: '800', display: 'block', marginBottom: '4px' }}>Google Ads (AED)</label>
               <input 
                 type="number" 
-                min="0"
+                min="0" 
                 className="form-control" 
-                placeholder="0"
+                placeholder="Google Ads (AED)"
+                title="Google Ads (AED)"
                 style={{ height: '36px', fontSize: '13px', border: '1.5px solid #ede6d9', borderRadius: '8px', background: '#fff' }}
                 value={googleBudget}
                 onChange={(e) => setGoogleBudget(e.target.value)}

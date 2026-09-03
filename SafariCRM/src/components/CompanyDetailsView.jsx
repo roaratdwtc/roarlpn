@@ -88,16 +88,14 @@ export default function CompanyDetailsView({ companyDetails, onSave }) {
           }}>
             
             {/* Full Name */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Building size={14} /> REGISTERED COMPANY NAME
-              </label>
+            <div>
               <input 
                 type="text"
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
-                placeholder="e.g. Roar Adventure Tourism LLC"
+                placeholder="Registered Company Name * (e.g. Roar Adventure Tourism LLC)"
+                title="Registered Company Name"
                 required
                 className="form-control"
                 style={{ width: '100%' }}
@@ -105,16 +103,14 @@ export default function CompanyDetailsView({ companyDetails, onSave }) {
             </div>
 
             {/* Contact Person */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <User size={14} /> OFFICIAL CONTACT PERSON
-              </label>
+            <div>
               <input 
                 type="text"
                 name="contactPerson"
                 value={formData.contactPerson}
                 onChange={handleChange}
-                placeholder="e.g. Mr. Abid Ali"
+                placeholder="Official Contact Person * (e.g. Mr. Abid Ali)"
+                title="Official Contact Person"
                 required
                 className="form-control"
                 style={{ width: '100%' }}
@@ -122,16 +118,14 @@ export default function CompanyDetailsView({ companyDetails, onSave }) {
             </div>
 
             {/* Phone/WhatsApp */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Phone size={14} /> WHATSAPP / CONTACT PHONE
-              </label>
+            <div>
               <input 
                 type="text"
                 name="whatsapp"
                 value={formData.whatsapp}
                 onChange={handleChange}
-                placeholder="e.g. +97145578679"
+                placeholder="WhatsApp / Contact Phone * (e.g. +97145578679)"
+                title="WhatsApp / Contact Phone"
                 required
                 className="form-control"
                 style={{ width: '100%' }}
@@ -139,16 +133,14 @@ export default function CompanyDetailsView({ companyDetails, onSave }) {
             </div>
 
             {/* Email */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Mail size={14} /> OFFICIAL EMAIL ADDRESS
-              </label>
+            <div>
               <input 
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="e.g. info@roaradventuretourism.com"
+                placeholder="Official Email Address * (e.g. info@roaradventuretourism.com)"
+                title="Official Email Address"
                 required
                 className="form-control"
                 style={{ width: '100%' }}
@@ -156,16 +148,14 @@ export default function CompanyDetailsView({ companyDetails, onSave }) {
             </div>
 
             {/* Registration Date */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Calendar size={14} /> ESTABLISHMENT / REGISTRATION DATE
-              </label>
+            <div>
               <input 
                 type="text"
                 name="regDate"
                 value={formData.regDate}
                 onChange={handleChange}
-                placeholder="e.g. 2016-01-01"
+                placeholder="Establishment / Registration Date * (e.g. 2016-01-01)"
+                title="Establishment / Registration Date"
                 required
                 className="form-control"
                 style={{ width: '100%' }}
@@ -173,16 +163,14 @@ export default function CompanyDetailsView({ companyDetails, onSave }) {
             </div>
 
             {/* License No */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <FileText size={14} /> TOUR OPERATOR LICENSE DETAILS
-              </label>
+            <div>
               <input 
                 type="text"
                 name="licenseNo"
                 value={formData.licenseNo}
                 onChange={handleChange}
-                placeholder="e.g. DET/DTCM Licensed Tour Operator"
+                placeholder="Tour Operator License Details * (e.g. DET/DTCM Licensed)"
+                title="Tour Operator License Details"
                 required
                 className="form-control"
                 style={{ width: '100%' }}
@@ -192,16 +180,14 @@ export default function CompanyDetailsView({ companyDetails, onSave }) {
           </div>
 
           {/* Address (Full Row) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <MapPin size={14} /> HEADQUARTERS PHYSICAL ADDRESS
-            </label>
+          <div>
             <input 
               type="text"
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="e.g. Dubai World Trade Centre (DWTC), Sheikh Zayed Rd, Dubai, UAE"
+              placeholder="Headquarters Physical Address * (e.g. DWTC, Sheikh Zayed Rd, Dubai)"
+              title="Headquarters Physical Address"
               required
               className="form-control"
               style={{ width: '100%' }}
@@ -209,15 +195,13 @@ export default function CompanyDetailsView({ companyDetails, onSave }) {
           </div>
 
           {/* Services Offered (Full Row) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Compass size={14} /> SUMMARY OF CORE SERVICES OFFERED
-            </label>
+          <div>
             <textarea 
               name="whatWeOffer"
               value={formData.whatWeOffer}
               onChange={handleChange}
-              placeholder="List core offerings separated by commas..."
+              placeholder="Summary of Core Services Offered * (List core offerings separated by commas...)"
+              title="Summary of Core Services Offered"
               required
               className="form-control"
               rows={4}

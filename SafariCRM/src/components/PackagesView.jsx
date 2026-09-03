@@ -817,11 +817,11 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
                 
                 <div className="form-group">
-                  <label>Package Name *</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. VIP Safari Private Car 799AED"
+                    placeholder="Package Name * (e.g. VIP Safari Private Car)"
+                    title="Package Name *"
                     value={pkgFormData.name}
                     onChange={(e) => setPkgFormData({ ...pkgFormData, name: e.target.value })}
                     required
@@ -830,51 +830,53 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div className="form-group">
-                    <label>Category *</label>
                     <select 
                       className="form-control"
+                      title="Package Category *"
                       value={pkgFormData.category}
                       onChange={(e) => setPkgFormData({ ...pkgFormData, category: e.target.value })}
                     >
                       {categoriesList.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
+                        <option key={cat} value={cat}>Category: {cat}</option>
                       ))}
                     </select>
                   </div>
 
                   <div className="form-group">
-                    <label>Price Calculation Type</label>
                     <select 
                       className="form-control"
+                      title="Price Calculation Type"
                       value={pkgFormData.type}
                       onChange={(e) => setPkgFormData({ ...pkgFormData, type: e.target.value })}
                     >
-                      <option value="per_person">Per Person Rate</option>
-                      <option value="flat">Flat Rate (Per Vehicle / Group)</option>
+                      <option value="per_person">Rate: Per Person Rate</option>
+                      <option value="flat">Rate: Flat Rate (Per Vehicle / Group)</option>
                     </select>
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div className="form-group">
-                    <label>Peak Price (Standard, AED) *</label>
                     <input 
                       type="number" 
                       min="0"
                       className="form-control" 
-                      value={pkgFormData.peakRate}
+                      placeholder="Peak Price Standard (AED) *"
+                      title="Peak Price (Standard, AED) *"
+                      value={pkgFormData.peakRate || ''}
                       onChange={(e) => setPkgFormData({ ...pkgFormData, peakRate: parseFloat(e.target.value) || 0 })}
                       required
                     />
                   </div>
 
                   <div className="form-group">
-                    <label>Off-Peak Price (Discounted, AED) *</label>
                     <input 
                       type="number" 
                       min="0"
                       className="form-control" 
-                      value={pkgFormData.offpeakRate}
+                      placeholder="Off-Peak Price Discounted (AED) *"
+                      title="Off-Peak Price (Discounted, AED) *"
+                      value={pkgFormData.offpeakRate || ''}
                       onChange={(e) => setPkgFormData({ ...pkgFormData, offpeakRate: parseFloat(e.target.value) || 0 })}
                       required
                     />
@@ -883,23 +885,25 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', borderTop: '1px solid var(--border-light)', paddingTop: '14px' }}>
                   <div className="form-group">
-                    <label>Camp Use Expense (AED / Person)</label>
                     <input 
                       type="number" 
                       min="0"
                       className="form-control" 
-                      value={pkgFormData.campUse}
+                      placeholder="Camp Use Expense (AED / Pax)"
+                      title="Camp Use Expense (AED / Person)"
+                      value={pkgFormData.campUse || ''}
                       onChange={(e) => setPkgFormData({ ...pkgFormData, campUse: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label>Quadbike Expense (AED / Bike)</label>
                     <input 
                       type="number" 
                       min="0"
                       className="form-control" 
-                      value={pkgFormData.quadbikeExpense}
+                      placeholder="Quadbike Expense (AED / Bike)"
+                      title="Quadbike Expense (AED / Bike)"
+                      value={pkgFormData.quadbikeExpense || ''}
                       onChange={(e) => setPkgFormData({ ...pkgFormData, quadbikeExpense: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
@@ -908,7 +912,7 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                 {/* ADDONS EDITOR */}
                 <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '14px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <label style={{ fontWeight: '700', fontSize: '13px', color: 'var(--text-dark)' }}>Package Addons List</label>
+                    <span style={{ fontWeight: '700', fontSize: '12px', color: 'var(--text-dark)', textTransform: 'uppercase' }}>Package Addons List</span>
                     <button 
                       type="button" 
                       onClick={handleAddAddon} 
@@ -987,11 +991,11 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '10px' }}>
                 
                 <div className="form-group">
-                  <label>Coupon Code *</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. RoarNYOfferDxb"
+                    placeholder="Coupon Code * (e.g. RoarSummerOffer26)"
+                    title="Coupon Code *"
                     value={cpnFormData.code}
                     onChange={(e) => setCpnFormData({ ...cpnFormData, code: e.target.value.replace(/\s+/g, '') })}
                     required
@@ -1000,17 +1004,17 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                 </div>
 
                 <div className="form-group">
-                  <label>Target Package *</label>
                   <select 
                     className="form-control"
+                    title="Target Package *"
                     value={cpnFormData.packageId}
                     onChange={(e) => setCpnFormData({ ...cpnFormData, packageId: e.target.value })}
                     required
                   >
-                    <option value="all_safari">All Packages (Universal Off-Peak Rate on Every Package)</option>
+                    <option value="all_safari">Target: All Packages (Universal Off-Peak Rate on Every Package)</option>
                     {packages.map(p => (
                       <option key={p.id} value={p.id}>
-                        {p.name} (Base: AED {p.offpeakRate})
+                        Target: {p.name} (Base: AED {p.offpeakRate})
                       </option>
                     ))}
                   </select>
@@ -1018,40 +1022,40 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
 
                 {cpnFormData.packageId !== 'all_safari' ? (
                   <div className="form-group">
-                    <label>Custom Coupon Price (AED) *</label>
                     <input 
                       type="number" 
                       min="0"
                       className="form-control" 
-                      placeholder="Discounted price, e.g. 799"
-                      value={cpnFormData.customPrice}
+                      placeholder="Custom Coupon Price (AED) *"
+                      title="Custom Coupon Price (AED) *"
+                      value={cpnFormData.customPrice || ''}
                       onChange={(e) => setCpnFormData({ ...cpnFormData, customPrice: parseFloat(e.target.value) || 0 })}
                       required
                     />
                   </div>
                 ) : (
                   <div style={{ background: 'rgba(22, 163, 74, 0.05)', border: '1px solid rgba(22, 163, 74, 0.2)', padding: '10px', borderRadius: '6px' }}>
-                    <label style={{ color: '#16a34a', fontWeight: 'bold', fontSize: '12px', display: 'block', marginBottom: '2px' }}>✓ Universal Discount Type</label>
+                    <div style={{ color: '#16a34a', fontWeight: 'bold', fontSize: '12px', marginBottom: '2px' }}>✓ Universal Discount Type</div>
                     <div style={{ fontSize: '11px', color: '#475569' }}>This coupon automatically applies the off-peak rate for any evening safari or morning private tour selected.</div>
                   </div>
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                   <div className="form-group">
-                    <label>Start Date (Optional)</label>
                     <input 
                       type="date" 
                       className="form-control" 
+                      title="Start Date (Optional)"
                       value={cpnFormData.startDate}
                       onChange={(e) => setCpnFormData({ ...cpnFormData, startDate: e.target.value })}
                     />
                   </div>
 
                   <div className="form-group">
-                    <label>End Date / Expiry (Optional)</label>
                     <input 
                       type="date" 
                       className="form-control" 
+                      title="End Date / Expiry (Optional)"
                       value={cpnFormData.endDate}
                       onChange={(e) => setCpnFormData({ ...cpnFormData, endDate: e.target.value })}
                     />
@@ -1059,14 +1063,14 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                 </div>
 
                 <div className="form-group">
-                  <label>Coupon Status</label>
                   <select 
                     className="form-control"
+                    title="Coupon Status"
                     value={cpnFormData.isActive}
                     onChange={(e) => setCpnFormData({ ...cpnFormData, isActive: parseInt(e.target.value) })}
                   >
-                    <option value="1">Active</option>
-                    <option value="0">Disabled / Inactive</option>
+                    <option value="1">Status: Active</option>
+                    <option value="0">Status: Disabled / Inactive</option>
                   </select>
                 </div>
 
@@ -1098,11 +1102,11 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div className="form-group">
-                    <label>Category Name *</label>
                     <input 
                       type="text" 
                       className="form-control" 
-                      placeholder="e.g. Quad & Buggy Safari" 
+                      placeholder="Category Name * (e.g. Quad & Buggy Safari)" 
+                      title="Category Name *"
                       value={newCatName}
                       onChange={(e) => setNewCatName(e.target.value)}
                     />

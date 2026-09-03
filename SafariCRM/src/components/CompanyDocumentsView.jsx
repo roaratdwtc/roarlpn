@@ -519,11 +519,11 @@ export default function CompanyDocumentsView({ documents = [], setDocuments, set
               />
 
               <div className="form-group">
-                <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px', display: 'block' }}>Document Name *</label>
                 <input 
                   type="text" 
                   className="form-control" 
-                  placeholder="e.g. Trade License 2026"
+                  placeholder="Document Name * (e.g. Trade License 2026)"
+                  title="Document Name *"
                   required
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -532,21 +532,21 @@ export default function CompanyDocumentsView({ documents = [], setDocuments, set
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div className="form-group">
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px', display: 'block' }}>Category *</label>
                   <select 
                     className="form-control"
+                    title="Document Category *"
                     value={formData.category}
                     onChange={e => setFormData({ ...formData, category: e.target.value })}
                   >
-                    {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                    {categories.map(c => <option key={c} value={c}>Category: {c}</option>)}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px', display: 'block' }}>Expiry Date (Optional)</label>
                   <input 
                     type="date" 
                     className="form-control" 
+                    title="Expiry Date (Optional)"
                     value={formData.expiryDate}
                     onChange={e => setFormData({ ...formData, expiryDate: e.target.value })}
                   />
@@ -554,12 +554,10 @@ export default function CompanyDocumentsView({ documents = [], setDocuments, set
               </div>
 
               <div className="form-group">
-                <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px', display: 'block' }}>
-                  {editingDoc ? 'Replace Document File (Optional)' : 'Select Document File *'}
-                </label>
                 <input 
                   type="file" 
                   className="form-control"
+                  title={editingDoc ? 'Replace Document File (Optional)' : 'Select Document File *'}
                   style={{ padding: '6px' }}
                   onChange={handleFileChange}
                 />
@@ -571,11 +569,11 @@ export default function CompanyDocumentsView({ documents = [], setDocuments, set
               </div>
 
               <div className="form-group">
-                <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-dark)', marginBottom: '4px', display: 'block' }}>Notes</label>
                 <textarea 
                   className="form-control" 
                   rows="3"
-                  placeholder="Enter details, description or reference numbers..."
+                  placeholder="Notes (Details, description or reference numbers...)"
+                  title="Document Notes"
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
                 />

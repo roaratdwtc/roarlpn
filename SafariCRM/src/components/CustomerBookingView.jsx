@@ -729,7 +729,6 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
               </div>
 
               <div style={{ marginBottom: "6px" }}>
-                <label style={{ fontSize: "11px", fontWeight: "800", color: "#8c7361", display: "block", marginBottom: "4px" }}>Type of Tour</label>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button 
                     type="button" 
@@ -786,9 +785,10 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
               <div>
                 {formData.tourType === 'self_drive' ? (
                   <div>
-                    <label style={{ fontSize: "11px", fontWeight: "800", color: "#8c7361", display: "block", marginBottom: "4px" }}>Meeting Point</label>
                     <input 
                       style={{ ...inp, background: "#f8f9fa", cursor: "not-allowed", color: "#543c2b", fontWeight: "750" }} 
+                      placeholder="Meeting Point: https://maps.app.goo.gl/jcACpe96sKRcmbVe6"
+                      title="Meeting Point"
                       value="https://maps.app.goo.gl/jcACpe96sKRcmbVe6" 
                       readOnly 
                     />
@@ -910,12 +910,12 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
             {/* Coupons Section */}
             {showCouponsSetting && (
               <div style={{ borderTop: "1.5px solid #ede6d9", paddingTop: "12px", marginBottom: "14px" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <label style={{ fontSize: "10.5px", fontWeight: "800", color: "#8c7361" }}>Have a Promo Coupon Code?</label>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   <div style={{ display: "flex", gap: "8px" }}>
                     <input 
                       style={{ ...inp, padding: "8px 12px", fontSize: "12.5px", flex: 1 }} 
-                      placeholder="Enter promo code" 
+                      placeholder="Enter promo coupon code" 
+                      title="Promo Coupon Code"
                       value={tempCouponCode}
                       onChange={(e) => setTempCouponCode(e.target.value.replace(/\s+/g, ""))}
                     />
@@ -1073,12 +1073,12 @@ export default function CustomerBookingView({ bookings, setBookings, partners = 
                 </p>
 
                 <div className="form-group">
-                  <label style={{ fontSize: '11px', fontWeight: '800', color: '#543c2b', marginBottom: '4px', display: 'block' }}>Email Address *</label>
                   <input 
                     type="email" 
                     className="form-control" 
                     style={inp}
-                    placeholder="e.g. john@example.com"
+                    placeholder="Email Address * (e.g. john@example.com)"
+                    title="Email Address *"
                     value={leadEmail}
                     onChange={(e) => setLeadEmail(e.target.value)}
                     required

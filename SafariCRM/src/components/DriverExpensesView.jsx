@@ -93,10 +93,10 @@ export default function DriverExpensesView({ expenses, setExpenses, bookings, dr
         <form onSubmit={handleSave}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '20px' }}>
             <div className="form-group">
-              <label>Select Driver *</label>
               <select
                 className="form-control"
                 required
+                title="Select Driver *"
                 value={formData.driverId}
                 onChange={(e) => {
                   const drv = drivers.find(d => d.id === e.target.value);
@@ -110,7 +110,7 @@ export default function DriverExpensesView({ expenses, setExpenses, bookings, dr
                   });
                 }}
               >
-                <option value="">Choose Driver</option>
+                <option value="">Select Driver *</option>
                 {drivers.map(d => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
@@ -118,9 +118,9 @@ export default function DriverExpensesView({ expenses, setExpenses, bookings, dr
             </div>
 
             <div className="form-group">
-              <label>Associate Safari Booking</label>
               <select
                 className="form-control"
+                title="Associate Safari Booking"
                 value={formData.bookingId}
                 onChange={(e) => {
                   const booking = bookings.find(b => b.id === e.target.value);
@@ -146,7 +146,7 @@ export default function DriverExpensesView({ expenses, setExpenses, bookings, dr
                   });
                 }}
               >
-                <option value="">Unassociated / General</option>
+                <option value="">Associate Safari Booking (Optional)</option>
                 {availableBookings.map(b => (
                   <option key={b.id} value={b.id}>
                     {b.date} - {b.customerName} ({b.packageName})
@@ -156,61 +156,59 @@ export default function DriverExpensesView({ expenses, setExpenses, bookings, dr
             </div>
 
             <div className="form-group">
-              <label>Date</label>
               <input
                 type="date"
                 className="form-control"
+                title="Expense Date"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
               />
             </div>
 
             <div className="form-group">
-              <label>Driver Salary (AED)</label>
               <input
                 type="number"
                 min="0"
                 className="form-control"
-                value={formData.salary}
+                placeholder="Driver Salary (AED)"
+                title="Driver Salary (AED)"
+                value={formData.salary || ''}
                 onChange={(e) => setFormData({ ...formData, salary: parseFloat(e.target.value) || 0 })}
               />
             </div>
 
             <div className="form-group">
-              <label>Fuel Allowance (AED)</label>
               <input
                 type="number"
                 min="0"
                 className="form-control"
-                value={formData.carPetrol}
+                placeholder="Fuel Allowance (AED)"
+                title="Fuel Allowance (AED)"
+                value={formData.carPetrol || ''}
                 onChange={(e) => setFormData({ ...formData, carPetrol: parseFloat(e.target.value) || 0 })}
               />
             </div>
 
             <div className="form-group">
-              <label>Camp Use Cost (AED)</label>
               <input
                 type="number"
                 min="0"
                 className="form-control"
-                value={formData.campUse}
+                placeholder="Camp Use Cost (AED)"
+                title="Camp Use Cost (AED)"
+                value={formData.campUse || ''}
                 onChange={(e) => setFormData({ ...formData, campUse: parseFloat(e.target.value) || 0 })}
               />
             </div>
 
             {/* Camp Addon Collection — driver commission auto-calculates */}
             <div className="form-group" style={{ background: 'rgba(140,91,48,0.04)', borderRadius: '10px', padding: '12px', border: '1px solid rgba(140,91,48,0.15)' }}>
-              <label style={{ color: 'var(--primary)', fontWeight: '800' }}>
-                🛺 Camp Addon Collection (AED)
-                <span style={{ fontWeight: '400', fontSize: '11px', color: 'var(--text-muted)', marginLeft: '6px' }}>
-                  Driver's total cash from camp extras (quad bikes, etc.)
-                </span>
-              </label>
               <input
                 type="number"
                 min="0"
                 className="form-control"
-                placeholder="e.g. 200 for 2 quad bikes"
+                placeholder="Camp Addon Collection AED (e.g. 200 for quad bikes)"
+                title="Camp Addon Collection (AED)"
                 value={formData.campAddonCollection || ''}
                 onChange={(e) => {
                   const collected = parseFloat(e.target.value) || 0;
@@ -225,22 +223,23 @@ export default function DriverExpensesView({ expenses, setExpenses, bookings, dr
             </div>
 
             <div className="form-group">
-              <label>Misc Credits (AED) <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '400' }}>— addon commission adds automatically</span></label>
               <input
                 type="number"
                 min="0"
                 className="form-control"
-                value={formData.misc}
+                placeholder="Misc Credits (AED)"
+                title="Misc Credits (AED)"
+                value={formData.misc || ''}
                 onChange={(e) => setFormData({ ...formData, misc: parseFloat(e.target.value) || 0 })}
               />
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label>Notes / Explanations</label>
               <input
                 type="text"
                 className="form-control"
-                placeholder="e.g. VIP Seating upgrades and quad rides details..."
+                placeholder="Notes / Explanations (VIP upgrades, quad rides details...)"
+                title="Notes / Explanations"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />

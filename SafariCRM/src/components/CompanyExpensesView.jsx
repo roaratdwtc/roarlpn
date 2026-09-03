@@ -1601,13 +1601,14 @@ export default function CompanyExpensesView({
                 
                 {/* Category Selection */}
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>Expense Category / Type *</label>
                   <select 
                     className="form-control"
                     required
+                    title="Expense Category / Type *"
                     value={expenseFormData.category}
                     onChange={(e) => handleCategorySelectChange(e.target.value)}
                   >
+                    <option value="" disabled>Select Expense Category *</option>
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
@@ -1617,14 +1618,14 @@ export default function CompanyExpensesView({
 
                 {/* Amount */}
                 <div className="form-group">
-                  <label>Amount (AED) *</label>
                   <input 
                     type="number" 
                     step="0.01"
                     min="0"
                     className="form-control" 
                     required
-                    placeholder="e.g. 14500"
+                    placeholder="Amount (AED) *"
+                    title="Amount (AED) *"
                     value={expenseFormData.amount}
                     onChange={(e) => setExpenseFormData({ ...expenseFormData, amount: e.target.value })}
                   />
@@ -1632,11 +1633,11 @@ export default function CompanyExpensesView({
 
                 {/* Date */}
                 <div className="form-group">
-                  <label>Payment Date *</label>
                   <input 
                     type="date" 
                     className="form-control" 
                     required
+                    title="Payment Date *"
                     value={expenseFormData.date}
                     onChange={(e) => setExpenseFormData({ ...expenseFormData, date: e.target.value })}
                   />
@@ -1644,10 +1645,10 @@ export default function CompanyExpensesView({
 
                 {/* Due Date */}
                 <div className="form-group">
-                  <label>Renewal / Due Date</label>
                   <input 
                     type="date" 
                     className="form-control" 
+                    title="Renewal / Due Date"
                     value={expenseFormData.dueDate}
                     onChange={(e) => setExpenseFormData({ ...expenseFormData, dueDate: e.target.value })}
                   />
@@ -1655,11 +1656,11 @@ export default function CompanyExpensesView({
 
                 {/* Invoice No */}
                 <div className="form-group">
-                  <label>Invoice / Receipt No</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. INV-2026-8819"
+                    placeholder="Invoice / Receipt # (e.g. INV-2026-8819)"
+                    title="Invoice / Receipt Number"
                     value={expenseFormData.invoiceNo}
                     onChange={(e) => setExpenseFormData({ ...expenseFormData, invoiceNo: e.target.value })}
                   />
@@ -1667,39 +1668,39 @@ export default function CompanyExpensesView({
 
                 {/* Payment Method */}
                 <div className="form-group">
-                  <label>Payment Method</label>
                   <select 
                     className="form-control"
+                    title="Payment Method"
                     value={expenseFormData.paymentMethod}
                     onChange={(e) => setExpenseFormData({ ...expenseFormData, paymentMethod: e.target.value })}
                   >
                     {PAYMENT_METHODS.map(pm => (
-                      <option key={pm} value={pm}>{pm}</option>
+                      <option key={pm} value={pm}>Method: {pm}</option>
                     ))}
                   </select>
                 </div>
 
                 {/* Status */}
                 <div className="form-group">
-                  <label>Payment Status</label>
                   <select 
                     className="form-control"
+                    title="Payment Status"
                     value={expenseFormData.status}
                     onChange={(e) => setExpenseFormData({ ...expenseFormData, status: e.target.value })}
                   >
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
-                    <option value="overdue">Overdue</option>
+                    <option value="paid">Status: Paid</option>
+                    <option value="pending">Status: Pending</option>
+                    <option value="overdue">Status: Overdue</option>
                   </select>
                 </div>
 
-                {/* Note at the end of expense form for details (Exact user requirement from Image 1) */}
+                {/* Note at the end of expense form for details */}
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>Note / Description (Details)</label>
                   <textarea 
                     className="form-control" 
                     rows="2"
-                    placeholder="Add details, policy numbers, or extra notes for this expense..."
+                    placeholder="Note / Description (Details, policy #, extra notes...)"
+                    title="Notes & Details"
                     value={expenseFormData.notes}
                     onChange={(e) => setExpenseFormData({ ...expenseFormData, notes: e.target.value })}
                     style={{ resize: 'none' }}
@@ -1743,12 +1744,12 @@ export default function CompanyExpensesView({
             </div>
             <form onSubmit={handleAddNewCategory}>
               <div className="form-group">
-                <label>Category Name *</label>
                 <input 
                   type="text" 
                   className="form-control" 
                   required
-                  placeholder="e.g. Software Subscriptions, Legal Consultant..."
+                  placeholder="Category Name * (e.g. Software, Legal Consultant)"
+                  title="Category Name *"
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
                   autoFocus
@@ -1783,125 +1784,122 @@ export default function CompanyExpensesView({
               <div className="form-grid-two-col" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
                 
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label>Card Label / Line Title</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. VIP Inbound Hotline, Desert Safari Dispatch, Online Leads"
+                    placeholder="Card Label / Line Title (e.g. VIP Inbound Hotline, Dispatch)"
+                    title="Card Label / Line Title"
                     value={simFormData.cardLabel}
                     onChange={(e) => setSimFormData({ ...simFormData, cardLabel: e.target.value })}
                   />
-                  <span style={{ fontSize: '10.5px', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
-                    Title displayed at the top of this sales SIM card.
-                  </span>
                 </div>
 
                 <div className="form-group">
-                  <label>Mobile Number *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     required
-                    placeholder="e.g. +971 58 934 4077"
+                    placeholder="Mobile Number * (e.g. +971 58 934 4077)"
+                    title="Mobile Number *"
                     value={simFormData.phoneNumber}
                     onChange={(e) => setSimFormData({ ...simFormData, phoneNumber: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Telecom Provider *</label>
                   <select 
                     className="form-control"
                     required
+                    title="Telecom Provider *"
                     value={simFormData.provider}
                     onChange={(e) => setSimFormData({ ...simFormData, provider: e.target.value })}
                   >
                     {SIM_PROVIDERS.map(p => (
-                      <option key={p} value={p}>{p}</option>
+                      <option key={p} value={p}>Provider: {p}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Assigned Sales Agent *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     required
-                    placeholder="e.g. Asad (Sales Lead)"
+                    placeholder="Assigned Sales Agent * (e.g. Asad)"
+                    title="Assigned Sales Agent *"
                     value={simFormData.assignedAgent}
                     onChange={(e) => setSimFormData({ ...simFormData, assignedAgent: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Agent Role / Department *</label>
                   <select 
                     className="form-control"
                     required
+                    title="Agent Role / Department *"
                     value={simFormData.agentRole}
                     onChange={(e) => setSimFormData({ ...simFormData, agentRole: e.target.value })}
                   >
                     {AGENT_ROLES.map(role => (
-                      <option key={role} value={role}>{role}</option>
+                      <option key={role} value={role}>Role: {role}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Plan Name</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. Business Unlimited 300"
+                    placeholder="Plan Name (e.g. Business Unlimited 300)"
+                    title="Plan Name"
                     value={simFormData.planName}
                     onChange={(e) => setSimFormData({ ...simFormData, planName: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Monthly Cost (AED)</label>
                   <input 
                     type="number" 
                     step="0.01"
                     min="0"
                     className="form-control" 
-                    placeholder="e.g. 300"
+                    placeholder="Monthly Cost (AED)"
+                    title="Monthly Cost (AED)"
                     value={simFormData.monthlyCost}
                     onChange={(e) => setSimFormData({ ...simFormData, monthlyCost: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>SIM Card No (ICCID)</label>
                   <input 
                     type="text" 
                     className="form-control" 
-                    placeholder="e.g. 89971032194019283"
+                    placeholder="SIM Card # ICCID (e.g. 89971032194019283)"
+                    title="SIM Card Number (ICCID)"
                     value={simFormData.simCardNumber}
                     onChange={(e) => setSimFormData({ ...simFormData, simCardNumber: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Status</label>
                   <select 
                     className="form-control"
+                    title="SIM Status"
                     value={simFormData.status}
                     onChange={(e) => setSimFormData({ ...simFormData, status: e.target.value })}
                   >
-                    <option value="active">Active</option>
-                    <option value="spare">Spare</option>
-                    <option value="suspended">Suspended</option>
+                    <option value="active">Status: Active</option>
+                    <option value="spare">Status: Spare</option>
+                    <option value="suspended">Status: Suspended</option>
                   </select>
                 </div>
 
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label>Notes & Allocation Details</label>
                   <textarea 
                     className="form-control" 
                     rows="2"
-                    placeholder="Handset model, WhatsApp campaign target, or notes..."
+                    placeholder="Notes & Allocation Details (Handset model, WhatsApp campaign target...)"
+                    title="Notes & Allocation Details"
                     value={simFormData.notes}
                     onChange={(e) => setSimFormData({ ...simFormData, notes: e.target.value })}
                     style={{ resize: 'none' }}
@@ -2220,73 +2218,81 @@ export default function CompanyExpensesView({
             <form onSubmit={(e) => { e.preventDefault(); setIsEditCardLabelsOpen(false); }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label>Card 1 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 1 Title (Total Overheads)"
+                    title="Card 1 Title"
                     value={cardLabels.total} 
                     onChange={(e) => setCardLabels({ ...cardLabels, total: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 2 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 2 Title (Trade License)"
+                    title="Card 2 Title"
                     value={cardLabels.license} 
                     onChange={(e) => setCardLabels({ ...cardLabels, license: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 3 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 3 Title (Office Rent)"
+                    title="Card 3 Title"
                     value={cardLabels.rent} 
                     onChange={(e) => setCardLabels({ ...cardLabels, rent: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 4 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 4 Title (Staff Accom.)"
+                    title="Card 4 Title"
                     value={cardLabels.telecom} 
                     onChange={(e) => setCardLabels({ ...cardLabels, telecom: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 5 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 5 Title (Telecom / Internet)"
+                    title="Card 5 Title"
                     value={cardLabels.sims} 
                     onChange={(e) => setCardLabels({ ...cardLabels, sims: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 6 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 6 Title (Office Supplies)"
+                    title="Card 6 Title"
                     value={cardLabels.supplies} 
                     onChange={(e) => setCardLabels({ ...cardLabels, supplies: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 7 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 7 Title (Petty Cash)"
+                    title="Card 7 Title"
                     value={cardLabels.pettyCash} 
                     onChange={(e) => setCardLabels({ ...cardLabels, pettyCash: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 8 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 8 Title (Renewal / Due Soon)"
+                    title="Card 8 Title"
                     value={cardLabels.renewal} 
                     onChange={(e) => setCardLabels({ ...cardLabels, renewal: e.target.value })} 
                   />

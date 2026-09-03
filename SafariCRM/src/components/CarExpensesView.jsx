@@ -2119,13 +2119,14 @@ export default function CarExpensesView({
                 
                 {/* Vehicle Plate Selection */}
                 <div className="form-group">
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Plate *</label>
                   <select 
                     className="form-control"
                     required
+                    title="Car Number Plate *"
                     value={formData.plateNo}
                     onChange={(e) => handleCarSelectChange(e.target.value)}
                   >
+                    <option value="" disabled>Select Vehicle Plate *</option>
                     {fleetPlates.map(plate => (
                       <option key={plate} value={plate}>Plate {plate}</option>
                     ))}
@@ -2135,13 +2136,14 @@ export default function CarExpensesView({
 
                 {/* Expense Category Selection */}
                 <div className="form-group">
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Category *</label>
                   <select 
                     className="form-control"
                     required
+                    title="Expense Category *"
                     value={formData.category}
                     onChange={(e) => handleCategorySelectChange(e.target.value)}
                   >
+                    <option value="" disabled>Select Expense Category *</option>
                     {categories.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
@@ -2151,14 +2153,14 @@ export default function CarExpensesView({
 
                 {/* Amount (AED) */}
                 <div className="form-group">
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Amount (AED) *</label>
                   <input 
                     type="number" 
                     step="0.01"
                     min="0"
                     className="form-control" 
                     required
-                    placeholder="e.g. 350"
+                    placeholder="Amount (AED) *"
+                    title="Amount (AED) *"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   />
@@ -2166,11 +2168,11 @@ export default function CarExpensesView({
 
                 {/* Date */}
                 <div className="form-group">
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Date *</label>
                   <input 
                     type="date" 
                     className="form-control" 
                     required
+                    title="Expense Date *"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   />
@@ -2178,38 +2180,38 @@ export default function CarExpensesView({
 
                 {/* Payment Method */}
                 <div className="form-group">
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Method</label>
                   <select 
                     className="form-control"
+                    title="Payment Method"
                     value={formData.paymentMethod}
                     onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                   >
                     {PAYMENT_METHODS.map(pm => (
-                      <option key={pm} value={pm}>{pm}</option>
+                      <option key={pm} value={pm}>Method: {pm}</option>
                     ))}
                   </select>
                 </div>
 
                 {/* Payment Status */}
                 <div className="form-group">
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Status</label>
                   <select 
                     className="form-control"
+                    title="Payment Status"
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   >
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
+                    <option value="paid">Status: Paid</option>
+                    <option value="pending">Status: Pending</option>
                   </select>
                 </div>
 
                 {/* Notes */}
                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Notes</label>
                   <textarea 
                     className="form-control" 
                     rows="2"
-                    placeholder="Optional details or maintenance notes..."
+                    placeholder="Notes (Optional details or maintenance remarks...)"
+                    title="Maintenance Notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     style={{ resize: 'none' }}
@@ -2253,12 +2255,12 @@ export default function CarExpensesView({
             </div>
             <form onSubmit={handleAddNewCategory}>
               <div className="form-group">
-                <label>Category Name *</label>
                 <input 
                   type="text" 
                   className="form-control" 
                   required
-                  placeholder="e.g. AC Gas Refill, Suspension Overhaul..."
+                  placeholder="Category Name * (e.g. AC Gas Refill, Oil Filter)"
+                  title="Category Name *"
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
                   autoFocus
@@ -2289,23 +2291,23 @@ export default function CarExpensesView({
             </div>
             <form onSubmit={handleAddNewPlate}>
               <div className="form-group">
-                <label>Number Plate *</label>
                 <input 
                   type="text" 
                   className="form-control" 
                   required
-                  placeholder="e.g. AA12345 or 48590"
+                  placeholder="Number Plate * (e.g. AA12345 or 48590)"
+                  title="Number Plate *"
                   value={newPlateNumber}
                   onChange={(e) => setNewPlateNumber(e.target.value)}
                   autoFocus
                 />
               </div>
               <div className="form-group" style={{ marginTop: '8px' }}>
-                <label>Car Label / Nickname (Optional)</label>
                 <input 
                   type="text" 
                   className="form-control" 
-                  placeholder="e.g. Toyota Land Cruiser (Car 1) or Driver Ali"
+                  placeholder="Car Label / Nickname (Optional, e.g. Land Cruiser Car 1)"
+                  title="Car Label / Nickname (Optional)"
                   value={newPlateLabel}
                   onChange={(e) => setNewPlateLabel(e.target.value)}
                 />
@@ -2563,11 +2565,11 @@ export default function CarExpensesView({
             </div>
             <form onSubmit={handleSaveCarLabel}>
               <div className="form-group">
-                <label>Car Label / Nickname / Driver Name</label>
                 <input 
                   type="text" 
                   className="form-control" 
-                  placeholder="e.g. Toyota Land Cruiser (Car 1) or Driver Ali"
+                  placeholder="Car Label / Nickname (e.g. Land Cruiser Car 1 or Driver Ali)"
+                  title="Car Label / Nickname / Driver Name"
                   value={customPlateLabelInput}
                   onChange={(e) => setCustomPlateLabelInput(e.target.value)}
                   autoFocus
@@ -2605,73 +2607,81 @@ export default function CarExpensesView({
             <form onSubmit={(e) => { e.preventDefault(); setIsEditCardLabelsOpen(false); }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label>Card 1 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 1 Title (Total Fleet Expenses)"
+                    title="Card 1 Title"
                     value={cardLabels.total} 
                     onChange={(e) => setCardLabels({ ...cardLabels, total: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 2 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 2 Title (Engine Oil / Lube)"
+                    title="Card 2 Title"
                     value={cardLabels.oil} 
                     onChange={(e) => setCardLabels({ ...cardLabels, oil: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 3 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 3 Title (Tyres Replacement)"
+                    title="Card 3 Title"
                     value={cardLabels.tyres} 
                     onChange={(e) => setCardLabels({ ...cardLabels, tyres: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 4 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 4 Title (Vehicle Passing / RTA)"
+                    title="Card 4 Title"
                     value={cardLabels.passing} 
                     onChange={(e) => setCardLabels({ ...cardLabels, passing: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 5 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 5 Title (Fleet Insurance)"
+                    title="Card 5 Title"
                     value={cardLabels.insurance} 
                     onChange={(e) => setCardLabels({ ...cardLabels, insurance: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 6 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 6 Title (Repairs / Workshop)"
+                    title="Card 6 Title"
                     value={cardLabels.repairs} 
                     onChange={(e) => setCardLabels({ ...cardLabels, repairs: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 7 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 7 Title (Highest Expense Car)"
+                    title="Card 7 Title"
                     value={cardLabels.highest} 
                     onChange={(e) => setCardLabels({ ...cardLabels, highest: e.target.value })} 
                   />
                 </div>
                 <div className="form-group">
-                  <label>Card 8 Label</label>
                   <input 
                     type="text" 
                     className="form-control" 
+                    placeholder="Card 8 Title (This Month Maint.)"
+                    title="Card 8 Title"
                     value={cardLabels.thisMonth} 
                     onChange={(e) => setCardLabels({ ...cardLabels, thisMonth: e.target.value })} 
                   />
@@ -2779,16 +2789,17 @@ export default function CarExpensesView({
                 
                 {/* Car Plate */}
                 <div className="form-group">
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Car Number Plate *</label>
                   <select 
                     className="form-control"
                     required
+                    title="Car Number Plate *"
                     value={docFormData.carPlate}
                     onChange={(e) => setDocFormData({ ...docFormData, carPlate: e.target.value })}
                   >
+                    <option value="" disabled>Select Vehicle Plate *</option>
                     {fleetPlates.map(plate => (
                       <option key={plate} value={plate}>
-                        {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
+                        Plate {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
                       </option>
                     ))}
                   </select>
@@ -2796,13 +2807,14 @@ export default function CarExpensesView({
 
                 {/* Category */}
                 <div className="form-group">
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Document Category *</label>
                   <select 
                     className="form-control"
                     required
+                    title="Document Category *"
                     value={docFormData.category}
                     onChange={(e) => setDocFormData({ ...docFormData, category: e.target.value })}
                   >
+                    <option value="" disabled>Select Document Category *</option>
                     {CAR_DOCUMENT_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
@@ -2811,12 +2823,12 @@ export default function CarExpensesView({
 
                 {/* Document Title */}
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Document Title *</label>
                   <input 
                     type="text" 
                     className="form-control"
                     required
-                    placeholder="e.g. Mulkiya Registration Card 2026-2027 or Orient Insurance Policy"
+                    placeholder="Document Title * (e.g. Mulkiya Registration Card or Orient Insurance Policy)"
+                    title="Document Title *"
                     value={docFormData.title}
                     onChange={(e) => setDocFormData({ ...docFormData, title: e.target.value })}
                   />
@@ -2824,10 +2836,10 @@ export default function CarExpensesView({
 
                 {/* Issue Date */}
                 <div className="form-group">
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Issue Date</label>
                   <input 
                     type="date" 
                     className="form-control"
+                    title="Issue Date"
                     value={docFormData.issueDate}
                     onChange={(e) => setDocFormData({ ...docFormData, issueDate: e.target.value })}
                   />
@@ -2835,8 +2847,8 @@ export default function CarExpensesView({
 
                 {/* Expiry Date */}
                 <div className="form-group">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Expiry Date</label>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: '750', color: 'var(--text-muted)' }}>Expiry Date</span>
                     <div style={{ display: 'flex', gap: '4px' }}>
                       <button
                         type="button"
@@ -2861,6 +2873,7 @@ export default function CarExpensesView({
                   <input 
                     type="date" 
                     className="form-control"
+                    title="Expiry Date"
                     value={docFormData.expiryDate}
                     onChange={(e) => setDocFormData({ ...docFormData, expiryDate: e.target.value })}
                   />
@@ -2868,10 +2881,6 @@ export default function CarExpensesView({
 
                 {/* File Upload Area */}
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>
-                    Document File Attachment (PDF, JPG, PNG, SVG) *
-                  </label>
-                  
                   <div style={{
                     border: '2px dashed #ede6d9',
                     borderRadius: '10px',
@@ -2896,7 +2905,7 @@ export default function CarExpensesView({
                     />
                     <UploadCloud size={28} style={{ color: 'var(--primary)', margin: '0 auto 6px' }} />
                     <p style={{ fontSize: '12.5px', fontWeight: '700', color: 'var(--text-dark)', margin: 0 }}>
-                      {docFormData.fileName ? docFormData.fileName : 'Click or Drag & Drop to Upload Document'}
+                      {docFormData.fileName ? docFormData.fileName : 'Click or Drag & Drop to Upload Document (PDF, JPG, PNG)'}
                     </p>
                     <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
                       {docFormData.fileSize ? `File Size: ${docFormData.fileSize} • Click to replace` : 'Supports PDF, PNG, JPG, SVG up to 8MB'}
@@ -2906,11 +2915,11 @@ export default function CarExpensesView({
 
                 {/* Notes */}
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '11.5px', fontWeight: '800' }}>Notes / Description</label>
                   <textarea 
                     className="form-control"
                     rows="2"
-                    placeholder="Policy number, testing center name, claim reference, or specific vehicle remarks..."
+                    placeholder="Notes / Description (Policy number, testing center name, claim reference...)"
+                    title="Notes / Description"
                     value={docFormData.notes}
                     onChange={(e) => setDocFormData({ ...docFormData, notes: e.target.value })}
                   />

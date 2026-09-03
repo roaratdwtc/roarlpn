@@ -809,27 +809,27 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Plate Number *</label>
                     <input 
                       type="text" 
                       className="form-control"
                       required
-                      placeholder="e.g. EE66074"
+                      placeholder="Plate Number * (e.g. EE66074)"
+                      title="Plate Number *"
                       value={carFormData.plateNo}
                       onChange={(e) => setCarFormData({ ...carFormData, plateNo: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Financing Bank *</label>
                     <select 
                       className="form-control"
+                      title="Financing Bank *"
                       value={carFormData.bank}
                       onChange={(e) => setCarFormData({ ...carFormData, bank: e.target.value })}
                     >
-                      <option value="Emirates NBD">Emirates NBD</option>
-                      <option value="Emirates Islamic">Emirates Islamic</option>
-                      <option value="RAK Bank">RAK Bank</option>
-                      <option value="ADCB">ADCB</option>
+                      <option value="Emirates NBD">Bank: Emirates NBD</option>
+                      <option value="Emirates Islamic">Bank: Emirates Islamic</option>
+                      <option value="RAK Bank">Bank: RAK Bank</option>
+                      <option value="ADCB">Bank: ADCB</option>
                       <option value="No Bank">No Bank (Paid Off / Owned)</option>
                     </select>
                   </div>
@@ -837,22 +837,22 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Brand / Model *</label>
                     <input 
                       type="text" 
                       className="form-control"
                       required
-                      placeholder="e.g. Land Cruiser"
+                      placeholder="Brand / Model * (e.g. Land Cruiser)"
+                      title="Brand / Model *"
                       value={carFormData.brand}
                       onChange={(e) => setCarFormData({ ...carFormData, brand: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Year</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="e.g. 2024"
+                      placeholder="Model Year (e.g. 2024)"
+                      title="Model Year"
                       value={carFormData.model}
                       onChange={(e) => setCarFormData({ ...carFormData, model: e.target.value })}
                     />
@@ -861,21 +861,21 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Vehicle Owner / Driver Name</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="e.g. Irshad"
+                      placeholder="Vehicle Owner / Driver Name"
+                      title="Vehicle Owner / Driver Name"
                       value={carFormData.owner}
                       onChange={(e) => setCarFormData({ ...carFormData, owner: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Owner WhatsApp (Freelancer Share)</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="e.g. 971551356738"
+                      placeholder="Owner WhatsApp (+971...)"
+                      title="Owner WhatsApp (Freelancer Share)"
                       value={carFormData.whatsapp || ''}
                       onChange={(e) => setCarFormData({ ...carFormData, whatsapp: e.target.value })}
                     />
@@ -884,21 +884,21 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Monthly Installment (AED)</label>
                     <input 
                       type="number" 
                       className="form-control"
-                      placeholder="4400"
-                      value={carFormData.installment}
+                      placeholder="Monthly Installment (AED)"
+                      title="Monthly Installment (AED)"
+                      value={carFormData.installment || ''}
                       onChange={(e) => setCarFormData({ ...carFormData, installment: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Due Date (Day of Month)</label>
                     <input 
                       type="number" 
                       className="form-control"
-                      placeholder="15"
+                      placeholder="Due Day of Month (e.g. 15)"
+                      title="Due Date (Day of Month)"
                       min="1"
                       max="31"
                       value={carFormData.instDate}
@@ -909,22 +909,22 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Deferment Schedule / Note</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="e.g. April+May Deferment"
+                      placeholder="Deferment Schedule / Notes"
+                      title="Deferment Schedule / Notes"
                       value={carFormData.deferment}
                       onChange={(e) => setCarFormData({ ...carFormData, deferment: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Current Value (AED)</label>
                     <input 
                       type="number" 
                       className="form-control"
-                      placeholder="220000"
-                      value={carFormData.currentValue}
+                      placeholder="Current Value (AED)"
+                      title="Current Value (AED)"
+                      value={carFormData.currentValue || ''}
                       onChange={(e) => setCarFormData({ ...carFormData, currentValue: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
@@ -933,31 +933,31 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
                 {/* Registration, Insurance, capacity detail fields */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Color</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="e.g. Silver"
+                      placeholder="Color (e.g. White)"
+                      title="Color"
                       value={carFormData.color}
                       onChange={(e) => setCarFormData({ ...carFormData, color: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Chassis Number</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="Chassis No."
+                      placeholder="Chassis Number"
+                      title="Chassis Number"
                       value={carFormData.chassisNo}
                       onChange={(e) => setCarFormData({ ...carFormData, chassisNo: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Capacity (Passengers)</label>
                     <input 
                       type="number" 
                       className="form-control"
-                      placeholder="7"
+                      placeholder="Capacity (Pax)"
+                      title="Capacity (Passengers)"
                       value={carFormData.passengers}
                       onChange={(e) => setCarFormData({ ...carFormData, passengers: parseInt(e.target.value) || 7 })}
                     />
@@ -966,21 +966,21 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Registration Date</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="DD-MM-YYYY"
+                      placeholder="Registration Date (DD-MM-YYYY)"
+                      title="Registration Date"
                       value={carFormData.regDate}
                       onChange={(e) => setCarFormData({ ...carFormData, regDate: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Registration Expiry Date</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="DD-MM-YYYY"
+                      placeholder="Registration Expiry (DD-MM-YYYY)"
+                      title="Registration Expiry Date"
                       value={carFormData.expDate}
                       onChange={(e) => setCarFormData({ ...carFormData, expDate: e.target.value })}
                     />
@@ -989,21 +989,21 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '12px' }}>
                   <div className="form-group">
-                    <label>Insurance Company</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="Orient Insurance"
+                      placeholder="Insurance Company (e.g. Orient)"
+                      title="Insurance Company"
                       value={carFormData.insCompany}
                       onChange={(e) => setCarFormData({ ...carFormData, insCompany: e.target.value })}
                     />
                   </div>
                   <div className="form-group">
-                    <label>Policy Number</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="Policy No."
+                      placeholder="Insurance Policy #"
+                      title="Policy Number"
                       value={carFormData.policyNo}
                       onChange={(e) => setCarFormData({ ...carFormData, policyNo: e.target.value })}
                     />
@@ -1011,11 +1011,11 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
                 </div>
 
                 <div className="form-group">
-                  <label>Insurance Expiry Date</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="DD-MM-YYYY"
+                    placeholder="Insurance Expiry Date (DD-MM-YYYY)"
+                    title="Insurance Expiry Date"
                     value={carFormData.insExp}
                     onChange={(e) => setCarFormData({ ...carFormData, insExp: e.target.value })}
                   />
@@ -1469,32 +1469,33 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
             <form onSubmit={handleSaveLedgerRow} style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label>Month Name</label>
                   <select 
                     className="form-control"
+                    title="Month Name"
                     value={ledgerFormData.month}
                     onChange={(e) => setLedgerFormData({ ...ledgerFormData, month: e.target.value })}
                   >
-                    <option value="January">January</option>
-                    <option value="February">February</option>
-                    <option value="March">March</option>
-                    <option value="April">April</option>
-                    <option value="May">May</option>
-                    <option value="June">June</option>
-                    <option value="July">July</option>
-                    <option value="August">August</option>
-                    <option value="September">September</option>
-                    <option value="October">October</option>
-                    <option value="November">November</option>
-                    <option value="December">December</option>
+                    <option value="January">Month: January</option>
+                    <option value="February">Month: February</option>
+                    <option value="March">Month: March</option>
+                    <option value="April">Month: April</option>
+                    <option value="May">Month: May</option>
+                    <option value="June">Month: June</option>
+                    <option value="July">Month: July</option>
+                    <option value="August">Month: August</option>
+                    <option value="September">Month: September</option>
+                    <option value="October">Month: October</option>
+                    <option value="November">Month: November</option>
+                    <option value="December">Month: December</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Installment (AED)</label>
                   <input 
                     type="number" 
                     className="form-control"
-                    value={ledgerFormData.installment}
+                    placeholder="Installment (AED)"
+                    title="Installment (AED)"
+                    value={ledgerFormData.installment || ''}
                     onChange={(e) => setLedgerFormData({ ...ledgerFormData, installment: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
@@ -1502,51 +1503,54 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                 <div className="form-group">
-                  <label>Salik Trips (AED)</label>
                   <input 
                     type="number" 
                     className="form-control"
-                    value={ledgerFormData.salik}
+                    placeholder="Salik Trips (AED)"
+                    title="Salik Trips (AED)"
+                    value={ledgerFormData.salik || ''}
                     onChange={(e) => setLedgerFormData({ ...ledgerFormData, salik: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Traffic Fines (AED)</label>
                   <input 
                     type="number" 
                     className="form-control"
-                    value={ledgerFormData.fine}
+                    placeholder="Traffic Fines (AED)"
+                    title="Traffic Fines (AED)"
+                    value={ledgerFormData.fine || ''}
                     onChange={(e) => setLedgerFormData({ ...ledgerFormData, fine: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Others (AED)</label>
                   <input 
                     type="number" 
                     className="form-control"
-                    value={ledgerFormData.others}
+                    placeholder="Others (AED)"
+                    title="Others (AED)"
+                    value={ledgerFormData.others || ''}
                     onChange={(e) => setLedgerFormData({ ...ledgerFormData, others: parseFloat(e.target.value) || 0 })}
                   />
                 </div>
               </div>
 
               <div className="form-group">
-                <label>Amount Received / Deposited (AED)</label>
                 <input 
                   type="number" 
                   className="form-control"
-                  placeholder="e.g. 4400"
-                  value={ledgerFormData.received}
+                  placeholder="Amount Received / Deposited (AED)"
+                  title="Amount Received / Deposited (AED)"
+                  value={ledgerFormData.received || ''}
                   onChange={(e) => setLedgerFormData({ ...ledgerFormData, received: parseFloat(e.target.value) || 0 })}
                 />
               </div>
 
               <div className="form-group">
-                <label>Ledger Notes / Remarks</label>
                 <textarea 
                   className="form-control" 
                   rows="2"
-                  placeholder="Record payment date reference or fine details"
+                  placeholder="Ledger Notes / Remarks (Payment date, reference, notes...)"
+                  title="Ledger Notes / Remarks"
                   style={{ resize: 'none' }}
                   value={ledgerFormData.note}
                   onChange={(e) => setLedgerFormData({ ...ledgerFormData, note: e.target.value })}
@@ -1580,54 +1584,54 @@ export default function CarFinanceView({ cars, setCars, drivers = [], viewMode =
             <form onSubmit={handleSaveFine} style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div className="form-group">
-                  <label>Fine Date</label>
                   <input 
                     type="date" 
                     className="form-control"
+                    title="Fine Date"
                     value={fineFormData.date}
                     onChange={(e) => handleFineDateChange(e.target.value)}
                   />
                 </div>
                 <div className="form-group">
-                  <label>Fine Month</label>
                   <select 
                     className="form-control"
+                    title="Fine Month"
                     value={fineFormData.month}
                     onChange={(e) => setFineFormData({ ...fineFormData, month: e.target.value })}
                   >
-                    <option value="January">January</option>
-                    <option value="February">February</option>
-                    <option value="March">March</option>
-                    <option value="April">April</option>
-                    <option value="May">May</option>
-                    <option value="June">June</option>
-                    <option value="July">July</option>
-                    <option value="August">August</option>
-                    <option value="September">September</option>
-                    <option value="October">October</option>
-                    <option value="November">November</option>
-                    <option value="December">December</option>
+                    <option value="January">Month: January</option>
+                    <option value="February">Month: February</option>
+                    <option value="March">Month: March</option>
+                    <option value="April">Month: April</option>
+                    <option value="May">Month: May</option>
+                    <option value="June">Month: June</option>
+                    <option value="July">Month: July</option>
+                    <option value="August">Month: August</option>
+                    <option value="September">Month: September</option>
+                    <option value="October">Month: October</option>
+                    <option value="November">Month: November</option>
+                    <option value="December">Month: December</option>
                   </select>
                 </div>
               </div>
 
               <div className="form-group">
-                <label>Fine Amount (AED)</label>
                 <input 
                   type="number" 
                   className="form-control"
-                  placeholder="e.g. 320"
+                  placeholder="Fine Amount (AED) *"
+                  title="Fine Amount (AED) *"
                   value={fineFormData.amount || ''}
                   onChange={(e) => setFineFormData({ ...fineFormData, amount: parseFloat(e.target.value) || 0 })}
                 />
               </div>
 
               <div className="form-group">
-                <label>Violation / Fine Description</label>
                 <textarea 
                   className="form-control" 
                   rows="3"
-                  placeholder="e.g. Over speeding Sheikh Zayed Road, camera violation"
+                  placeholder="Violation / Fine Description (e.g. Over speeding Sheikh Zayed Road)"
+                  title="Violation / Fine Description"
                   style={{ resize: 'none' }}
                   value={fineFormData.description}
                   onChange={(e) => setFineFormData({ ...fineFormData, description: e.target.value })}

@@ -504,33 +504,34 @@ export default function WhatsAppAgentView({ bookings = [], setBookings, packages
 
       {/* Follow-up Modal */}
       {showFollowUpModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'var(--bg-secondary, #1a1f2e)', borderRadius: '16px', padding: '24px', width: '360px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary, #e5e7eb)', marginBottom: '16px' }}>Schedule Follow-Up</div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(84, 60, 43, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(3px)' }}>
+          <div style={{ background: '#ffffff', borderRadius: '16px', padding: '24px', width: '360px', border: '1.5px solid #ede6d9', boxShadow: '0 10px 25px rgba(84, 60, 43, 0.12)' }}>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: '#543c2b', marginBottom: '16px', fontFamily: 'var(--font-heading)' }}>Schedule Follow-Up</div>
             <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted, #6b7280)', display: 'block', marginBottom: '4px' }}>Delay (hours)</label>
               <input
                 type="number"
                 value={followUpHours}
                 onChange={e => setFollowUpHours(Number(e.target.value))}
                 min={1}
                 max={72}
-                style={{ width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-primary, #e5e7eb)', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                placeholder="Delay in Hours (e.g. 2)"
+                title="Delay (hours)"
+                style={{ width: '100%', padding: '10px 12px', background: '#fdfbf7', border: '1.5px solid #ede6d9', borderRadius: '8px', color: '#543c2b', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ fontSize: '12px', color: 'var(--text-muted, #6b7280)', display: 'block', marginBottom: '4px' }}>Reason (optional)</label>
               <input
                 type="text"
                 value={followUpReason}
                 onChange={e => setFollowUpReason(e.target.value)}
-                placeholder="e.g. Customer said they'll confirm tonight"
-                style={{ width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'var(--text-primary, #e5e7eb)', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
+                placeholder="Reason (e.g. Customer will confirm tonight)"
+                title="Reason (optional)"
+                style={{ width: '100%', padding: '10px 12px', background: '#fdfbf7', border: '1.5px solid #ede6d9', borderRadius: '8px', color: '#543c2b', fontSize: '13px', outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button type="button" onClick={() => setShowFollowUpModal(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-muted, #6b7280)', cursor: 'pointer', fontSize: '13px' }}>Cancel</button>
-              <button type="button" onClick={handleFollowUp} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'var(--primary, #8c5b30)', color: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Schedule</button>
+              <button type="button" onClick={() => setShowFollowUpModal(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ede6d9', background: 'transparent', color: '#8c7361', cursor: 'pointer', fontSize: '13px', fontWeight: '700' }}>Cancel</button>
+              <button type="button" onClick={handleFollowUp} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'var(--primary, #8c5b30)', color: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: '800' }}>Schedule</button>
             </div>
           </div>
         </div>

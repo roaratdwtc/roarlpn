@@ -1001,10 +1001,19 @@ export default function BookingsView({
   };
 
   const handlePricingTypeChange = (pricingTypeVal) => {
-    const nextAuto = calculateBookingPrice(formData.packageName, formData.pax, pricingTypeVal, formData.couponCode, formData.addonPrice);
+    let nextCoupon = formData.couponCode;
+    if (pricingTypeVal === 'offpeak') {
+      nextCoupon = offpeakCouponCodeSetting || 'RoarSummerOffer26';
+    } else if (pricingTypeVal === 'peak') {
+      if (nextCoupon && (nextCoupon.toLowerCase() === (offpeakCouponCodeSetting || '').toLowerCase() || nextCoupon.toLowerCase().includes('summer'))) {
+        nextCoupon = '';
+      }
+    }
+    const nextAuto = calculateBookingPrice(formData.packageName, formData.pax, pricingTypeVal, nextCoupon, formData.addonPrice);
     setFormData(prev => ({
       ...prev,
       pricingType: pricingTypeVal,
+      couponCode: nextCoupon,
       price: Math.max(0, nextAuto - discountInput)
     }));
   };
@@ -1937,35 +1946,36 @@ export default function BookingsView({
             <form onSubmit={handleSave}>
               <div className="form-grid-two-col">
                 <div className="form-group col-span-2">
-                  <label>Customer Name *</label>
                   <input 
                     type="text" 
                     className="form-control"
                     required
-                    placeholder="e.g. Mr. Rohit jain"
+                    placeholder="Customer Name *"
+                    title="Customer Name *"
                     value={formData.customerName}
                     onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>WhatsApp / Phone</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="e.g. +971569468126"
+                    placeholder="WhatsApp / Phone (+971...)"
+                    title="WhatsApp / Phone"
                     value={formData.whatsapp}
                     onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Booking Source (Partner)</label>
                   <select 
                     className="form-control"
+                    title="Booking Source (Partner)"
                     value={formData.partnerId}
                     onChange={(e) => setFormData({ ...formData, partnerId: e.target.value })}
                   >
+                    <option value="" disabled>Booking Source (Partner)</option>
                     {(partners || []).map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
@@ -1973,11 +1983,11 @@ export default function BookingsView({
                 </div>
 
                 <div className="form-group">
-                  <label>Date *</label>
                   <input 
                     type="date" 
                     className="form-control"
                     required
+                    title="Tour Date *"
                     value={formData.date}
                     onChange={(e) => {
                       const newDate = e.target.value;
@@ -2002,14 +2012,14 @@ export default function BookingsView({
                 </div>
 
                 <div className="form-group">
-                  <label>Safari Package / Tour *</label>
                   <select 
                     className="form-control"
                     required
+                    title="Safari Package / Tour *"
                     value={formData.packageName}
                     onChange={(e) => handlePackageChange(e.target.value, formData.pax)}
                   >
-                    <option value="">Select Package</option>
+                    <option value="">Select Safari Package / Tour *</option>
                     {activePackages.map(p => (
                       <option key={p.id} value={p.name}>
                         {p.name} ({p.type === 'per_person' ? `${p.peakRate || p.rate}/${p.offpeakRate || p.rate} AED` : `${p.peakRate || p.rate}/${p.offpeakRate || p.rate} AED`})
@@ -2018,97 +2028,33 @@ export default function BookingsView({
                   </select>
                 </div>
 
-                {/* Seasonal Off-Peak Rate Indicator & 1-Click Toggle */}
-                <div style={{
-                  gridColumn: 'span 2',
-                  background: (formData.pricingType === 'offpeak' || (formData.couponCode && formData.couponCode.toLowerCase().includes('summer'))) ? 'rgba(5, 150, 105, 0.08)' : '#fdfbf7',
-                  border: (formData.pricingType === 'offpeak' || (formData.couponCode && formData.couponCode.toLowerCase().includes('summer'))) ? '1px solid rgba(5, 150, 105, 0.25)' : '1px solid #ede6d9',
-                  borderRadius: '8px',
-                  padding: '9px 12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '8px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Sparkles size={16} style={{ color: (formData.pricingType === 'offpeak') ? '#047857' : 'var(--primary)' }} />
-                    <div>
-                      <div style={{ fontSize: '12px', fontWeight: '800', color: (formData.pricingType === 'offpeak') ? '#047857' : 'var(--text-dark)' }}>
-                        {formData.pricingType === 'offpeak' 
-                          ? `⚡ Summer End Sale Discount Applied (Coupon: ${formData.couponCode || offpeakCouponCodeSetting})` 
-                          : `Peak Standard Pricing Active`}
-                      </div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                        {autoApplyOffpeakSetting 
-                          ? `Summer End Sale coupon is globally active (${offpeakCouponCodeSetting})`
-                          : `Toggle to apply seasonal off-peak discounted rate overrides on this booking`}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (formData.pricingType === 'offpeak') {
-                        handlePricingTypeChange('peak');
-                        handleCouponCodeChange('');
-                      } else {
-                        handlePricingTypeChange('offpeak');
-                        handleCouponCodeChange(offpeakCouponCodeSetting);
-                      }
-                    }}
-                    className="btn btn-secondary"
-                    style={{
-                      fontSize: '11.5px',
-                      fontWeight: '800',
-                      padding: '4px 10px',
-                      background: formData.pricingType === 'offpeak' ? '#ffffff' : '#059669',
-                      color: formData.pricingType === 'offpeak' ? 'var(--text-dark)' : '#ffffff',
-                      border: formData.pricingType === 'offpeak' ? '1px solid #d1d5db' : 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {formData.pricingType === 'offpeak' ? 'Switch to Peak (Standard)' : '⚡ Apply Summer End Sale Discount'}
-                  </button>
-                </div>
-
                 <div className="form-group">
-                  <label>Pricing Tier *</label>
                   <select 
                     className="form-control"
+                    title="Pricing Tier (Peak / Off-Peak)"
                     value={formData.pricingType}
                     onChange={(e) => handlePricingTypeChange(e.target.value)}
                   >
-                    <option value="peak">Peak Time (Standard)</option>
-                    <option value="offpeak">Off-Peak (Discounted)</option>
+                    <option value="peak">Peak Tier (Standard)</option>
+                    <option value="offpeak">Off-Peak Tier (Discounted)</option>
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Coupon Code</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="Enter promo code"
+                    placeholder="Coupon Code (Optional)"
+                    title="Coupon Code"
                     value={formData.couponCode}
                     onChange={(e) => handleCouponCodeChange(e.target.value.replace(/\s+/g, ''))}
                   />
-                  {formData.couponCode && (() => {
-                    const status = getCouponValidationStatus(formData.couponCode, activePackages.find(p => p.name === formData.packageName)?.id);
-                    return (
-                      <span style={{ fontSize: '11px', display: 'block', marginTop: '4px', fontWeight: 'bold', color: status.status === 'valid' ? '#16a34a' : '#ef4444' }}>
-                        {status.message}
-                      </span>
-                    );
-                  })()}
                 </div>
 
                 <div className="form-group col-span-2">
-                  <label>Type of Tour</label>
                   <select 
                     className="form-control"
+                    title="Type of Tour"
                     value={formData.tourType || 'pick_drop'}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -2131,17 +2077,18 @@ export default function BookingsView({
                       }
                     }}
                   >
-                    <option value="pick_drop">With Pick/Drop</option>
-                    <option value="self_drive">Self Drive</option>
+                    <option value="pick_drop">Tour Type: With Pick/Drop</option>
+                    <option value="self_drive">Tour Type: Self Drive</option>
                   </select>
                 </div>
 
                 {formData.tourType === 'self_drive' ? (
                   <div className="form-group">
-                    <label>Meeting Point</label>
                     <input 
                       type="text" 
                       className="form-control"
+                      placeholder="Meeting Point"
+                      title="Meeting Point"
                       style={{ background: '#f8f9fa', cursor: 'not-allowed', fontWeight: 'bold' }}
                       value="https://maps.app.goo.gl/jcACpe96sKRcmbVe6"
                       readOnly
@@ -2149,11 +2096,11 @@ export default function BookingsView({
                   </div>
                 ) : (
                   <div className="form-group">
-                    <label>Area/Hotel Name & Room Number *</label>
                     <input 
                       type="text" 
                       className="form-control"
-                      placeholder="e.g. Atlantis The Palm, Room 1204"
+                      placeholder="Area / Hotel Name & Room Number *"
+                      title="Area / Hotel Name & Room Number *"
                       value={formData.pickupLocation}
                       onChange={(e) => setFormData({ ...formData, pickupLocation: e.target.value })}
                       required
@@ -2162,35 +2109,35 @@ export default function BookingsView({
                 )}
 
                 <div className="form-group">
-                  <label>{formData.tourType === 'self_drive' ? 'Arrival Time' : 'Pickup Time Slot'}</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder={formData.tourType === 'self_drive' ? 'e.g. 4:40 PM' : 'e.g. 3:30 PM to 4:00 PM'}
+                    placeholder={formData.tourType === 'self_drive' ? 'Arrival Time (e.g. 4:40 PM)' : 'Pickup Time Slot (e.g. 3:30 PM - 4:00 PM)'}
+                    title={formData.tourType === 'self_drive' ? 'Arrival Time' : 'Pickup Time Slot'}
                     value={formData.pickupTime}
                     onChange={(e) => setFormData({ ...formData, pickupTime: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Addon Service / Ride (Manual)</label>
                   <input 
                     type="text" 
                     className="form-control"
-                    placeholder="e.g. Quad Bike 30m"
+                    placeholder="Addon Service / Ride (Manual)"
+                    title="Addon Service / Ride (Manual)"
                     value={formData.addonName}
                     onChange={(e) => setFormData({ ...formData, addonName: e.target.value })}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Addon Price (Manual, AED)</label>
                   <input 
                     type="number" 
                     min="0"
                     className="form-control"
-                    placeholder="0"
-                    value={formData.addonPrice}
+                    placeholder="Addon Price (AED)"
+                    title="Addon Price (Manual, AED)"
+                    value={formData.addonPrice || ''}
                     onChange={(e) => handleAddonPriceChange(parseFloat(e.target.value) || 0)}
                   />
                 </div>
@@ -2201,8 +2148,8 @@ export default function BookingsView({
                   if (pkgAddons.length === 0) return null;
 
                   return (
-                    <div className="form-group col-span-2" style={{ background: 'rgba(140, 91, 48, 0.03)', border: '1px solid rgba(140, 91, 48, 0.1)', borderRadius: '8px', padding: '12px' }}>
-                      <label style={{ fontWeight: '700', fontSize: '12.5px', marginBottom: '8px', display: 'block', color: 'var(--primary)' }}>Quick Package Addons Checklist</label>
+                    <div className="form-group col-span-2" style={{ background: 'rgba(140, 91, 48, 0.03)', border: '1px solid rgba(140, 91, 48, 0.1)', borderRadius: '8px', padding: '10px 12px' }}>
+                      <div style={{ fontWeight: '700', fontSize: '11px', marginBottom: '8px', color: 'var(--primary)', textTransform: 'uppercase' }}>Quick Package Addons Checklist</div>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '8px' }}>
                         {pkgAddons.map((a, i) => {
                           const addonChecked = formData.addonName.includes(a.name);
@@ -2250,21 +2197,23 @@ export default function BookingsView({
                 })()}
 
                 <div className="form-group">
-                  <label>Pax (Number of guests)</label>
                   <input 
                     type="number" 
                     min="1" 
                     className="form-control"
+                    placeholder="Number of Guests (Pax)"
+                    title="Number of Guests (Pax)"
                     value={formData.pax}
                     onChange={(e) => handlePaxChange(parseInt(e.target.value) || 1)}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Total Price (Auto-calculated, AED)</label>
                   <input 
                     type="number" 
                     className="form-control"
+                    placeholder="Total Price (AED)"
+                    title="Total Auto-calculated Price (AED)"
                     value={autoPrice}
                     disabled
                     style={{ background: '#f3f4f6', color: '#543d2b', fontWeight: 'bold', cursor: 'not-allowed' }}
@@ -2272,13 +2221,13 @@ export default function BookingsView({
                 </div>
 
                 <div className="form-group">
-                  <label>Discount (AED)</label>
                   <input 
                     type="number" 
                     min="0"
                     className="form-control"
-                    placeholder="0"
-                    value={discountInput}
+                    placeholder="Discount (AED)"
+                    title="Discount (AED)"
+                    value={discountInput || ''}
                     onChange={(e) => {
                       const discVal = parseFloat(e.target.value) || 0;
                       setDiscountInput(discVal);
@@ -2291,11 +2240,12 @@ export default function BookingsView({
                 </div>
 
                 <div className="form-group">
-                  <label>Final Price (AED)</label>
                   <input 
                     type="number" 
                     min="0" 
                     className="form-control"
+                    placeholder="Final Price (AED) *"
+                    title="Final Price (AED)"
                     value={formData.price}
                     onChange={(e) => {
                       const priceVal = parseFloat(e.target.value) || 0;
@@ -2306,26 +2256,27 @@ export default function BookingsView({
                 </div>
 
                 <div className="form-group">
-                  <label>Payment Option</label>
                   <select 
                     className="form-control"
+                    title="Payment Option"
                     value={formData.paymentOption === 'Collection' ? 'Payment on Arrival' : (formData.paymentOption || 'Payment on Arrival')}
                     onChange={(e) => setFormData({ ...formData, paymentOption: e.target.value })}
                   >
-                    <option value="Payment on Arrival">Payment on Arrival</option>
-                    <option value="Paid on Viator">Paid on Viator</option>
-                    <option value="Paid via stripe">Paid via stripe</option>
-                    <option value="Paid to Partner">Paid to Partner</option>
-                    <option value="Paid via Payment Link">Paid via Payment Link</option>
-                    <option value="Paid via RAK Bank">Paid via RAK Bank</option>
+                    <option value="Payment on Arrival">Payment: Payment on Arrival</option>
+                    <option value="Paid on Viator">Payment: Paid on Viator</option>
+                    <option value="Paid via stripe">Payment: Paid via Stripe</option>
+                    <option value="Paid to Partner">Payment: Paid to Partner</option>
+                    <option value="Paid via Payment Link">Payment: Paid via Payment Link</option>
+                    <option value="Paid via RAK Bank">Payment: Paid via RAK Bank</option>
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>Pending Payment on Arrival (AED)</label>
                   <input 
                     type="number" 
                     className="form-control"
+                    placeholder="Pending on Arrival (AED)"
+                    title="Pending Payment on Arrival (AED)"
                     value={(formData.paymentOption === 'Payment on Arrival' || formData.paymentOption === 'Collection' || !formData.paymentOption) ? formData.price : 0}
                     disabled
                     style={{ background: '#f3f4f6', color: '#543d2b', fontWeight: 'bold', cursor: 'not-allowed' }}
@@ -2333,7 +2284,6 @@ export default function BookingsView({
                 </div>
 
                 <div className="form-group">
-                  <label>Assign Drivers</label>
                   {(() => {
                     const carsCount = Math.ceil((parseInt(formData.pax) || 1) / 6) || 1;
                     const currentDrivers = (formData.driverId || '').split(',');
@@ -2368,6 +2318,7 @@ export default function BookingsView({
                               <select
                                 className="form-control"
                                 style={{ flex: 1 }}
+                                title={`Assign Driver for Car ${idx + 1}`}
                                 value={val}
                                 onChange={(e) => {
                                   const newDrivers = [...currentDrivers];
@@ -2376,7 +2327,7 @@ export default function BookingsView({
                                   setFormData({ ...formData, driverId: newDrivers.join(',') });
                                 }}
                               >
-                                <option value="">Unassigned</option>
+                                <option value="">Assign Driver (Unassigned)</option>
                                 {(drivers || []).map(d => (
                                   <option key={d.id} value={d.id}>{d.name}</option>
                                 ))}
@@ -2414,24 +2365,25 @@ export default function BookingsView({
                 </div>
 
                 <div className="form-group">
-                  <label>Status</label>
                   {formData.date < new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0] ? (
                     <select 
                       className="form-control"
+                      title="Booking Status"
                       value={formData.status === 'confirmed' || formData.status === 'pending' ? 'completed' : formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     >
-                      <option value="completed">Completed</option>
-                      <option value="cancelled">Cancelled</option>
+                      <option value="completed">Status: Completed</option>
+                      <option value="cancelled">Status: Cancelled</option>
                     </select>
                   ) : (
                     <select 
                       className="form-control"
                       value="confirmed"
                       disabled
+                      title="Booking Status"
                       style={{ background: '#f3f4f6', cursor: 'not-allowed', color: '#1d4ed8', fontWeight: 'bold' }}
                     >
-                      <option value="confirmed">Confirmed (Upcoming/Today)</option>
+                      <option value="confirmed">Status: Confirmed (Upcoming/Today)</option>
                     </select>
                   )}
                 </div>
