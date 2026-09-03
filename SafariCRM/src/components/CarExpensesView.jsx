@@ -778,39 +778,68 @@ export default function CarExpensesView({
 
   return (
     <div className="view-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      
-      {/* Top Header & Quick Actions */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <h2 style={{ fontSize: '20px', fontWeight: '800', fontFamily: 'var(--font-heading)', color: 'var(--text-dark)' }}>
-              Fleet Vehicles & Official Vault
-            </h2>
-            <span 
-              className="badge" 
-              style={{ background: 'rgba(140, 91, 48, 0.1)', color: 'var(--primary)', fontWeight: '800', fontSize: '11px', padding: '2px 8px', borderRadius: '6px' }}
-            >
-              {fleetPlates.length} Cars
-            </span>
-          </div>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Vehicle maintenance records, Mulkiya, Insurance, Passing & Accident reports by number plate.
-          </p>
+
+      {/* Top Controls Bar: Sub-Tabs on the Left & Fleet Actions on the Right */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', borderBottom: '1.5px solid #ede6d9', paddingBottom: '4px' }}>
+        {/* Sub-Tabs */}
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button
+            onClick={() => setActiveSubTab('expenses')}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '8px 14px',
+              fontSize: '13px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              color: activeSubTab === 'expenses' ? 'var(--primary)' : 'var(--text-muted)',
+              borderBottom: activeSubTab === 'expenses' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
+              marginBottom: '-6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.15s'
+            }}
+          >
+            <Wrench size={15} /> Fleet Expenses ({filteredExpenses.length})
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('documents')}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '8px 14px',
+              fontSize: '13px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              color: activeSubTab === 'documents' ? 'var(--primary)' : 'var(--text-muted)',
+              borderBottom: activeSubTab === 'documents' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
+              marginBottom: '-6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.15s'
+            }}
+          >
+            <FileText size={15} /> Vehicle Documents ({(carDocuments || []).length})
+          </button>
         </div>
 
+        {/* Fleet & Action Controls */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
           
           {/* Add New Car Button */}
           <button 
             onClick={() => { setNewPlateNumber(''); setNewPlateLabel(''); setIsAddPlateOpen(true); }}
             className="btn btn-secondary" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 11px', height: '36px' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '6px 11px', height: '34px' }}
             title="Add new car number plate to fleet"
           >
-            <Plus size={14} /> Add New Car
+            <Plus size={14} /> Add Car
           </button>
 
-          {/* Car Number Plate Dropdown (No # symbol per user directive) */}
+          {/* Car Number Plate Dropdown */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
             <select 
               value={selectedPlateFilter}
@@ -818,18 +847,18 @@ export default function CarExpensesView({
               className="form-control"
               style={{
                 width: 'auto',
-                minWidth: '190px',
+                minWidth: '170px',
                 fontSize: '12px',
                 fontWeight: '800',
                 color: selectedPlateFilter !== 'all' ? '#8c5b30' : 'var(--text-dark)',
                 borderColor: selectedPlateFilter !== 'all' ? '#8c5b30' : '#ede6d9',
                 background: '#ffffff',
-                height: '36px',
+                height: '34px',
                 padding: '4px 10px'
               }}
               title="Filter fleet records by car number plate"
             >
-              <option value="all">🚗 All Fleet Cars ({fleetPlates.length} Cars)</option>
+              <option value="all">🚗 All Fleet ({fleetPlates.length} Cars)</option>
               {fleetPlates.map(plate => (
                 <option key={plate} value={plate}>
                   {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''} ({(carExpensesMap[plate] || 0).toLocaleString()} AED)
@@ -846,7 +875,7 @@ export default function CarExpensesView({
                   setIsEditCarLabelOpen(true);
                 }}
                 className="btn btn-secondary"
-                style={{ padding: '7px 10px', height: '36px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                style={{ padding: '6px 9px', height: '34px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                 title="Change car label text / nickname"
               >
                 <Edit2 size={13} /> Label
@@ -859,102 +888,61 @@ export default function CarExpensesView({
               <button 
                 onClick={() => setIsEditCardLabelsOpen(true)}
                 className="btn btn-secondary"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '7px 11px', height: '36px' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '6px 11px', height: '34px' }}
                 title="Customize the 8 card header label texts"
               >
-                <Layers size={14} /> Edit Card Labels
+                <Layers size={14} /> Edit Labels
               </button>
 
               <button 
                 onClick={handleOpenReport}
                 className="btn btn-secondary" 
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '6px 11px', height: '34px' }}
               >
-                <Printer size={14} /> Print Report
+                <Printer size={14} /> Report
               </button>
 
               <button 
                 onClick={() => setIsAddCategoryOpen(true)}
                 className="btn btn-secondary" 
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '6px 11px', height: '34px' }}
               >
                 <Plus size={14} /> Add Type
               </button>
 
               <button 
-                onClick={() => handleOpenAddModal()}
+                onClick={handleOpenAddModal}
                 className="btn btn-primary" 
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 14px', height: '36px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '6px 13px', height: '34px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
               >
                 <Plus size={14} /> Log Expense
               </button>
             </>
           ) : (
-            <>
-              <button 
-                onClick={() => window.print()}
-                className="btn btn-secondary" 
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px', height: '36px' }}
-                title="Print vehicle documents compliance sheet"
-              >
-                <Printer size={14} /> Print Vault
-              </button>
-
-              <button 
-                onClick={() => handleOpenAddDoc(selectedPlateFilter !== 'all' ? selectedPlateFilter : null)}
-                className="btn btn-primary" 
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 14px', height: '36px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
-              >
-                <UploadCloud size={14} /> Upload Document
-              </button>
-            </>
+            <button 
+              onClick={() => {
+                setEditingDoc(null);
+                setDocFormData({
+                  carPlate: selectedPlateFilter !== 'all' ? selectedPlateFilter : (fleetPlates[0] || 'FF79157'),
+                  title: '',
+                  category: 'Mulkiya',
+                  issueDate: '',
+                  expiryDate: '',
+                  fileName: '',
+                  fileType: '',
+                  fileSize: '',
+                  fileData: '',
+                  notes: ''
+                });
+                setIsDocModalOpen(true);
+              }}
+              className="btn btn-primary" 
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '6px 13px', height: '34px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
+            >
+              <Plus size={14} /> Upload Document
+            </button>
           )}
         </div>
-      </div>
-
-      {/* Sub-Tab Navigation Bar: Expenses vs Documents */}
-      <div style={{ display: 'flex', gap: '6px', borderBottom: '1.5px solid #ede6d9', paddingBottom: '2px' }}>
-        <button
-          onClick={() => setActiveSubTab('expenses')}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '8px 16px',
-            fontSize: '13px',
-            fontWeight: '800',
-            cursor: 'pointer',
-            color: activeSubTab === 'expenses' ? 'var(--primary)' : 'var(--text-muted)',
-            borderBottom: activeSubTab === 'expenses' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
-            marginBottom: '-2px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.15s'
-          }}
-        >
-          <Wrench size={15} /> Fleet Expenses & Maintenance ({filteredExpenses.length})
-        </button>
-
-        <button
-          onClick={() => setActiveSubTab('documents')}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '8px 16px',
-            fontSize: '13px',
-            fontWeight: '800',
-            cursor: 'pointer',
-            color: activeSubTab === 'documents' ? 'var(--primary)' : 'var(--text-muted)',
-            borderBottom: activeSubTab === 'documents' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
-            marginBottom: '-2px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.15s'
-          }}
-        >
-          <FileText size={15} /> Vehicle Documents & Legal Vault ({(carDocuments || []).length})
-        </button>
       </div>
 
       {activeSubTab === 'expenses' ? (

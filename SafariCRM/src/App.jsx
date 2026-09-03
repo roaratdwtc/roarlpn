@@ -782,21 +782,21 @@ export default function App() {
 
   // Tab Header Mapping
   const tabTitles = {
-    dashboard: 'BI Analytics Dashboard',
-    bookings: 'Safari Bookings Manager',
-    customers: 'Customer Directory',
-    drivers: 'Drivers Registry',
-    expenses: 'Driver Trip Expenses & Addons',
-    packages: 'Safari Packages & Coupons Manager',
-    partners: 'Partners Setup & Statement Generator',
-    carsFreelancers: 'Cars & Freelancer Profiles Manager',
-    carFinance: 'Car Finance Ledger',
-    carExpenses: 'Car Expenses & Fleet Maintenance',
-    companyExpenses: 'Company Expenses & Sales SIMs',
-    whatsappAgent: 'WhatsApp Agent & CRM Sandbox',
-    adminAssistant: 'Admin AI Assistant Chat',
-    companyDetails: 'Company Profile Setup',
-    companyDocuments: 'Company Documents Registry'
+    dashboard: 'Dashboard',
+    bookings: 'Bookings',
+    customers: 'Customers',
+    drivers: 'Drivers',
+    expenses: 'Trip Expenses',
+    packages: 'Packages & Coupons',
+    partners: 'Partners & Invoices',
+    carsFreelancers: 'Cars & Freelancers',
+    carFinance: 'Car Finance',
+    carExpenses: 'Car Expenses',
+    companyExpenses: 'Company Expenses',
+    whatsappAgent: 'WhatsApp Sandbox',
+    adminAssistant: 'AI Assistant',
+    companyDetails: 'Company Setup',
+    companyDocuments: 'Company Documents'
   };
 
   // Update browser window tab title to match current panel

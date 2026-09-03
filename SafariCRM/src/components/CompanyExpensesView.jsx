@@ -440,7 +440,9 @@ export default function CompanyExpensesView({
       licensingTotal,
       rentEjariTotal,
       telecomBillsTotal,
+      totalSimCount: companySims.length,
       activeSimCount: activeSims.length,
+      spareSimCount: companySims.filter(s => s.status === 'spare').length,
       totalSimMonthlyCost,
       officeSuppliesTotal,
       pettyCashTotal,
@@ -549,41 +551,78 @@ export default function CompanyExpensesView({
   return (
     <div className="view-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       
-      {/* Top Header & Actions */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-        <div>
-          <h2 style={{ fontSize: '20px', fontWeight: '800', fontFamily: 'var(--font-heading)', color: 'var(--text-dark)' }}>
-            Company Expenses & Sales SIMs
-          </h2>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Corporate overheads, renewals, office bills & sales mobile directory.
-          </p>
+      {/* Top Controls Bar: Sub-Tabs & Context Action Buttons */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', borderBottom: '1.5px solid #ede6d9', paddingBottom: '4px' }}>
+        {/* Sub-Tabs */}
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <button
+            onClick={() => { setActiveSubTab('expenses'); setSearchTerm(''); }}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '8px 14px',
+              fontSize: '13px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              color: activeSubTab === 'expenses' ? 'var(--primary)' : 'var(--text-muted)',
+              borderBottom: activeSubTab === 'expenses' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
+              marginBottom: '-6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.15s'
+            }}
+          >
+            <Building2 size={15} /> Overheads ({companyExpenses.length})
+          </button>
+
+          <button
+            onClick={() => { setActiveSubTab('sims'); setSearchTerm(''); }}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: '8px 14px',
+              fontSize: '13px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              color: activeSubTab === 'sims' ? 'var(--primary)' : 'var(--text-muted)',
+              borderBottom: activeSubTab === 'sims' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
+              marginBottom: '-6px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              transition: 'all 0.15s'
+            }}
+          >
+            <Smartphone size={15} /> Sales SIMs ({companySims.length})
+          </button>
         </div>
 
+        {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button 
-            onClick={() => setIsEditCardLabelsOpen(true)}
-            className="btn btn-secondary"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '8px 12px' }}
-            title="Customize the 8 card header labels"
-          >
-            <Layers size={14} /> Edit Card Labels
-          </button>
-
-          <button 
-            onClick={handleOpenReport}
-            className="btn btn-secondary" 
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 12px' }}
-          >
-            <Printer size={14} /> Print Report
-          </button>
-
           {activeSubTab === 'expenses' ? (
             <>
               <button 
+                onClick={() => setIsEditCardLabelsOpen(true)}
+                className="btn btn-secondary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '12px', padding: '7px 12px' }}
+                title="Customize the 8 card header labels"
+              >
+                <Layers size={14} /> Edit Card Labels
+              </button>
+
+              <button 
+                onClick={handleOpenReport}
+                className="btn btn-secondary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px' }}
+              >
+                <Printer size={14} /> Print Report
+              </button>
+
+              <button 
                 onClick={() => setIsAddCategoryOpen(true)}
                 className="btn btn-secondary" 
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 12px' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px' }}
               >
                 <Plus size={14} /> Add Type
               </button>
@@ -591,98 +630,64 @@ export default function CompanyExpensesView({
               <button 
                 onClick={handleOpenAddExpense}
                 className="btn btn-primary" 
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 14px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 14px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
               >
                 <Plus size={14} /> Log Expense
               </button>
             </>
           ) : (
-            <button 
-              onClick={handleOpenAddSim}
-              className="btn btn-primary" 
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '8px 14px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
-            >
-              <Plus size={14} /> Assign SIM
-            </button>
+            <>
+              <button 
+                onClick={handleOpenReport}
+                className="btn btn-secondary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 12px' }}
+              >
+                <Printer size={14} /> Print Report
+              </button>
+
+              <button 
+                onClick={handleOpenAddSim}
+                className="btn btn-primary" 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', padding: '7px 14px', boxShadow: '0 4px 12px rgba(140, 91, 48, 0.25)' }}
+              >
+                <Plus size={14} /> Assign SIM
+              </button>
+            </>
           )}
         </div>
       </div>
 
-      {/* Sub-Tab Navigation Header */}
-      <div style={{ display: 'flex', gap: '6px', borderBottom: '1.5px solid #ede6d9', paddingBottom: '2px' }}>
-        <button
-          onClick={() => { setActiveSubTab('expenses'); setSearchTerm(''); }}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '8px 14px',
-            fontSize: '13px',
-            fontWeight: '800',
-            cursor: 'pointer',
-            color: activeSubTab === 'expenses' ? 'var(--primary)' : 'var(--text-muted)',
-            borderBottom: activeSubTab === 'expenses' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
-            marginBottom: '-2px',
-            display: 'inline-flex',
+      {/* SUB-TAB 1: COMPANY EXPENSES LEDGER */}
+      {activeSubTab === 'expenses' && (
+        <>
+          {/* 1-Row Unified Search & Filters for Overheads */}
+          <div style={{
+            display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.15s'
-          }}
-        >
-          <Building2 size={15} /> Overheads ({companyExpenses.length})
-        </button>
+            gap: '8px',
+            flexWrap: 'wrap',
+            background: '#ffffff',
+            border: '1.5px solid #ede6d9',
+            borderRadius: '10px',
+            padding: '8px 12px',
+            marginBottom: '4px'
+          }}>
+            {/* Search */}
+            <div style={{ position: 'relative', flex: '1', minWidth: '180px' }}>
+              <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input 
+                type="text" 
+                className="form-control" 
+                placeholder="Search category, notes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ paddingLeft: '30px', fontSize: '12px', height: '34px' }}
+              />
+            </div>
 
-        <button
-          onClick={() => { setActiveSubTab('sims'); setSearchTerm(''); }}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '8px 14px',
-            fontSize: '13px',
-            fontWeight: '800',
-            cursor: 'pointer',
-            color: activeSubTab === 'sims' ? 'var(--primary)' : 'var(--text-muted)',
-            borderBottom: activeSubTab === 'sims' ? '2.5px solid var(--primary)' : '2.5px solid transparent',
-            marginBottom: '-2px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            transition: 'all 0.15s'
-          }}
-        >
-          <Smartphone size={15} /> Sales SIMs ({companySims.length})
-        </button>
-      </div>
-
-      {/* 1-Row Unified Search & Filters (Per Image 2 user annotation: "move the filter here in 1 row") */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        flexWrap: 'wrap',
-        background: '#ffffff',
-        border: '1.5px solid #ede6d9',
-        borderRadius: '10px',
-        padding: '8px 12px',
-        marginBottom: '2px'
-      }}>
-        {/* Search */}
-        <div style={{ position: 'relative', flex: '1', minWidth: '180px' }}>
-          <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-          <input 
-            type="text" 
-            className="form-control" 
-            placeholder={activeSubTab === 'expenses' ? "Search category, notes..." : "Search sales agent, number, role..."}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ paddingLeft: '30px', fontSize: '12px', height: '34px' }}
-          />
-        </div>
-
-        {activeSubTab === 'expenses' ? (
-          <>
             {/* Category Dropdown */}
             <select 
-              className="form-control"
+              className="form-control" 
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
               style={{ width: 'auto', minWidth: '150px', fontSize: '12px', height: '34px', fontWeight: categoryFilter !== 'all' ? '800' : 'normal', color: categoryFilter !== 'all' ? '#8c5b30' : 'inherit' }}
@@ -695,7 +700,7 @@ export default function CompanyExpensesView({
 
             {/* Status Dropdown */}
             <select 
-              className="form-control"
+              className="form-control" 
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               style={{ width: 'auto', minWidth: '105px', fontSize: '12px', height: '34px' }}
@@ -708,7 +713,7 @@ export default function CompanyExpensesView({
 
             {/* Date Range Dropdown */}
             <select 
-              className="form-control"
+              className="form-control" 
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
               style={{ width: 'auto', minWidth: '110px', fontSize: '12px', height: '34px' }}
@@ -738,287 +743,250 @@ export default function CompanyExpensesView({
                 />
               </div>
             )}
-          </>
-        ) : (
-          <>
-            {/* Provider Filter */}
-            <select 
-              className="form-control"
-              value={simProviderFilter}
-              onChange={(e) => setSimProviderFilter(e.target.value)}
-              style={{ width: 'auto', minWidth: '110px', fontSize: '12px', height: '34px' }}
+
+            {(searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || dateFilter !== 'all') && (
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setCategoryFilter('all');
+                  setStatusFilter('all');
+                  setDateFilter('all');
+                }}
+                className="btn btn-secondary"
+                style={{ fontSize: '11px', padding: '4px 10px', height: '34px' }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
+          {/* 8 KPI & Report Cards Grid (Shown on Overheads ONLY) */}
+          <div className="stats-grid" style={{ marginBottom: '8px' }}>
+            
+            {/* 1. Total Corporate Overheads */}
+            <div 
+              onClick={() => { setCategoryFilter('all'); setStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: categoryFilter === 'all' && statusFilter === 'all' ? 'rgba(140, 91, 48, 0.08)' : '#ffffff', 
+                border: categoryFilter === 'all' && statusFilter === 'all' ? '2px solid var(--primary)' : '1px solid #ede6d9', 
+                padding: '12px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: categoryFilter === 'all' && statusFilter === 'all' ? '0 2px 8px rgba(140, 91, 48, 0.15)' : 'none'
+              }}
+              title="Click to show all overheads"
             >
-              <option value="all">All Providers</option>
-              {SIM_PROVIDERS.map(p => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  {cardLabels.total}
+                </span>
+                <Building2 size={14} style={{ color: 'var(--primary)' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>
+                {stats.totalCompanyOverheads.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {filteredExpenses.length} items
+              </div>
+            </div>
 
-            {/* SIM Status */}
-            <select 
-              className="form-control"
-              value={simStatusFilter}
-              onChange={(e) => setSimStatusFilter(e.target.value)}
-              style={{ width: 'auto', minWidth: '110px', fontSize: '12px', height: '34px' }}
+            {/* 2. Government & Licensing */}
+            <div 
+              onClick={() => { setCategoryFilter('Trade License Renewal'); setStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: categoryFilter === 'Trade License Renewal' ? 'rgba(4, 120, 87, 0.08)' : '#ffffff', 
+                border: categoryFilter === 'Trade License Renewal' ? '2px solid #047857' : '1px solid #ede6d9', 
+                padding: '12px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: categoryFilter === 'Trade License Renewal' ? '0 2px 8px rgba(4, 120, 87, 0.15)' : 'none'
+              }}
+              title="Click to filter by Trade License"
             >
-              <option value="all">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="spare">Spare</option>
-              <option value="suspended">Suspended</option>
-            </select>
-          </>
-        )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  {cardLabels.license}
+                </span>
+                <ShieldCheck size={14} style={{ color: '#047857' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#047857', marginTop: '4px' }}>
+                {stats.licensingTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                DET & GDRFA
+              </div>
+            </div>
 
-        {(searchTerm || categoryFilter !== 'all' || statusFilter !== 'all' || dateFilter !== 'all' || simProviderFilter !== 'all' || simStatusFilter !== 'all') && (
-          <button 
-            onClick={() => {
-              setSearchTerm('');
-              setCategoryFilter('all');
-              setStatusFilter('all');
-              setDateFilter('all');
-              setSimProviderFilter('all');
-              setSimStatusFilter('all');
-            }}
-            className="btn btn-secondary"
-            style={{ fontSize: '11px', padding: '4px 10px', height: '34px' }}
-          >
-            Reset
-          </button>
-        )}
-      </div>
+            {/* 3. Office Rent & Ejari */}
+            <div 
+              onClick={() => { setCategoryFilter('Office Rent & Ejari'); setStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: categoryFilter === 'Office Rent & Ejari' ? 'rgba(201, 118, 42, 0.08)' : '#ffffff', 
+                border: categoryFilter === 'Office Rent & Ejari' ? '2px solid #c9762a' : '1px solid #ede6d9', 
+                padding: '12px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: categoryFilter === 'Office Rent & Ejari' ? '0 2px 8px rgba(201, 118, 42, 0.15)' : 'none'
+              }}
+              title="Click to filter by Office Rent"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  {cardLabels.rent}
+                </span>
+                <Layers size={14} style={{ color: '#c9762a' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
+                {stats.rentEjariTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                DWTC lease & Ejari
+              </div>
+            </div>
 
-      {/* 8 KPI & Report Cards Grid (Clickable Category Filters, 2 cards per row on mobile) */}
-      <div className="stats-grid" style={{ marginBottom: '8px' }}>
-        
-        {/* 1. Total Corporate Overheads */}
-        <div 
-          onClick={() => { setCategoryFilter('all'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
-          className="stat-card" 
-          style={{ 
-            background: categoryFilter === 'all' && statusFilter === 'all' ? 'rgba(140, 91, 48, 0.08)' : '#ffffff', 
-            border: categoryFilter === 'all' && statusFilter === 'all' ? '2px solid var(--primary)' : '1px solid #ede6d9', 
-            padding: '12px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            boxShadow: categoryFilter === 'all' && statusFilter === 'all' ? '0 2px 8px rgba(140, 91, 48, 0.15)' : 'none'
-          }}
-          title="Click to show all overheads"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {cardLabels.total}
-            </span>
-            <Building2 size={14} style={{ color: 'var(--primary)' }} />
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>
-            {stats.totalCompanyOverheads.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
-          </div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            {filteredExpenses.length} items
-          </div>
-        </div>
+            {/* 4. Internet & Main Phone Bills */}
+            <div 
+              onClick={() => { setCategoryFilter('Company Main Phone Bill'); setStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: categoryFilter === 'Company Main Phone Bill' ? 'rgba(29, 78, 216, 0.08)' : '#ffffff', 
+                border: categoryFilter === 'Company Main Phone Bill' ? '2px solid #1d4ed8' : '1px solid #ede6d9', 
+                padding: '12px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: categoryFilter === 'Company Main Phone Bill' ? '0 2px 8px rgba(29, 78, 216, 0.15)' : 'none'
+              }}
+              title="Click to filter by Internet & Phone Bills"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  {cardLabels.telecom}
+                </span>
+                <Wifi size={14} style={{ color: '#1d4ed8' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#1d4ed8', marginTop: '4px' }}>
+                {stats.telecomBillsTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Hotline + Fiber
+              </div>
+            </div>
 
-        {/* 2. Government & Licensing */}
-        <div 
-          onClick={() => { setCategoryFilter('Trade License Renewal'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
-          className="stat-card" 
-          style={{ 
-            background: categoryFilter === 'Trade License Renewal' ? 'rgba(4, 120, 87, 0.08)' : '#ffffff', 
-            border: categoryFilter === 'Trade License Renewal' ? '2px solid #047857' : '1px solid #ede6d9', 
-            padding: '12px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            boxShadow: categoryFilter === 'Trade License Renewal' ? '0 2px 8px rgba(4, 120, 87, 0.15)' : 'none'
-          }}
-          title="Click to filter by Trade License"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {cardLabels.license}
-            </span>
-            <ShieldCheck size={14} style={{ color: '#047857' }} />
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: '#047857', marginTop: '4px' }}>
-            {stats.licensingTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
-          </div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            DET & GDRFA
-          </div>
-        </div>
+            {/* 5. Active Sales SIMs */}
+            <div 
+              onClick={() => setActiveSubTab('sims')}
+              className="stat-card" 
+              style={{ 
+                background: '#ffffff', 
+                border: '1px solid #ede6d9', 
+                padding: '12px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              title="Click to switch to Sales SIMs view"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  {cardLabels.sims}
+                </span>
+                <Smartphone size={14} style={{ color: '#b45309' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
+                {stats.activeSimCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Active Lines</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '700', marginTop: '2px' }}>
+                {stats.totalSimMonthlyCost.toLocaleString()} AED / mo
+              </div>
+            </div>
 
-        {/* 3. Office Rent & Ejari */}
-        <div 
-          onClick={() => { setCategoryFilter('Office Rent & Ejari'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
-          className="stat-card" 
-          style={{ 
-            background: categoryFilter === 'Office Rent & Ejari' ? 'rgba(201, 118, 42, 0.08)' : '#ffffff', 
-            border: categoryFilter === 'Office Rent & Ejari' ? '2px solid #c9762a' : '1px solid #ede6d9', 
-            padding: '12px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            boxShadow: categoryFilter === 'Office Rent & Ejari' ? '0 2px 8px rgba(201, 118, 42, 0.15)' : 'none'
-          }}
-          title="Click to filter by Office Rent"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {cardLabels.rent}
-            </span>
-            <Layers size={14} style={{ color: '#c9762a' }} />
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
-            {stats.rentEjariTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
-          </div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            DWTC lease & Ejari
-          </div>
-        </div>
+            {/* 6. Office Supplies & Consumables */}
+            <div 
+              onClick={() => { setCategoryFilter('Office Expenses & Supplies'); setStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: categoryFilter === 'Office Expenses & Supplies' ? 'rgba(201, 118, 42, 0.08)' : '#ffffff', 
+                border: categoryFilter === 'Office Expenses & Supplies' ? '2px solid #c9762a' : '1px solid #ede6d9', 
+                padding: '12px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: categoryFilter === 'Office Expenses & Supplies' ? '0 2px 8px rgba(201, 118, 42, 0.15)' : 'none'
+              }}
+              title="Click to filter by Office Supplies"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  {cardLabels.supplies}
+                </span>
+                <Coffee size={14} style={{ color: '#c9762a' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
+                {stats.officeSuppliesTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Stationery & pantry
+              </div>
+            </div>
 
-        {/* 4. Internet & Main Phone Bills */}
-        <div 
-          onClick={() => { setCategoryFilter('Company Main Phone Bill'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
-          className="stat-card" 
-          style={{ 
-            background: categoryFilter === 'Company Main Phone Bill' ? 'rgba(29, 78, 216, 0.08)' : '#ffffff', 
-            border: categoryFilter === 'Company Main Phone Bill' ? '2px solid #1d4ed8' : '1px solid #ede6d9', 
-            padding: '12px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            boxShadow: categoryFilter === 'Company Main Phone Bill' ? '0 2px 8px rgba(29, 78, 216, 0.15)' : 'none'
-          }}
-          title="Click to filter by Internet & Phone Bills"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {cardLabels.telecom}
-            </span>
-            <Wifi size={14} style={{ color: '#1d4ed8' }} />
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: '#1d4ed8', marginTop: '4px' }}>
-            {stats.telecomBillsTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
-          </div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Hotline + Fiber
-          </div>
-        </div>
+            {/* 7. Petty Cash Disbursements */}
+            <div 
+              onClick={() => { setCategoryFilter('Petty Cash Disbursements'); setStatusFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: categoryFilter === 'Petty Cash Disbursements' ? 'rgba(217, 119, 6, 0.08)' : '#ffffff', 
+                border: categoryFilter === 'Petty Cash Disbursements' ? '2px solid #d97706' : '1px solid #ede6d9', 
+                padding: '12px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: categoryFilter === 'Petty Cash Disbursements' ? '0 2px 8px rgba(217, 119, 6, 0.15)' : 'none'
+              }}
+              title="Click to filter by Petty Cash"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  {cardLabels.pettyCash}
+                </span>
+                <CreditCard size={14} style={{ color: '#d97706' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
+                {stats.pettyCashTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Daily cash spent
+              </div>
+            </div>
 
-        {/* 5. Active Sales SIMs */}
-        <div 
-          onClick={() => setActiveSubTab('sims')}
-          className="stat-card" 
-          style={{ 
-            background: activeSubTab === 'sims' ? 'rgba(180, 83, 9, 0.08)' : '#ffffff', 
-            border: activeSubTab === 'sims' ? '2px solid #b45309' : '1px solid #ede6d9', 
-            padding: '12px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            boxShadow: activeSubTab === 'sims' ? '0 2px 8px rgba(180, 83, 9, 0.15)' : 'none'
-          }}
-          title="Click to switch to Sales SIMs view"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {cardLabels.sims}
-            </span>
-            <Smartphone size={14} style={{ color: '#b45309' }} />
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
-            {stats.activeSimCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Active Lines</span>
-          </div>
-          <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '700', marginTop: '2px' }}>
-            {stats.totalSimMonthlyCost.toLocaleString()} AED / mo
-          </div>
-        </div>
+            {/* 8. Upcoming Renewals */}
+            <div 
+              onClick={() => { setStatusFilter('pending'); setCategoryFilter('all'); }}
+              className="stat-card" 
+              style={{ 
+                background: statusFilter === 'pending' ? 'rgba(239, 68, 68, 0.08)' : '#ffffff', 
+                border: statusFilter === 'pending' ? '2px solid #ef4444' : '1px solid #ede6d9', 
+                padding: '12px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                boxShadow: statusFilter === 'pending' ? '0 2px 8px rgba(239, 68, 68, 0.15)' : 'none'
+              }}
+              title="Click to show pending renewals"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                  {cardLabels.renewal}
+                </span>
+                <Clock size={14} style={{ color: '#b91c1c' }} />
+              </div>
+              <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#b91c1c', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {stats.nextRenewal ? stats.nextRenewal.category : 'Up to date'}
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {stats.nextRenewal ? `Due: ${(stats.nextRenewal.dueDate || '').split('-').reverse().join('/')}` : 'No renewals due'}
+              </div>
+            </div>
 
-        {/* 6. Office Supplies & Consumables */}
-        <div 
-          onClick={() => { setCategoryFilter('Office Expenses & Supplies'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
-          className="stat-card" 
-          style={{ 
-            background: categoryFilter === 'Office Expenses & Supplies' ? 'rgba(201, 118, 42, 0.08)' : '#ffffff', 
-            border: categoryFilter === 'Office Expenses & Supplies' ? '2px solid #c9762a' : '1px solid #ede6d9', 
-            padding: '12px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            boxShadow: categoryFilter === 'Office Expenses & Supplies' ? '0 2px 8px rgba(201, 118, 42, 0.15)' : 'none'
-          }}
-          title="Click to filter by Office Supplies"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {cardLabels.supplies}
-            </span>
-            <Coffee size={14} style={{ color: '#c9762a' }} />
           </div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--text-dark)', marginTop: '4px' }}>
-            {stats.officeSuppliesTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
-          </div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Stationery & pantry
-          </div>
-        </div>
-
-        {/* 7. Petty Cash Disbursements */}
-        <div 
-          onClick={() => { setCategoryFilter('Petty Cash Disbursements'); setStatusFilter('all'); setActiveSubTab('expenses'); }}
-          className="stat-card" 
-          style={{ 
-            background: categoryFilter === 'Petty Cash Disbursements' ? 'rgba(140, 91, 48, 0.08)' : '#ffffff', 
-            border: categoryFilter === 'Petty Cash Disbursements' ? '2px solid var(--primary)' : '1px solid #ede6d9', 
-            padding: '12px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            boxShadow: categoryFilter === 'Petty Cash Disbursements' ? '0 2px 8px rgba(140, 91, 48, 0.15)' : 'none'
-          }}
-          title="Click to filter by Petty Cash"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {cardLabels.pettyCash}
-            </span>
-            <CreditCard size={14} style={{ color: 'var(--primary)' }} />
-          </div>
-          <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>
-            {stats.pettyCashTotal.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED</span>
-          </div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            Daily cash spent
-          </div>
-        </div>
-
-        {/* 8. Upcoming Critical Renewals */}
-        <div 
-          onClick={() => { setStatusFilter('pending'); setActiveSubTab('expenses'); }}
-          className="stat-card" 
-          style={{ 
-            background: statusFilter === 'pending' ? 'rgba(185, 28, 28, 0.08)' : '#fdfbf7', 
-            border: statusFilter === 'pending' ? '2px solid #b91c1c' : '1px solid #ede6d9', 
-            padding: '12px 14px',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease',
-            boxShadow: statusFilter === 'pending' ? '0 2px 8px rgba(185, 28, 28, 0.15)' : 'none'
-          }}
-          title="Click to show pending renewals"
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              {cardLabels.renewal}
-            </span>
-            <Clock size={14} style={{ color: '#b91c1c' }} />
-          </div>
-          <div style={{ fontSize: '13.5px', fontWeight: '800', color: '#b91c1c', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {stats.nextRenewal ? stats.nextRenewal.category : 'Up to date'}
-          </div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-            {stats.nextRenewal ? `Due: ${(stats.nextRenewal.dueDate || '').split('-').reverse().join('/')}` : 'No renewals due'}
-          </div>
-        </div>
-
-      </div>
-
-      {/* SUB-TAB 1: COMPANY EXPENSES LEDGER */}
-      {activeSubTab === 'expenses' && (
-        <>
 
           {/* Expenses Table (Scrollable on mobile to show all details) */}
           <div className="table-responsive card" style={{ background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px', padding: '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
@@ -1156,8 +1124,85 @@ export default function CompanyExpensesView({
       {/* SUB-TAB 2: SALES AGENT SIMS & NUMBERS DIRECTORY */}
       {activeSubTab === 'sims' && (
         <>
-          {/* Filters & Search */}
-          <div className="card" style={{ padding: '12px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px' }}>
+          {/* 4 SIM-Specific KPI Cards (Showing SIMs data only per user request) */}
+          <div className="stats-grid" style={{ marginBottom: '10px' }}>
+            {/* Total Lines */}
+            <div 
+              onClick={() => { setSimStatusFilter('all'); setSimProviderFilter('all'); setSearchTerm(''); }}
+              className="stat-card" 
+              style={{ background: simStatusFilter === 'all' && simProviderFilter === 'all' ? 'rgba(140, 91, 48, 0.08)' : '#ffffff', border: simStatusFilter === 'all' && simProviderFilter === 'all' ? '2px solid var(--primary)' : '1px solid #ede6d9', padding: '12px 14px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              title="Click to show all SIM lines"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>TOTAL SIM LINES</span>
+                <Smartphone size={14} style={{ color: 'var(--primary)' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: 'var(--primary)', marginTop: '4px' }}>
+                {companySims.length} <span style={{ fontSize: '11px', fontWeight: '600' }}>Lines</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Du, Etisalat & Virgin
+              </div>
+            </div>
+
+            {/* Active Lines */}
+            <div 
+              onClick={() => { setSimStatusFilter('active'); }}
+              className="stat-card" 
+              style={{ background: simStatusFilter === 'active' ? 'rgba(4, 120, 87, 0.08)' : '#ffffff', border: simStatusFilter === 'active' ? '2px solid #047857' : '1px solid #ede6d9', padding: '12px 14px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              title="Click to filter by active SIMs"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>ACTIVE IN FLEET</span>
+                <CheckCircle2 size={14} style={{ color: '#047857' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#047857', marginTop: '4px' }}>
+                {stats.activeSimCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Active</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Assigned to Sales & Drivers
+              </div>
+            </div>
+
+            {/* Spare Lines */}
+            <div 
+              onClick={() => { setSimStatusFilter('spare'); }}
+              className="stat-card" 
+              style={{ background: simStatusFilter === 'spare' ? 'rgba(201, 118, 42, 0.08)' : '#ffffff', border: simStatusFilter === 'spare' ? '2px solid #c9762a' : '1px solid #ede6d9', padding: '12px 14px', cursor: 'pointer', transition: 'all 0.15s ease' }}
+              title="Click to filter by spare SIMs"
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>SPARE / STANDBY</span>
+                <Phone size={14} style={{ color: '#c9762a' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#c9762a', marginTop: '4px' }}>
+                {stats.spareSimCount} <span style={{ fontSize: '11px', fontWeight: '600' }}>Available</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Ready for assignment
+              </div>
+            </div>
+
+            {/* Monthly Cost */}
+            <div 
+              className="stat-card" 
+              style={{ background: '#ffffff', border: '1px solid #ede6d9', padding: '12px 14px' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>MONTHLY TELECOM BILL</span>
+                <CreditCard size={14} style={{ color: '#1d4ed8' }} />
+              </div>
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#1d4ed8', marginTop: '4px' }}>
+                {stats.totalSimMonthlyCost.toLocaleString()} <span style={{ fontSize: '11px', fontWeight: '600' }}>AED / mo</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Monthly plans commitment
+              </div>
+            </div>
+          </div>
+
+          {/* Single Filters & Search Bar (No duplicates) */}
+          <div className="card" style={{ padding: '12px', display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #ede6d9', borderRadius: '10px', marginBottom: '10px' }}>
             
             <div style={{ position: 'relative', flex: '1 1 200px', minWidth: '180px' }}>
               <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
