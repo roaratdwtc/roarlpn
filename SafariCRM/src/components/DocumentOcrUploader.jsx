@@ -17,9 +17,11 @@ export default function DocumentOcrUploader({
   const handleFile = async (file) => {
     if (!file) return;
 
-    // Check if image or pdf
-    if (!file.type.startsWith('image/') && !file.name.endsWith('.pdf')) {
-      setErrorMsg('Please upload an image file (JPG, PNG, WEBP) of the document for OCR scanning.');
+    // Check if image or pdf (case insensitive)
+    const isImage = file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf' || (file.name || '').toLowerCase().endsWith('.pdf');
+    if (!isImage && !isPdf) {
+      setErrorMsg('Please upload a document file (PDF, JPG, PNG, WEBP) for OCR scanning.');
       return;
     }
 

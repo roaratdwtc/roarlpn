@@ -839,50 +839,6 @@ export default function CarExpensesView({
             <Plus size={14} /> Add Car
           </button>
 
-          {/* Car Number Plate Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <select 
-              value={selectedPlateFilter}
-              onChange={(e) => setSelectedPlateFilter(e.target.value)}
-              className="form-control"
-              style={{
-                width: 'auto',
-                minWidth: '170px',
-                fontSize: '12px',
-                fontWeight: '800',
-                color: selectedPlateFilter !== 'all' ? '#8c5b30' : 'var(--text-dark)',
-                borderColor: selectedPlateFilter !== 'all' ? '#8c5b30' : '#ede6d9',
-                background: '#ffffff',
-                height: '34px',
-                padding: '4px 10px'
-              }}
-              title="Filter fleet records by car number plate"
-            >
-              <option value="all">🚗 All Fleet ({fleetPlates.length} Cars)</option>
-              {fleetPlates.map(plate => (
-                <option key={plate} value={plate}>
-                  {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''} ({(carExpensesMap[plate] || 0).toLocaleString()} AED)
-                </option>
-              ))}
-            </select>
-
-            {selectedPlateFilter !== 'all' && (
-              <button
-                type="button"
-                onClick={() => {
-                  setEditingPlateForLabel(selectedPlateFilter);
-                  setCustomPlateLabelInput(carLabels[selectedPlateFilter] || '');
-                  setIsEditCarLabelOpen(true);
-                }}
-                className="btn btn-secondary"
-                style={{ padding: '6px 9px', height: '34px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
-                title="Change car label text / nickname"
-              >
-                <Edit2 size={13} /> Label
-              </button>
-            )}
-          </div>
-
           {activeSubTab === 'expenses' ? (
             <>
               <button 
@@ -967,20 +923,37 @@ export default function CarExpensesView({
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
           
           {/* Car Plate Filter */}
-          <select 
-            className="form-control"
-            value={selectedPlateFilter}
-            onChange={(e) => setSelectedPlateFilter(e.target.value)}
-            style={{ width: 'auto', minWidth: '140px', fontSize: '12px', fontWeight: '700', color: selectedPlateFilter !== 'all' ? '#8c5b30' : 'var(--text-dark)' }}
-            title="Filter by car plate"
-          >
-            <option value="all">🚗 All Fleet Cars ({fleetPlates.length})</option>
-            {fleetPlates.map(plate => (
-              <option key={plate} value={plate}>
-                {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
-              </option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <select 
+              className="form-control"
+              value={selectedPlateFilter}
+              onChange={(e) => setSelectedPlateFilter(e.target.value)}
+              style={{ width: 'auto', minWidth: '140px', fontSize: '12px', fontWeight: '700', color: selectedPlateFilter !== 'all' ? '#8c5b30' : 'var(--text-dark)' }}
+              title="Filter by car plate"
+            >
+              <option value="all">🚗 All Fleet Cars ({fleetPlates.length})</option>
+              {fleetPlates.map(plate => (
+                <option key={plate} value={plate}>
+                  {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
+                </option>
+              ))}
+            </select>
+            {selectedPlateFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingPlateForLabel(selectedPlateFilter);
+                  setCustomPlateLabelInput(carLabels[selectedPlateFilter] || '');
+                  setIsEditCarLabelOpen(true);
+                }}
+                className="btn btn-secondary"
+                style={{ padding: '6px 9px', height: '34px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                title="Change car label text / nickname"
+              >
+                <Edit2 size={13} /> Label
+              </button>
+            )}
+          </div>
 
           {/* Category Filter */}
           <select 
@@ -1486,20 +1459,37 @@ export default function CarExpensesView({
             {/* Middle & Right Filters in 1 Row */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               {/* Car Plate Filter */}
-              <select 
-                className="form-control"
-                value={selectedPlateFilter}
-                onChange={(e) => setSelectedPlateFilter(e.target.value)}
-                style={{ width: 'auto', minWidth: '140px', fontSize: '12px', fontWeight: '700', color: selectedPlateFilter !== 'all' ? '#8c5b30' : 'var(--text-dark)', height: '36px' }}
-                title="Filter by car plate"
-              >
-                <option value="all">🚗 All Fleet Cars ({fleetPlates.length})</option>
-                {fleetPlates.map(plate => (
-                  <option key={plate} value={plate}>
-                    {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <select 
+                  className="form-control"
+                  value={selectedPlateFilter}
+                  onChange={(e) => setSelectedPlateFilter(e.target.value)}
+                  style={{ width: 'auto', minWidth: '140px', fontSize: '12px', fontWeight: '700', color: selectedPlateFilter !== 'all' ? '#8c5b30' : 'var(--text-dark)', height: '36px' }}
+                  title="Filter by car plate"
+                >
+                  <option value="all">🚗 All Fleet Cars ({fleetPlates.length})</option>
+                  {fleetPlates.map(plate => (
+                    <option key={plate} value={plate}>
+                      {plate} {carLabels[plate] ? `- ${carLabels[plate]}` : ''}
+                    </option>
+                  ))}
+                </select>
+                {selectedPlateFilter !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPlateForLabel(selectedPlateFilter);
+                      setCustomPlateLabelInput(carLabels[selectedPlateFilter] || '');
+                      setIsEditCarLabelOpen(true);
+                    }}
+                    className="btn btn-secondary"
+                    style={{ padding: '6px 9px', height: '36px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    title="Change car label text / nickname"
+                  >
+                    <Edit2 size={13} /> Label
+                  </button>
+                )}
+              </div>
 
               {/* Category Filter */}
               <select 

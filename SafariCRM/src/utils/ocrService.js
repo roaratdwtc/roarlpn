@@ -1,4 +1,86 @@
 import Tesseract from 'tesseract.js';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configure PDF.js worker
+try {
+  if (pdfjsLib.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.mjs',
+      import.meta.url
+    ).toString();
+  }
+} catch (e) {
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+  } catch (err) {
+    console.warn("Could not set PDF worker:", err);
+  }
+}
+
+/**
+ * Extract text and rendered canvas images from PDF document
+ */
+async function processPdfDocument(fileOrDataUrl, onProgress) {
+  if (onProgress) onProgress({ status: 'Loading PDF document...', progress: 20 });
+
+  let arrayBuffer;
+  if (fileOrDataUrl instanceof Blob || fileOrDataUrl instanceof File) {
+    arrayBuffer = await fileOrDataUrl.arrayBuffer();
+  } else if (typeof fileOrDataUrl === 'string') {
+    if (fileOrDataUrl.startsWith('data:')) {
+      const base64 = fileOrDataUrl.split(',')[1];
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      arrayBuffer = bytes.buffer;
+    } else {
+      const resp = await fetch(fileOrDataUrl);
+      arrayBuffer = await resp.arrayBuffer();
+    }
+  } else {
+    throw new Error('Unsupported PDF file format.');
+  }
+
+  const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+  const pdfDoc = await loadingTask.promise;
+  const maxPages = Math.min(pdfDoc.numPages, 3);
+
+  let embeddedText = '';
+  const renderedImages = [];
+
+  for (let pageNum = 1; pageNum <= maxPages; pageNum++) {
+    if (onProgress) onProgress({ status: `Processing PDF page ${pageNum} of ${maxPages}...`, progress: 20 + Math.round((pageNum / maxPages) * 20) });
+    const page = await pdfDoc.getPage(pageNum);
+
+    // 1. Direct digital text content
+    try {
+      const textContent = await page.getTextContent();
+      const pageStr = textContent.items.map(item => item.str).join(' ');
+      if (pageStr && pageStr.trim().length > 15) {
+        embeddedText += `\n--- PAGE ${pageNum} ---\n` + pageStr;
+      }
+    } catch (err) {
+      console.warn(`Could not extract digital text from page ${pageNum}:`, err);
+    }
+
+    // 2. Render high-res canvas (2.0x scale) for scanned documents
+    try {
+      const viewport = page.getViewport({ scale: 2.0 });
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      renderedImages.push(canvas.toDataURL('image/png'));
+    } catch (err) {
+      console.warn(`Could not render PDF page ${pageNum} to canvas:`, err);
+    }
+  }
+
+  return { embeddedText, renderedImages };
+}
 
 /**
  * Standardize dates to YYYY-MM-DD or DD-MM-YYYY
@@ -286,6 +368,59 @@ export function parseDocumentOCRText(rawText = '') {
  * Accepts file (File/Blob) or Data URL string, runs Tesseract OCR and parses fields
  */
 export async function performDocumentOCR(fileOrDataUrl, onProgress = null) {
+  const isPdf = (fileOrDataUrl instanceof File && (fileOrDataUrl.type === 'application/pdf' || (fileOrDataUrl.name || '').toLowerCase().endsWith('.pdf'))) ||
+                (typeof fileOrDataUrl === 'string' && (fileOrDataUrl.startsWith('data:application/pdf') || fileOrDataUrl.toLowerCase().includes('.pdf')));
+
+  // PDF Document Handling (Both digital text and scanned image PDFs)
+  if (isPdf) {
+    try {
+      const { embeddedText, renderedImages } = await processPdfDocument(fileOrDataUrl, onProgress);
+      let combinedText = embeddedText || '';
+
+      // If embedded text is sufficient to detect details, parse it!
+      let extracted = parseDocumentOCRText(combinedText);
+      const hasKeyFields = extracted.plateNo || extracted.brand || extracted.owner || extracted.licenseNo || extracted.expDate;
+
+      // If scanned PDF with little embedded text, or missing key fields, run Tesseract on rendered page images
+      if (!hasKeyFields && renderedImages.length > 0) {
+        if (onProgress) onProgress({ status: 'Running OCR on rendered PDF pages...', progress: 50 });
+        for (let i = 0; i < renderedImages.length; i++) {
+          const preprocessed = await preprocessImage(renderedImages[i]);
+          const { data: { text } } = await Tesseract.recognize(
+            preprocessed,
+            'eng',
+            {
+              logger: (m) => {
+                if (onProgress && m.status === 'recognizing text') {
+                  const pct = Math.round(50 + (m.progress || 0) * 45);
+                  onProgress({ status: `Reading PDF page ${i + 1} (${Math.round((m.progress || 0) * 100)}%)...`, progress: pct });
+                }
+              }
+            }
+          );
+          combinedText += `\n--- OCR PAGE ${i + 1} ---\n` + (text || '');
+        }
+        extracted = parseDocumentOCRText(combinedText);
+      }
+
+      if (onProgress) onProgress({ status: 'OCR Complete!', progress: 100 });
+
+      return {
+        success: true,
+        data: extracted,
+        rawText: combinedText
+      };
+    } catch (pdfErr) {
+      console.error('PDF OCR Processing error:', pdfErr);
+      return {
+        success: false,
+        error: pdfErr.message || 'Failed to parse PDF document',
+        data: parseDocumentOCRText('')
+      };
+    }
+  }
+
+  // Standard Image Document Handling
   let dataUrl = '';
   
   if (typeof fileOrDataUrl === 'string') {
