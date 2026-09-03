@@ -114,9 +114,47 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      handleSaveCategoryImage(category, e.target.result);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+        handleSaveCategoryImage(category, compressedDataUrl);
+      };
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleResetAllCategoryImages = async () => {
+    const defaultImages = {
+      'Evening Desert Safari': '/evening_safari.jpg',
+      'Morning Desert Safari': '/morning_safari.jpg',
+      'Self Drive Safari': '/self_drive_safari.jpg',
+      'City Tours': '/city_tours.jpg',
+      'Dune Buggy Ride': '/morning_safari.jpg'
+    };
+    if (onSaveSetting) {
+      await onSaveSetting('category_images', JSON.stringify(defaultImages));
+    }
   };
 
   const handleUpdateCategory = async (oldName, newName, imageUrl) => {
@@ -1167,18 +1205,37 @@ export default function PackagesView({ packages = [], setPackages, coupons = [],
 
               {/* List of Categories Section */}
               <div>
-                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: '900', color: 'var(--text-dark)' }}>
-                  Active Categories & Flyers Directory
-                </h4>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 0 10px 0' }}>
+                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '900', color: 'var(--text-dark)' }}>
+                    Active Categories & Flyers Directory
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={handleResetAllCategoryImages}
+                    style={{
+                      padding: '5px 10px',
+                      background: '#fcf8f2',
+                      border: '1px solid var(--accent-gold, #8c5b30)',
+                      borderRadius: '6px',
+                      color: 'var(--accent-gold, #8c5b30)',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    Reset to Default Clean Flyers
+                  </button>
+                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '45vh', overflowY: 'auto', paddingRight: '4px' }}>
                   {categoriesList.map(cat => {
                     const standardFlyers = [
                       { label: 'Evening Safari Flyer', path: '/evening_safari.jpg' },
                       { label: 'Morning Safari Flyer', path: '/morning_safari.jpg' },
                       { label: 'Self Drive Safari Flyer', path: '/self_drive_safari.jpg' },
-                      { label: 'City Tours Flyer', path: '/city_tours.jpg' },
-                      { label: 'Quadbike Flyer', path: '/quadpackages.png' },
-                      { label: 'Dune Buggy Flyer', path: '/buggypackages.png' }
+                      { label: 'City Tours Flyer', path: '/city_tours.jpg' }
                     ];
 
                     const currentImg = categoryImages[cat] || (

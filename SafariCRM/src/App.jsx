@@ -130,6 +130,35 @@ export default function App() {
     }
   };
 
+  // Helper for safe localStorage setting with quota protection
+  const setLocalStorageItemSafe = (key, value) => {
+    try {
+      localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+    } catch (e) {
+      console.warn(`Quota exceeded or error setting localStorage key ${key}:`, e);
+      if (key === 'safari_settings' && Array.isArray(value)) {
+        try {
+          const cleaned = value.map(s => {
+            if (s.setting_key === 'category_images' && typeof s.setting_value === 'string' && s.setting_value.length > 500) {
+              return {
+                ...s,
+                setting_value: JSON.stringify({
+                  'Evening Desert Safari': '/evening_safari.jpg',
+                  'Morning Desert Safari': '/morning_safari.jpg',
+                  'Self Drive Safari': '/self_drive_safari.jpg',
+                  'City Tours': '/city_tours.jpg',
+                  'Dune Buggy Ride': '/morning_safari.jpg'
+                })
+              };
+            }
+            return s;
+          });
+          localStorage.setItem(key, JSON.stringify(cleaned));
+        } catch (_) {}
+      }
+    }
+  };
+
   // central state with dynamic loading & persistent cache
   const [bookings, setBookings] = useState(() => {
     const stored = getLocalStorageItemSafe('safari_bookings', null);
@@ -228,7 +257,25 @@ export default function App() {
   });
 
   const [settings, setSettings] = useState(() => {
-    return getLocalStorageItemSafe('safari_settings', []);
+    const raw = getLocalStorageItemSafe('safari_settings', []);
+    if (Array.isArray(raw)) {
+      return raw.map(s => {
+        if (s.setting_key === 'category_images' && typeof s.setting_value === 'string' && s.setting_value.includes('data:image')) {
+          return {
+            ...s,
+            setting_value: JSON.stringify({
+              'Evening Desert Safari': '/evening_safari.jpg',
+              'Morning Desert Safari': '/morning_safari.jpg',
+              'Self Drive Safari': '/self_drive_safari.jpg',
+              'City Tours': '/city_tours.jpg',
+              'Dune Buggy Ride': '/morning_safari.jpg'
+            })
+          };
+        }
+        return s;
+      });
+    }
+    return raw;
   });
 
   const todayStrToday = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
@@ -504,7 +551,7 @@ export default function App() {
 
           if (settingsList && settingsList.length > 0) {
             setSettings(settingsList);
-            localStorage.setItem('safari_settings', JSON.stringify(settingsList));
+            setLocalStorageItemSafe('safari_settings', settingsList);
           }
           
           if (compDetails && compDetails.length > 0) {
@@ -570,7 +617,7 @@ export default function App() {
           ? settings.map(s => s.setting_key === key ? { ...s, setting_value: value } : s)
           : [...settings, { setting_key: key, setting_value: value }];
         setSettings(updated);
-        localStorage.setItem('safari_settings', JSON.stringify(updated));
+        setLocalStorageItemSafe('safari_settings', updated);
       }
     } catch (err) {
       console.error("Failed to save setting:", err);
@@ -607,7 +654,7 @@ export default function App() {
   }, [coupons]);
 
   useEffect(() => {
-    localStorage.setItem('safari_settings', JSON.stringify(settings));
+    setLocalStorageItemSafe('safari_settings', settings);
   }, [settings]);
 
   useEffect(() => {
