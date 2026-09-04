@@ -42,7 +42,11 @@ $tables = [
         status VARCHAR(50),
         addonName VARCHAR(255) DEFAULT '',
         addonPrice DECIMAL(10,2) DEFAULT 0.00,
-        calendar_event_id VARCHAR(255) DEFAULT ''
+        calendar_event_id VARCHAR(255) DEFAULT '',
+        carPax VARCHAR(255) DEFAULT '',
+        tourType VARCHAR(50) DEFAULT 'pick_drop',
+        pickedUpBy VARCHAR(255) DEFAULT '',
+        pickedUpAt VARCHAR(100) DEFAULT ''
     )",
     "drivers" => "CREATE TABLE IF NOT EXISTS drivers (
         id VARCHAR(100) PRIMARY KEY,
@@ -125,7 +129,7 @@ $tables = [
     )",
     "settings" => "CREATE TABLE IF NOT EXISTS settings (
         setting_key VARCHAR(100) PRIMARY KEY,
-        setting_value VARCHAR(255)
+        setting_value LONGTEXT
     )",
     "company_details" => "CREATE TABLE IF NOT EXISTS company_details (
         id VARCHAR(100) PRIMARY KEY,
@@ -202,6 +206,30 @@ $tables = [
         fileData LONGTEXT DEFAULT NULL,
         notes TEXT DEFAULT NULL,
         uploadedAt VARCHAR(50) DEFAULT ''
+    )",
+    "users" => "CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(100) PRIMARY KEY,
+        name VARCHAR(255),
+        phone VARCHAR(100),
+        password VARCHAR(255),
+        role VARCHAR(100),
+        linkedDriverId VARCHAR(100) DEFAULT '',
+        linkedCarPlate VARCHAR(100) DEFAULT '',
+        status VARCHAR(50) DEFAULT 'active',
+        createdAt VARCHAR(50) DEFAULT ''
+    )",
+    "invites" => "CREATE TABLE IF NOT EXISTS invites (
+        id VARCHAR(100) PRIMARY KEY,
+        code VARCHAR(100),
+        role VARCHAR(100),
+        targetName VARCHAR(255) DEFAULT '',
+        targetPhone VARCHAR(100) DEFAULT '',
+        targetPlate VARCHAR(100) DEFAULT '',
+        targetDriverId VARCHAR(100) DEFAULT '',
+        isUsed INT DEFAULT 0,
+        usedByPhone VARCHAR(100) DEFAULT '',
+        usedAt VARCHAR(50) DEFAULT NULL,
+        createdAt VARCHAR(50) DEFAULT ''
     )"
 ];
 
@@ -213,6 +241,11 @@ foreach ($tables as $name => $query) {
 }
 
 $conn->query("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('show_coupons', '1')");
+$conn->query("ALTER TABLE settings MODIFY COLUMN setting_value LONGTEXT");
+$chkPickup = $conn->query("SHOW COLUMNS FROM bookings LIKE 'pickedUpBy'");
+if ($chkPickup && $chkPickup->num_rows === 0) {
+    $conn->query("ALTER TABLE bookings ADD COLUMN pickedUpBy VARCHAR(255) DEFAULT '', ADD COLUMN pickedUpAt VARCHAR(100) DEFAULT ''");
+}
 
 $conn->query("INSERT IGNORE INTO company_details (id, fullName, address, contactPerson, whatsapp, email, regDate, licenseNo, whatWeOffer) VALUES (
     'company_info',
@@ -249,6 +282,16 @@ if ($colCheckPricingType && $colCheckPricingType->num_rows == 0) {
 $colCheckCalendar = $conn->query("SHOW COLUMNS FROM bookings LIKE 'calendar_event_id'");
 if ($colCheckCalendar && $colCheckCalendar->num_rows == 0) {
     $conn->query("ALTER TABLE bookings ADD COLUMN calendar_event_id VARCHAR(255) DEFAULT ''");
+}
+
+$colCheckCarPax = $conn->query("SHOW COLUMNS FROM bookings LIKE 'carPax'");
+if ($colCheckCarPax && $colCheckCarPax->num_rows == 0) {
+    $conn->query("ALTER TABLE bookings ADD COLUMN carPax VARCHAR(255) DEFAULT ''");
+}
+
+$colCheckTourType = $conn->query("SHOW COLUMNS FROM bookings LIKE 'tourType'");
+if ($colCheckTourType && $colCheckTourType->num_rows == 0) {
+    $conn->query("ALTER TABLE bookings ADD COLUMN tourType VARCHAR(50) DEFAULT 'pick_drop'");
 }
 
 $colCheckCpnStart = $conn->query("SHOW COLUMNS FROM coupons LIKE 'startDate'");
@@ -382,6 +425,138 @@ if ($action === 'save_setting') {
     } else {
         echo json_encode(["status" => "error", "message" => "Missing key"]);
     }
+    exit();
+}
+
+// 2.7 CREATE STRIPE CHECKOUT SESSION ACTION
+if ($action === 'create-stripe-session') {
+    $bookingId = isset($_GET['bookingId']) ? $conn->real_escape_string($_GET['bookingId']) : '';
+    $successUrl = isset($_GET['successUrl']) ? $_GET['successUrl'] : '';
+    $cancelUrl = isset($_GET['cancelUrl']) ? $_GET['cancelUrl'] : '';
+    
+    if (!$bookingId) {
+        echo json_encode(["status" => "error", "message" => "Missing bookingId"]);
+        exit();
+    }
+    
+    // Fetch booking details
+    $bookingRes = $conn->query("SELECT * FROM bookings WHERE id = '$bookingId'");
+    if (!$bookingRes || $bookingRes->num_rows === 0) {
+        echo json_encode(["status" => "error", "message" => "Booking not found"]);
+        exit();
+    }
+    $booking = $bookingRes->fetch_assoc();
+    
+    // Fetch Stripe secret key
+    $stripeSecretRes = $conn->query("SELECT setting_value FROM settings WHERE setting_key = 'stripe_secret_key'");
+    $stripeSecretKey = '';
+    if ($stripeSecretRes && $stripeSecretRes->num_rows > 0) {
+        $row = $stripeSecretRes->fetch_assoc();
+        $stripeSecretKey = trim($row['setting_value']);
+    }
+    
+    if (empty($stripeSecretKey)) {
+        // Return simulation flag if Stripe key is not configured
+        echo json_encode(["status" => "simulate", "message" => "Stripe secret key not set. Using simulator mode."]);
+        exit();
+    }
+    
+    // Call Stripe API
+    $packageName = $booking['packageName'] ?: 'Desert Safari Booking';
+    $price = floatval($booking['price']);
+    $amountInCents = intval($price * 100);
+    
+    $ch = curl_init("https://api.stripe.com/v1/checkout/sessions");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_USERPWD, $stripeSecretKey . ":");
+    
+    $fields = [
+        'payment_method_types[0]' => 'card',
+        'line_items[0][price_data][currency]' => 'aed',
+        'line_items[0][price_data][product_data][name]' => $packageName,
+        'line_items[0][price_data][unit_amount]' => $amountInCents,
+        'line_items[0][quantity]' => 1,
+        'mode' => 'payment',
+        'success_url' => $successUrl,
+        'cancel_url' => $cancelUrl,
+        'client_reference_id' => $bookingId
+    ];
+    
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode === 200) {
+        $resData = json_decode($response, true);
+        if (isset($resData['url'])) {
+            echo json_encode(["status" => "success", "url" => $resData['url']]);
+            exit();
+        }
+    }
+    
+    // Fallback to simulation if Stripe API fails (e.g. invalid key)
+    echo json_encode(["status" => "simulate", "message" => "Stripe API error: " . ($response ?: 'Connection failed')]);
+    exit();
+}
+
+// 2.8 CHARGE STRIPE DIRECTLY ACTION
+if ($action === 'charge-stripe') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $token = isset($input['token']) ? $conn->real_escape_string($input['token']) : '';
+    $amount = isset($input['amount']) ? floatval($input['amount']) : 0.0;
+    $bookingId = isset($input['bookingId']) ? $conn->real_escape_string($input['bookingId']) : '';
+    $email = isset($input['email']) ? $conn->real_escape_string($input['email']) : '';
+    
+    if (!$token || !$amount || !$bookingId) {
+        echo json_encode(["status" => "error", "message" => "Missing required charge fields"]);
+        exit();
+    }
+    
+    // Fetch Stripe secret key
+    $stripeSecretRes = $conn->query("SELECT setting_value FROM settings WHERE setting_key = 'stripe_secret_key'");
+    $stripeSecretKey = '';
+    if ($stripeSecretRes && $stripeSecretRes->num_rows > 0) {
+        $row = $stripeSecretRes->fetch_assoc();
+        $stripeSecretKey = trim($row['setting_value']);
+    }
+    
+    if (empty($stripeSecretKey)) {
+        echo json_encode(["status" => "error", "message" => "Stripe secret key not configured."]);
+        exit();
+    }
+    
+    $amountInCents = intval($amount * 100);
+    
+    $ch = curl_init("https://api.stripe.com/v1/charges");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_USERPWD, $stripeSecretKey . ":");
+    
+    $fields = [
+        'amount' => $amountInCents,
+        'currency' => 'aed',
+        'source' => $token,
+        'description' => "Desert Safari Booking #" . $bookingId,
+        'receipt_email' => $email
+    ];
+    
+    curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    
+    if ($httpCode === 200) {
+        $res = json_decode($response, true);
+        if ($res && isset($res['paid']) && $res['paid'] == true) {
+            $conn->query("UPDATE bookings SET status = 'confirmed' WHERE id = '$bookingId'");
+            echo json_encode(["status" => "success", "chargeId" => $res['id']]);
+            exit();
+        }
+    }
+    
+    echo json_encode(["status" => "error", "message" => "Stripe transaction rejected: " . ($response ?: 'Network timeout')]);
     exit();
 }
 

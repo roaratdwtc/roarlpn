@@ -174,6 +174,8 @@ export async function sendPhoneOtp(phoneNumber, containerId = 'recaptcha-contain
       userMsg = "reCAPTCHA check failed. Please refresh and try again.";
     } else if (err.code === 'auth/unauthorized-domain') {
       userMsg = `Current domain (${window.location.hostname}) is not authorized in Firebase Console > Authentication > Settings > Authorized domains.`;
+    } else if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
+      userMsg = "Firebase SMS is not enabled for UAE (+971) in Firebase Console. Please register or sign in directly using your password without SMS.";
     }
     throw new Error(userMsg);
   }
@@ -230,7 +232,8 @@ import {
   getFirestore, 
   doc, 
   setDoc, 
-  updateDoc 
+  updateDoc,
+  getDoc 
 } from 'firebase/firestore';
 
 let firestoreInstance = null;
@@ -294,6 +297,24 @@ export async function markInviteUsedInFirestore(inviteCode, phone) {
   } catch (e) {
     console.warn("markInviteUsedInFirestore note:", e);
   }
+}
+
+/**
+ * Fetch invite from Firestore 'invites' table
+ */
+export async function fetchInviteFromFirestore(inviteCode) {
+  const db = getFirestoreDb();
+  if (!db || !inviteCode) return null;
+  try {
+    const docRef = doc(db, 'invites', inviteCode.trim().toUpperCase());
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+  } catch (e) {
+    console.warn("fetchInviteFromFirestore note:", e);
+  }
+  return null;
 }
 
 /**

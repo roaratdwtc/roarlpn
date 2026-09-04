@@ -206,6 +206,30 @@ $tables = [
         fileData LONGTEXT DEFAULT NULL,
         notes TEXT DEFAULT NULL,
         uploadedAt VARCHAR(50) DEFAULT ''
+    )",
+    "users" => "CREATE TABLE IF NOT EXISTS users (
+        id VARCHAR(100) PRIMARY KEY,
+        name VARCHAR(255),
+        phone VARCHAR(100),
+        password VARCHAR(255),
+        role VARCHAR(100),
+        linkedDriverId VARCHAR(100) DEFAULT '',
+        linkedCarPlate VARCHAR(100) DEFAULT '',
+        status VARCHAR(50) DEFAULT 'active',
+        createdAt VARCHAR(50) DEFAULT ''
+    )",
+    "invites" => "CREATE TABLE IF NOT EXISTS invites (
+        id VARCHAR(100) PRIMARY KEY,
+        code VARCHAR(100),
+        role VARCHAR(100),
+        targetName VARCHAR(255) DEFAULT '',
+        targetPhone VARCHAR(100) DEFAULT '',
+        targetPlate VARCHAR(100) DEFAULT '',
+        targetDriverId VARCHAR(100) DEFAULT '',
+        isUsed INT DEFAULT 0,
+        usedByPhone VARCHAR(100) DEFAULT '',
+        usedAt VARCHAR(50) DEFAULT NULL,
+        createdAt VARCHAR(50) DEFAULT ''
     )"
 ];
 

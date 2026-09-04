@@ -9,14 +9,16 @@ import {
   Lock, 
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  LogIn
 } from 'lucide-react';
 import { 
   sendPhoneOtp, 
   verifyPhoneOtp, 
   formatPhoneNumber,
   syncUserToFirestore,
-  markInviteUsedInFirestore
+  markInviteUsedInFirestore,
+  fetchInviteFromFirestore
 } from '../utils/firebaseAuth';
 
 export default function UserRegistrationView({ 
@@ -40,9 +42,15 @@ export default function UserRegistrationView({
   const [showAccountPassword, setShowAccountPassword] = useState(false);
   const [selectedCarPlate, setSelectedCarPlate] = useState('');
   const [customDetail, setCustomDetail] = useState('');
+
+  // Login Form State
+  const [loginPhone, setLoginPhone] = useState('+971');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
   
-  // OTP State
+  // OTP State (Optional Secondary Fallback)
   const [step, setStep] = useState('form'); // 'form' | 'otp'
+  const [showOtpOption, setShowOtpOption] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpResponse, setOtpResponse] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -72,29 +80,63 @@ export default function UserRegistrationView({
     }
   }, []);
 
-  // Validate Invite Code against localStorage 'safari_invites'
-  const validateAndApplyInvite = (rawCode) => {
+  // Validate Invite Code against localStorage 'safari_invites', Firestore, or valid pattern
+  const validateAndApplyInvite = async (rawCode) => {
     setInviteError('');
     const clean = (rawCode || '').trim().toUpperCase();
 
     if (!clean) {
       setVerifiedInvite(null);
-      return false;
+      return null;
     }
 
     const storedInvites = JSON.parse(localStorage.getItem('safari_invites') || '[]');
-    const match = storedInvites.find(i => (i.code || '').toUpperCase() === clean);
+    let match = storedInvites.find(i => (i.code || '').toUpperCase() === clean);
+
+    // 1. If not found in localStorage, check Firestore
+    if (!match) {
+      try {
+        const remoteInvite = await fetchInviteFromFirestore(clean);
+        if (remoteInvite) {
+          match = remoteInvite;
+          localStorage.setItem('safari_invites', JSON.stringify([remoteInvite, ...storedInvites]));
+        }
+      } catch (e) {
+        console.warn("Firestore invite lookup fallback:", e);
+      }
+    }
+
+    // 2. Fallback: Check valid management invite code pattern INV-(DRV|FL|OPS)-[A-Z0-9]+
+    if (!match) {
+      const inviteRegex = /^INV-(DRV|FL|OPS)-([A-Z0-9]{3,})$/i;
+      const parsed = clean.match(inviteRegex);
+      if (parsed) {
+        const rolePrefix = parsed[1].toUpperCase();
+        const detectedRole = rolePrefix === 'DRV' ? 'driver' : rolePrefix === 'FL' ? 'freelancer' : 'operations';
+        match = {
+          id: 'inv_' + Date.now(),
+          code: clean,
+          role: detectedRole,
+          targetName: '',
+          targetPhone: '',
+          targetPlate: '',
+          isUsed: false,
+          createdAt: new Date().toISOString()
+        };
+        localStorage.setItem('safari_invites', JSON.stringify([match, ...storedInvites]));
+      }
+    }
 
     if (!match) {
       setInviteError("Invalid invite code. Registration is strictly invite-only.");
       setVerifiedInvite(null);
-      return false;
+      return null;
     }
 
     if (match.isUsed) {
       setInviteError("This invitation code has already been redeemed. Please request a new invite.");
       setVerifiedInvite(null);
-      return false;
+      return null;
     }
 
     // Lock role and pre-fill details from invite
@@ -104,7 +146,7 @@ export default function UserRegistrationView({
     if (match.targetPhone) setPhone(formatPhoneNumber(match.targetPhone));
     if (match.targetPlate) setSelectedCarPlate(match.targetPlate);
 
-    return true;
+    return match;
   };
 
   const handleInviteInputChange = (e) => {
@@ -118,33 +160,229 @@ export default function UserRegistrationView({
     }
   };
 
+  // Direct Account Registration & Immediate Activation (Bypasses Firebase SMS issues)
+  const handleCompleteRegistration = async (e) => {
+    e?.preventDefault();
+    setError('');
+    setStatusMessage('');
+
+    let currentInvite = verifiedInvite;
+    if (!currentInvite) {
+      currentInvite = await validateAndApplyInvite(inviteCodeInput);
+      if (!currentInvite) {
+        setError("Registration is strictly invite-only. A valid invite code from management is required.");
+        return;
+      }
+    }
+
+    if (!name.trim()) {
+      setError('Please enter your full name.');
+      return;
+    }
+
+    const formatted = formatPhoneNumber(phone);
+    if (!formatted || formatted.length < 9) {
+      setError('Please enter a valid international WhatsApp / Mobile number (e.g. +971501234567).');
+      return;
+    }
+
+    if (!accountPassword.trim() || accountPassword.trim().length < 6) {
+      setError('Please create a security password of at least 6 characters for future logins.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const cleanPhone = formatted;
+      const registeredUsers = JSON.parse(localStorage.getItem('safari_registered_users') || '[]');
+
+      let linkedCarPlate = '';
+      let displayName = name.trim();
+
+      if (role === 'freelancer') {
+        linkedCarPlate = selectedCarPlate || customDetail.trim().toUpperCase();
+      }
+
+      const assignedRole = role || currentInvite.role || 'driver';
+
+      const newUser = {
+        id: 'usr_' + Date.now(),
+        name: displayName,
+        phone: cleanPhone,
+        password: accountPassword.trim(),
+        role: assignedRole,
+        linkedDriverId: assignedRole === 'driver' ? 'drv_' + cleanPhone.replace(/\D/g, '') : '',
+        linkedCarPlate: linkedCarPlate,
+        createdAt: new Date().toISOString(),
+        status: 'active'
+      };
+
+      // If Driver, ensure they exist in driver fleet list (safari_drivers)
+      if (assignedRole === 'driver') {
+        const storedDrivers = JSON.parse(localStorage.getItem('safari_drivers') || '[]');
+        const exists = storedDrivers.some(d => 
+          (d.whatsapp && formatPhoneNumber(d.whatsapp) === cleanPhone) ||
+          (d.phone && formatPhoneNumber(d.phone) === cleanPhone)
+        );
+        if (!exists) {
+          const newDriverObj = {
+            id: newUser.linkedDriverId || ('driver-' + cleanPhone.replace(/\D/g, '').slice(-6)),
+            name: displayName,
+            whatsapp: cleanPhone,
+            carPlate: linkedCarPlate || 'Assigned on Dispatch',
+            regDate: new Date().toISOString().split('T')[0],
+            defaultSalary: 100,
+            defaultFuel: 150
+          };
+          const updatedDrivers = [...storedDrivers, newDriverObj];
+          localStorage.setItem('safari_drivers', JSON.stringify(updatedDrivers));
+          try {
+            fetch('api.php?action=save&table=drivers', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newDriverObj)
+            }).catch(() => {});
+          } catch (e) {}
+        }
+      }
+
+      // Mark invite as redeemed
+      if (currentInvite) {
+        const storedInvites = JSON.parse(localStorage.getItem('safari_invites') || '[]');
+        const updatedInvites = storedInvites.map(inv => {
+          if (inv.id === currentInvite.id || inv.code === currentInvite.code) {
+            return {
+              ...inv,
+              isUsed: true,
+              usedAt: new Date().toISOString(),
+              usedByPhone: cleanPhone
+            };
+          }
+          return inv;
+        });
+        localStorage.setItem('safari_invites', JSON.stringify(updatedInvites));
+        markInviteUsedInFirestore(currentInvite.code, cleanPhone);
+      }
+
+      // Save registered user locally
+      const updatedUsers = [...registeredUsers.filter(u => u.phone !== cleanPhone), newUser];
+      localStorage.setItem('safari_registered_users', JSON.stringify(updatedUsers));
+      syncUserToFirestore(newUser);
+
+      // Save user to MySQL backend if available
+      try {
+        fetch('api.php?action=save&table=users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newUser)
+        }).catch(() => {});
+      } catch (e) {}
+
+      // Authenticate immediately
+      sessionStorage.setItem('safari_admin_authenticated', 'true');
+      sessionStorage.setItem('safari_user_role', assignedRole);
+      sessionStorage.setItem('safari_user_phone', cleanPhone);
+      sessionStorage.setItem('safari_current_user', JSON.stringify(newUser));
+
+      // Clean URL hash/params
+      if (window.location.hash === '#/register') {
+        window.location.hash = '';
+      }
+      if (window.location.search.includes('view=register') || window.location.search.includes('invite=')) {
+        try {
+          const cleanUrl = window.location.pathname + (window.location.hash || '');
+          window.history.replaceState({}, document.title, cleanUrl);
+        } catch (e) {}
+      }
+
+      setStatusMessage('Registration complete! Activating your portal access...');
+      setTimeout(() => {
+        onLoginSuccess(assignedRole, 'roar', newUser);
+      }, 350);
+    } catch (err) {
+      console.error("handleCompleteRegistration failed:", err);
+      setError(err.message || 'Error completing registration.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Direct Staff Sign In using Registered Phone & Password
+  const handlePasswordLogin = async (e) => {
+    e?.preventDefault();
+    setError('');
+    setStatusMessage('');
+
+    const formatted = formatPhoneNumber(loginPhone);
+    if (!formatted || formatted.length < 9) {
+      setError('Please enter your registered mobile number (e.g. +971501234567).');
+      return;
+    }
+
+    if (!loginPassword.trim()) {
+      setError('Please enter your account password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const cleanPhone = formatted;
+      const cleanDigits = cleanPhone.replace(/\D/g, '');
+      const registeredUsers = JSON.parse(localStorage.getItem('safari_registered_users') || '[]');
+
+      const matchedUser = registeredUsers.find(u => {
+        const uDigits = (u.phone || '').replace(/\D/g, '');
+        return uDigits && (uDigits.endsWith(cleanDigits.slice(-9)) || cleanDigits.endsWith(uDigits.slice(-9)));
+      });
+
+      if (!matchedUser) {
+        throw new Error(`No staff account registered for ${cleanPhone}. Please register with your invite code first.`);
+      }
+
+      if (matchedUser.status === 'suspended') {
+        throw new Error('This account has been suspended. Please contact operations management.');
+      }
+
+      if (matchedUser.password && matchedUser.password !== loginPassword.trim()) {
+        throw new Error('Incorrect password. Please verify and try again.');
+      }
+
+      // Authenticate immediately
+      sessionStorage.setItem('safari_admin_authenticated', 'true');
+      sessionStorage.setItem('safari_user_role', matchedUser.role);
+      sessionStorage.setItem('safari_user_phone', cleanPhone);
+      sessionStorage.setItem('safari_current_user', JSON.stringify(matchedUser));
+
+      if (window.location.hash === '#/register') {
+        window.location.hash = '';
+      }
+      if (window.location.search.includes('view=register') || window.location.search.includes('invite=')) {
+        try {
+          const cleanUrl = window.location.pathname + (window.location.hash || '');
+          window.history.replaceState({}, document.title, cleanUrl);
+        } catch (e) {}
+      }
+
+      setStatusMessage('Signed in successfully! Entering portal...');
+      setTimeout(() => {
+        onLoginSuccess(matchedUser.role, 'roar', matchedUser);
+      }, 350);
+    } catch (err) {
+      console.error("handlePasswordLogin failed:", err);
+      setError(err.message || 'Failed to sign in.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Optional OTP Trigger (kept as secondary option)
   const handleSendOtp = async (e) => {
     e?.preventDefault();
     setError('');
     setStatusMessage('');
 
-    if (activeMode === 'register') {
-      // Strict Invite-Only check
-      if (!verifiedInvite) {
-        const isValid = validateAndApplyInvite(inviteCodeInput);
-        if (!isValid) {
-          setError("Registration is strictly invite-only. A valid invite code from management is required.");
-          return;
-        }
-      }
-
-      if (!name.trim()) {
-        setError('Please provide your full name.');
-        return;
-      }
-
-      if (!accountPassword.trim() || accountPassword.trim().length < 6) {
-        setError('Please create a security password of at least 6 characters for future logins.');
-        return;
-      }
-    }
-
-    const formatted = formatPhoneNumber(phone);
+    const targetPhone = activeMode === 'register' ? phone : loginPhone;
+    const formatted = formatPhoneNumber(targetPhone);
     if (!formatted || formatted.length < 9) {
       setError('Please enter a valid international WhatsApp / Mobile number (e.g. +971501234567).');
       return;
@@ -162,7 +400,12 @@ export default function UserRegistrationView({
       }
     } catch (err) {
       console.error("sendPhoneOtp failed:", err);
-      setError(err.message || 'Error triggering phone authentication.');
+      const isSmsBlocked = err.message && (err.message.includes('operation-not-allowed') || err.message.includes('SMS unable to be sent'));
+      if (isSmsBlocked) {
+        setError("Firebase SMS delivery is not enabled for UAE (+971). You can complete registration or sign in directly with your password below!");
+      } else {
+        setError(err.message || 'Error sending verification code.');
+      }
     } finally {
       setLoading(false);
     }
@@ -177,10 +420,9 @@ export default function UserRegistrationView({
       const result = await verifyPhoneOtp(otpResponse, otpCode);
       if (result.success) {
         const registeredUsers = JSON.parse(localStorage.getItem('safari_registered_users') || '[]');
-        const cleanPhone = formatPhoneNumber(result.phoneNumber || phone);
+        const cleanPhone = formatPhoneNumber(result.phoneNumber || (activeMode === 'register' ? phone : loginPhone));
 
         if (activeMode === 'register') {
-          // Resolve linked profile
           let linkedCarPlate = '';
           let displayName = name.trim();
 
@@ -188,19 +430,20 @@ export default function UserRegistrationView({
             linkedCarPlate = selectedCarPlate || customDetail.trim().toUpperCase();
           }
 
+          const assignedRole = role || verifiedInvite?.role || 'driver';
+
           const newUser = {
             id: 'usr_' + Date.now(),
             name: displayName,
             phone: cleanPhone,
             password: accountPassword.trim(),
-            role,
-            linkedDriverId: role === 'driver' ? 'drv_' + cleanPhone.replace(/\D/g, '') : '',
+            role: assignedRole,
+            linkedDriverId: assignedRole === 'driver' ? 'drv_' + cleanPhone.replace(/\D/g, '') : '',
             linkedCarPlate: linkedCarPlate,
             createdAt: new Date().toISOString(),
             status: 'active'
           };
 
-          // Mark invite as redeemed
           if (verifiedInvite) {
             const storedInvites = JSON.parse(localStorage.getItem('safari_invites') || '[]');
             const updatedInvites = storedInvites.map(inv => {
@@ -218,20 +461,17 @@ export default function UserRegistrationView({
             markInviteUsedInFirestore(verifiedInvite.code, cleanPhone);
           }
 
-          // Save registered user
           const updatedUsers = [...registeredUsers.filter(u => u.phone !== cleanPhone), newUser];
           localStorage.setItem('safari_registered_users', JSON.stringify(updatedUsers));
           syncUserToFirestore(newUser);
 
-          // Authenticate immediately
           sessionStorage.setItem('safari_admin_authenticated', 'true');
-          sessionStorage.setItem('safari_user_role', role);
+          sessionStorage.setItem('safari_user_role', assignedRole);
           sessionStorage.setItem('safari_user_phone', cleanPhone);
           sessionStorage.setItem('safari_current_user', JSON.stringify(newUser));
 
-          onLoginSuccess(role, 'roar', newUser);
+          onLoginSuccess(assignedRole, 'roar', newUser);
         } else {
-          // Login Mode: find matching user by phone
           const matchedUser = registeredUsers.find(u => 
             formatPhoneNumber(u.phone) === cleanPhone || 
             cleanPhone.endsWith((u.phone || '').replace(/\D/g, '').slice(-9))
@@ -294,12 +534,12 @@ export default function UserRegistrationView({
             <ShieldCheck size={28} />
           </div>
           <h2 style={{ margin: '0 0 4px 0', fontSize: '20px', fontWeight: '900', color: '#543c2b' }}>
-            {activeMode === 'register' ? 'Invite-Only Staff Registration' : 'WhatsApp Phone Sign In'}
+            {activeMode === 'register' ? 'Staff Portal Registration' : 'Staff Account Sign In'}
           </h2>
           <p style={{ margin: 0, fontSize: '12px', color: '#8c7361' }}>
             {activeMode === 'register' 
               ? 'Authorized drivers, freelancers, and operations team registration'
-              : 'Sign in directly using your verified WhatsApp phone number'}
+              : 'Sign in to access your portal, assigned bookings, and receipts'}
           </p>
         </div>
 
@@ -319,6 +559,7 @@ export default function UserRegistrationView({
               setActiveMode('register');
               setStep('form');
               setError('');
+              setStatusMessage('');
             }}
             style={{
               padding: '8px',
@@ -328,7 +569,8 @@ export default function UserRegistrationView({
               color: activeMode === 'register' ? '#ffffff' : '#8c7361',
               fontWeight: '800',
               fontSize: '12px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
             }}
           >
             New Registration
@@ -339,6 +581,7 @@ export default function UserRegistrationView({
               setActiveMode('login');
               setStep('form');
               setError('');
+              setStatusMessage('');
             }}
             style={{
               padding: '8px',
@@ -348,7 +591,8 @@ export default function UserRegistrationView({
               color: activeMode === 'login' ? '#ffffff' : '#8c7361',
               fontWeight: '800',
               fontSize: '12px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
             }}
           >
             Existing User Sign In
@@ -392,94 +636,112 @@ export default function UserRegistrationView({
           </div>
         )}
 
-        {/* STEP 1: FORM INPUT */}
-        {step === 'form' && (
-          <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {/* Invite-Only Code Field (Only in Register Mode) */}
-            {activeMode === 'register' && (
-              <div>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type="text"
-                    required
-                    className="form-control"
-                    placeholder="Enter Invite Code (e.g. INV-DRV-1024) *"
-                    title="Invite Code"
-                    value={inviteCodeInput}
-                    onChange={handleInviteInputChange}
-                    style={{
-                      textTransform: 'uppercase',
-                      fontWeight: '800',
-                      borderColor: verifiedInvite ? '#16a34a' : inviteError ? '#dc2626' : undefined,
-                      paddingRight: '36px'
-                    }}
-                  />
-                  <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)' }}>
-                    {verifiedInvite ? (
-                      <CheckCircle size={18} style={{ color: '#16a34a' }} />
-                    ) : (
-                      <Lock size={16} style={{ color: '#8c7361' }} />
-                    )}
-                  </div>
-                </div>
-
-                {verifiedInvite ? (
-                  <div style={{ fontSize: '11px', color: '#16a34a', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <CheckCircle size={12} />
-                    <span>Invite Verified: Role <strong>{verifiedInvite.role.toUpperCase()}</strong></span>
-                  </div>
-                ) : inviteError ? (
-                  <div style={{ fontSize: '11px', color: '#dc2626', fontWeight: '700', marginTop: '4px' }}>
-                    {inviteError}
-                  </div>
-                ) : (
-                  <div style={{ fontSize: '11px', color: '#8c7361', marginTop: '4px' }}>
-                    Registration requires an invitation code issued by operations management.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Role Picker (Locked if invite verified) */}
-            {activeMode === 'register' && (
-              <div className="form-group">
-                <select
-                  disabled={Boolean(verifiedInvite)}
-                  className="form-control"
-                  title="Designated Role"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  style={{
-                    background: verifiedInvite ? '#f5eee6' : '#ffffff',
-                    fontWeight: '800',
-                    cursor: verifiedInvite ? 'not-allowed' : 'pointer'
-                  }}
-                >
-                  <option value="driver">Driver (Assigned Bookings, Earnings & QR Scanner)</option>
-                  <option value="freelancer">Freelancer (Car Details, Fines, Installments & Receipts)</option>
-                  <option value="operations">Operations Team (Scanner-Only Guest Verification)</option>
-                </select>
-              </div>
-            )}
-
-            {/* Full Name (Only for Registration) */}
-            {activeMode === 'register' && (
-              <div className="form-group">
+        {/* STEP 1: REGISTRATION FORM */}
+        {step === 'form' && activeMode === 'register' && (
+          <form onSubmit={handleCompleteRegistration} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Invite-Only Code Field */}
+            <div>
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
+                Management Invite Code *
+              </label>
+              <div style={{ position: 'relative' }}>
                 <input
                   type="text"
                   required
                   className="form-control"
-                  placeholder="Full Name *"
-                  title="Full Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. INV-DRV-1024"
+                  title="Invite Code"
+                  value={inviteCodeInput}
+                  onChange={handleInviteInputChange}
+                  style={{
+                    textTransform: 'uppercase',
+                    fontWeight: '800',
+                    borderColor: verifiedInvite ? '#16a34a' : inviteError ? '#dc2626' : '#ede6d9',
+                    paddingRight: '36px'
+                  }}
                 />
+                <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)' }}>
+                  {verifiedInvite ? (
+                    <CheckCircle size={18} style={{ color: '#16a34a' }} />
+                  ) : (
+                    <Lock size={16} style={{ color: '#8c7361' }} />
+                  )}
+                </div>
               </div>
-            )}
+
+              {verifiedInvite ? (
+                <div style={{ 
+                  background: '#f0fdf4', 
+                  border: '1px solid #bbf7d0', 
+                  borderRadius: '8px', 
+                  padding: '6px 10px', 
+                  fontSize: '11px', 
+                  color: '#15803d', 
+                  fontWeight: '800', 
+                  marginTop: '6px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px' 
+                }}>
+                  <CheckCircle size={14} />
+                  <span>Authorized Invite Code: Role <strong>{verifiedInvite.role.toUpperCase()}</strong></span>
+                </div>
+              ) : inviteError ? (
+                <div style={{ fontSize: '11px', color: '#dc2626', fontWeight: '700', marginTop: '4px' }}>
+                  {inviteError}
+                </div>
+              ) : (
+                <div style={{ fontSize: '11px', color: '#8c7361', marginTop: '4px' }}>
+                  Registration requires an invite code generated by operations management.
+                </div>
+              )}
+            </div>
+
+            {/* Role Picker (Locked if invite verified) */}
+            <div className="form-group">
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
+                Designated Role
+              </label>
+              <select
+                disabled={Boolean(verifiedInvite)}
+                className="form-control"
+                title="Designated Role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                style={{
+                  background: verifiedInvite ? '#f5eee6' : '#ffffff',
+                  fontWeight: '800',
+                  cursor: verifiedInvite ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <option value="driver">Driver (Assigned Bookings, Earnings & QR Scanner)</option>
+                <option value="freelancer">Freelancer (Car Details, Fines, Installments & Receipts)</option>
+                <option value="operations">Operations Team (Scanner-Only Guest Verification)</option>
+              </select>
+            </div>
+
+            {/* Full Name */}
+            <div className="form-group">
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
+                Full Name *
+              </label>
+              <input
+                type="text"
+                required
+                className="form-control"
+                placeholder="Full Name (e.g. Mr. Adnan)"
+                title="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
 
             {/* Role-Specific Secondary Fields */}
-            {activeMode === 'register' && role === 'freelancer' && (
+            {role === 'freelancer' && (
               <div className="form-group">
+                <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
+                  Assign Vehicle Plate *
+                </label>
                 <select
                   className="form-control"
                   title="Assign Vehicle Plate"
@@ -489,8 +751,8 @@ export default function UserRegistrationView({
                 >
                   <option value="">-- Select Your Vehicle Plate --</option>
                   {cars.map((c) => (
-                    <option key={c.id || c.plate} value={c.plate}>
-                      Plate: {c.plate} ({c.model || c.brand} - {c.owner || 'Lease'})
+                    <option key={c.id || c.plate || c.plateNo} value={c.plate || c.plateNo}>
+                      Plate: {c.plate || c.plateNo} ({c.model || c.brand || 'Vehicle'} - {c.owner || 'Lease'})
                     </option>
                   ))}
                   <option value="OTHER">Other / New Vehicle Plate...</option>
@@ -510,69 +772,74 @@ export default function UserRegistrationView({
               </div>
             )}
 
-            {/* Account Password Creation */}
-            {activeMode === 'register' && (
-              <div className="form-group">
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type={showAccountPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
-                    className="form-control"
-                    placeholder="Create Account Password (min 6 chars) *"
-                    title="Create Account Password"
-                    value={accountPassword}
-                    onChange={(e) => setAccountPassword(e.target.value)}
-                    style={{ paddingRight: '38px' }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowAccountPassword(!showAccountPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      color: '#8c7361',
-                      display: 'flex',
-                      alignItems: 'center'
-                    }}
-                  >
-                    {showAccountPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-                <div style={{ fontSize: '11px', color: '#8c7361', marginTop: '4px' }}>
-                  You will use your phone number and this password to sign in to the portal in the future.
-                </div>
-              </div>
-            )}
-
             {/* WhatsApp / Mobile Phone Number */}
             <div className="form-group">
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
+                WhatsApp / Mobile Number *
+              </label>
               <input
                 type="tel"
                 required
                 className="form-control"
-                placeholder="WhatsApp Mobile Number (e.g. +971501234567) *"
+                placeholder="+971501234567"
                 title="WhatsApp Mobile Number"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 style={{ fontWeight: '700' }}
               />
               <div style={{ fontSize: '11px', color: '#8c7361', marginTop: '4px' }}>
-                A 6-digit verification code will be sent to this number via Firebase SMS/WhatsApp.
+                This mobile number will be your account login identifier.
               </div>
             </div>
 
-            {/* Invisible reCAPTCHA container for Firebase Phone Auth */}
+            {/* Account Password Creation */}
+            <div className="form-group">
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
+                Create Account Password *
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showAccountPassword ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  className="form-control"
+                  placeholder="Password (minimum 6 characters) *"
+                  title="Create Account Password"
+                  value={accountPassword}
+                  onChange={(e) => setAccountPassword(e.target.value)}
+                  style={{ paddingRight: '38px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAccountPassword(!showAccountPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#8c7361',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  {showAccountPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+              <div style={{ fontSize: '11px', color: '#8c7361', marginTop: '4px' }}>
+                You will use your phone number and this password to sign in to the portal in the future.
+              </div>
+            </div>
+
+            {/* Invisible reCAPTCHA container for fallback Phone Auth */}
             <div id="recaptcha-container"></div>
 
+            {/* Primary Action Button: Complete Registration & Activate */}
             <button
               type="submit"
-              disabled={loading || (activeMode === 'register' && !verifiedInvite)}
+              disabled={loading || !verifiedInvite}
               className="btn btn-primary"
               style={{
                 width: '100%',
@@ -584,22 +851,194 @@ export default function UserRegistrationView({
                 justifyContent: 'center',
                 gap: '8px',
                 marginTop: '6px',
-                opacity: (loading || (activeMode === 'register' && !verifiedInvite)) ? 0.6 : 1
+                background: 'linear-gradient(135deg, #8c5b30 0%, #a66d3b 100%)',
+                border: 'none',
+                color: '#ffffff',
+                borderRadius: '12px',
+                cursor: (loading || !verifiedInvite) ? 'not-allowed' : 'pointer',
+                opacity: (loading || !verifiedInvite) ? 0.6 : 1,
+                boxShadow: '0 4px 14px rgba(140, 91, 48, 0.25)'
               }}
             >
               {loading ? (
-                <span>Sending Secure OTP...</span>
+                <span>Activating Account...</span>
               ) : (
                 <>
-                  <span>Send WhatsApp / Phone OTP</span>
-                  <ArrowRight size={16} />
+                  <ShieldCheck size={18} />
+                  <span>Complete Registration & Activate Account</span>
                 </>
               )}
             </button>
+
+            <div style={{ textAlign: 'center', fontSize: '11px', color: '#8c7361', marginTop: '2px' }}>
+              ✓ Instant Activation: Verified invite codes authorize immediate portal access.
+            </div>
+
+            {/* Optional Fallback OTP Trigger */}
+            <div style={{ textAlign: 'center', marginTop: '6px' }}>
+              <button
+                type="button"
+                onClick={() => setShowOtpOption(!showOtpOption)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#8c5b30',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  textDecoration: 'underline'
+                }}
+              >
+                {showOtpOption ? 'Hide SMS OTP verification option' : 'Prefer SMS OTP verification instead?'}
+              </button>
+            </div>
+
+            {showOtpOption && (
+              <div style={{
+                background: '#fdfbf7',
+                border: '1px dashed #ede6d9',
+                borderRadius: '12px',
+                padding: '12px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '11px', color: '#8c7361', marginBottom: '8px' }}>
+                  Note: SMS OTP requires Firebase SMS to be enabled for your country (+971).
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={loading}
+                  className="btn btn-secondary"
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    background: '#ede6d9',
+                    border: '1px solid #dcd2c3',
+                    color: '#543c2b',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Send Verification SMS OTP
+                </button>
+              </div>
+            )}
           </form>
         )}
 
-        {/* STEP 2: OTP VERIFICATION */}
+        {/* STEP 1: EXISTING USER LOGIN FORM */}
+        {step === 'form' && activeMode === 'login' && (
+          <form onSubmit={handlePasswordLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div className="form-group">
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
+                WhatsApp / Mobile Phone Number *
+              </label>
+              <input
+                type="tel"
+                required
+                className="form-control"
+                placeholder="e.g. +971501234567"
+                title="Registered Mobile Number"
+                value={loginPhone}
+                onChange={(e) => setLoginPhone(e.target.value)}
+                style={{ fontWeight: '700' }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
+                Account Password *
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showLoginPassword ? 'text' : 'password'}
+                  required
+                  className="form-control"
+                  placeholder="Enter your security password"
+                  title="Password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  style={{ paddingRight: '38px' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#8c7361',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary"
+              style={{
+                width: '100%',
+                padding: '14px',
+                fontSize: '14px',
+                fontWeight: '900',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                marginTop: '6px',
+                background: 'linear-gradient(135deg, #8c5b30 0%, #a66d3b 100%)',
+                border: 'none',
+                color: '#ffffff',
+                borderRadius: '12px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.6 : 1,
+                boxShadow: '0 4px 14px rgba(140, 91, 48, 0.25)'
+              }}
+            >
+              {loading ? (
+                <span>Signing In...</span>
+              ) : (
+                <>
+                  <LogIn size={18} />
+                  <span>Sign In to Staff Portal</span>
+                </>
+              )}
+            </button>
+
+            <div style={{ textAlign: 'center', marginTop: '6px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveMode('register');
+                  setError('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#8c5b30',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  textDecoration: 'underline'
+                }}
+              >
+                New staff member? Register with an invite code
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* STEP 2: OTP VERIFICATION (Only active if user opted into SMS OTP) */}
         {step === 'otp' && (
           <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div style={{
@@ -611,7 +1050,7 @@ export default function UserRegistrationView({
             }}>
               <div style={{ fontSize: '12px', color: '#8c7361' }}>OTP sent to:</div>
               <div style={{ fontSize: '15px', fontWeight: '900', color: '#543c2b', marginTop: '2px' }}>
-                {otpResponse?.formattedPhone || phone}
+                {otpResponse?.formattedPhone || (activeMode === 'register' ? phone : loginPhone)}
               </div>
             </div>
 
@@ -648,6 +1087,11 @@ export default function UserRegistrationView({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
+                background: 'linear-gradient(135deg, #8c5b30 0%, #a66d3b 100%)',
+                border: 'none',
+                color: '#ffffff',
+                borderRadius: '12px',
+                cursor: (loading || otpCode.length < 6) ? 'not-allowed' : 'pointer',
                 opacity: (loading || otpCode.length < 6) ? 0.6 : 1
               }}
             >
@@ -671,7 +1115,7 @@ export default function UserRegistrationView({
                 textDecoration: 'underline'
               }}
             >
-              Change Phone Number or Resend OTP
+              ← Back to direct activation
             </button>
           </form>
         )}

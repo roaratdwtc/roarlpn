@@ -926,6 +926,17 @@ export default function App() {
   }
 
   const handleLoginSuccess = (role, company_id, companyOrUser) => {
+    setIsRegisterView(false);
+    if (window.location.hash === '#/register') {
+      window.location.hash = '';
+    }
+    if (window.location.search.includes('view=register') || window.location.search.includes('invite=')) {
+      try {
+        const cleanUrl = window.location.pathname + (window.location.hash || '');
+        window.history.replaceState({}, document.title, cleanUrl);
+      } catch (e) {}
+    }
+
     if (role === 'register_wizard') {
       setUserRole('register_wizard');
       setIsAuthenticated(true);
