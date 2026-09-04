@@ -1033,6 +1033,43 @@ export default function App() {
     );
   }
 
+  // Direct QR Scan Booking Verification Pass (Accessible to Customer, Driver, OpTeam without forced login)
+  if (verifyBookingData) {
+    const found = (bookings || []).find(b => 
+      b.id === verifyBookingData.id || 
+      (b.id || '').replace(/^book-/, '').toLowerCase() === (verifyBookingData.id || '').replace(/^book-/, '').toLowerCase()
+    );
+    const activeBooking = found ? { ...verifyBookingData, ...found } : verifyBookingData;
+
+    return (
+      <div style={{ minHeight: '100vh', background: '#fdfbf7', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+        <BookingVerificationModal 
+          booking={activeBooking} 
+          onClose={() => {
+            setVerifyBookingData(null);
+            const cleanUrl = window.location.pathname + (window.location.hash || '');
+            window.history.replaceState({}, document.title, cleanUrl);
+          }}
+          onUpdateBookingStatus={(id, newStatus) => {
+            setBookings(prev => (prev || []).map(b => b.id === id ? { ...b, status: newStatus } : b));
+            try {
+              fetch('api.php?action=save&table=bookings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...activeBooking, id, status: newStatus })
+              }).catch(() => {});
+            } catch (e) {}
+          }}
+          isAuthenticated={isAuthenticated}
+          userRole={userRole}
+          onLoginSuccess={handleLoginSuccess}
+          drivers={drivers}
+          partners={partners}
+        />
+      </div>
+    );
+  }
+
   if (isCustomerView) {
     return (
       <CustomerBookingView 
