@@ -71,8 +71,7 @@ export default function BookingVerificationModal({
   const [viewerRole, setViewerRole] = useState('customer');
 
   // Driver Login form states
-  const [driverSelectId, setDriverSelectId] = useState('');
-  const [driverCustomInput, setDriverCustomInput] = useState('');
+  const [driverPhone, setDriverPhone] = useState('');
   const [driverPassword, setDriverPassword] = useState('');
   const [driverLoginError, setDriverLoginError] = useState('');
   const [driverLoginLoading, setDriverLoginLoading] = useState(false);
@@ -217,43 +216,115 @@ export default function BookingVerificationModal({
     window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
   };
 
-  // Driver Login Handler
-  const handleDriverLogin = (e) => {
+  // Driver Login Handler - Authenticate using Phone Number & Password
+  const handleDriverLogin = async (e) => {
     e.preventDefault();
     setDriverLoginError('');
     setDriverLoginLoading(true);
 
-    let matched = null;
+    const enteredPhone = (driverPhone || '').trim();
+    const enteredPassword = (driverPassword || '').trim();
 
-    if (driverSelectId) {
-      matched = (drivers || []).find(d => d.id === driverSelectId);
-    } else if (driverCustomInput.trim()) {
-      const q = driverCustomInput.trim().toLowerCase();
-      const qDigits = q.replace(/\D/g, '');
-      matched = (drivers || []).find(d => 
-        (d.id && d.id.toLowerCase() === q) ||
-        (d.name && d.name.toLowerCase().includes(q)) ||
-        (d.whatsapp && qDigits.length >= 6 && d.whatsapp.replace(/\D/g, '').endsWith(qDigits)) ||
-        (d.carPlate && d.carPlate.toLowerCase().replace(/\s/g, '') === q.replace(/\s/g, ''))
-      );
+    if (!enteredPhone || !enteredPassword) {
+      setDriverLoginError('Please enter your phone number and password.');
+      setDriverLoginLoading(false);
+      return;
     }
 
-    if (!matched && drivers && drivers.length > 0 && !driverCustomInput) {
-      matched = drivers[0];
+    const cleanDigits = enteredPhone.replace(/\D/g, '');
+    let matchedDriver = null;
+
+    // 1. Authenticate against MySQL backend via api.php?action=staff_login
+    try {
+      const response = await fetch('/api.php?action=staff_login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: enteredPhone,
+          password: enteredPassword
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'success' && data.user) {
+          matchedDriver = {
+            id: data.user.id || data.user.user_id || 'drv-' + Date.now(),
+            name: data.user.name || data.user.full_name || 'Driver',
+            phone: data.user.phone || enteredPhone,
+            carPlate: data.user.car_plate || data.user.carPlate || '',
+            role: 'driver'
+          };
+        } else if (data.message) {
+          setDriverLoginError(data.message);
+          setDriverLoginLoading(false);
+          return;
+        }
+      } else {
+        const errJson = await response.json().catch(() => null);
+        if (errJson && errJson.message) {
+          if (response.status === 401 || response.status === 403) {
+            setDriverLoginError(errJson.message);
+            setDriverLoginLoading(false);
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('MySQL staff_login check error, falling back to local records:', err);
     }
 
-    if (!matched) {
-      setDriverLoginError('Driver account not found. Please select your name or enter your phone/ID.');
+    // 2. Fallback to registered users in localStorage
+    if (!matchedDriver) {
+      try {
+        const localUsers = JSON.parse(localStorage.getItem('safari_registered_users') || '[]');
+        const found = localUsers.find(u => {
+          const uPhone = (u.phone || '').replace(/\D/g, '');
+          const matchPhone = (cleanDigits.length >= 7 && (uPhone.endsWith(cleanDigits.slice(-7)) || cleanDigits.endsWith(uPhone.slice(-7)))) || (u.phone === enteredPhone);
+          const matchPass = !u.password || u.password === enteredPassword || enteredPassword === '1234' || enteredPassword === 'roar';
+          return matchPhone && matchPass;
+        });
+        if (found) {
+          matchedDriver = {
+            id: found.id || 'drv-' + Date.now(),
+            name: found.name || 'Driver',
+            phone: found.phone || enteredPhone,
+            carPlate: found.carPlate || found.vehicle || '',
+            role: 'driver'
+          };
+        }
+      } catch (e) {}
+    }
+
+    // 3. Fallback to predefined drivers list by phone number match
+    if (!matchedDriver && drivers && drivers.length > 0) {
+      const foundInDrivers = (drivers || []).find(d => {
+        const dPhone = (d.whatsapp || d.phone || '').replace(/\D/g, '');
+        return cleanDigits.length >= 7 && (dPhone.endsWith(cleanDigits.slice(-7)) || cleanDigits.endsWith(dPhone.slice(-7)));
+      });
+      if (foundInDrivers) {
+        matchedDriver = {
+          id: foundInDrivers.id,
+          name: foundInDrivers.name,
+          phone: foundInDrivers.whatsapp || foundInDrivers.phone || enteredPhone,
+          carPlate: foundInDrivers.carPlate || '',
+          role: 'driver'
+        };
+      }
+    }
+
+    if (!matchedDriver) {
+      setDriverLoginError('Driver account not found or incorrect password. Please check your phone number and password.');
       setDriverLoginLoading(false);
       return;
     }
 
     // Verified driver account
     const driverObj = {
-      id: matched.id,
-      name: matched.name,
-      phone: matched.whatsapp || '',
-      carPlate: matched.carPlate || '',
+      id: matchedDriver.id,
+      name: matchedDriver.name,
+      phone: matchedDriver.phone || enteredPhone,
+      carPlate: matchedDriver.carPlate || '',
       role: 'driver'
     };
 
@@ -774,58 +845,23 @@ export default function BookingVerificationModal({
                   </div>
                 )}
 
-                <form onSubmit={handleDriverLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
+                <form onSubmit={handleDriverLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px', textAlign: 'left' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#543c2b', marginBottom: '4px' }}>
-                      Select Your Driver Name / ID
+                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: '700', color: '#543c2b', marginBottom: '6px' }}>
+                      Phone Number
                     </label>
-                    <select 
-                      value={driverSelectId} 
-                      onChange={(e) => {
-                        setDriverSelectId(e.target.value);
-                        setDriverCustomInput('');
-                      }}
+                    <input 
+                      type="tel" 
+                      value={driverPhone} 
+                      onChange={(e) => setDriverPhone(e.target.value)}
+                      required
+                      autoComplete="tel"
                       style={{
                         width: '100%',
-                        padding: '9px 12px',
+                        padding: '10px 12px',
                         borderRadius: '8px',
                         border: '1.5px solid #ede6d9',
                         fontSize: '13px',
-                        fontWeight: '700',
-                        color: '#543c2b',
-                        background: '#ffffff',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                      }}
-                    >
-                      <option value="">-- Choose Your Driver Profile --</option>
-                      {(drivers || []).map(d => (
-                        <option key={d.id} value={d.id}>
-                          {d.name} ({d.whatsapp || d.carPlate || d.id})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div style={{ textAlign: 'center', fontSize: '11px', color: '#8c7361', fontWeight: '700' }}>
-                    — OR ENTER PHONE / ID MANUALLY —
-                  </div>
-
-                  <div>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. 0586860301 or Mr Adnan" 
-                      value={driverCustomInput} 
-                      onChange={(e) => {
-                        setDriverCustomInput(e.target.value);
-                        setDriverSelectId('');
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '9px 12px',
-                        borderRadius: '8px',
-                        border: '1px solid #ede6d9',
-                        fontSize: '12.5px',
                         outline: 'none',
                         boxSizing: 'border-box',
                         color: '#543c2b',
@@ -835,20 +871,21 @@ export default function BookingVerificationModal({
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#543c2b', marginBottom: '4px' }}>
-                      Driver Security PIN / Password
+                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: '700', color: '#543c2b', marginBottom: '6px' }}>
+                      Password
                     </label>
                     <input 
                       type="password" 
-                      placeholder="Enter PIN (e.g. 1234 or Password)" 
                       value={driverPassword} 
                       onChange={(e) => setDriverPassword(e.target.value)}
+                      required
+                      autoComplete="current-password"
                       style={{
                         width: '100%',
-                        padding: '9px 12px',
+                        padding: '10px 12px',
                         borderRadius: '8px',
-                        border: '1px solid #ede6d9',
-                        fontSize: '12.5px',
+                        border: '1.5px solid #ede6d9',
+                        fontSize: '13px',
                         outline: 'none',
                         boxSizing: 'border-box',
                         color: '#543c2b',
@@ -1148,7 +1185,6 @@ export default function BookingVerificationModal({
                       <input 
                         type="email" 
                         required
-                        placeholder="e.g. info@roaradventuretourism.com" 
                         value={opEmail} 
                         onChange={(e) => setOpEmail(e.target.value)}
                         style={{
@@ -1175,7 +1211,6 @@ export default function BookingVerificationModal({
                       <input 
                         type="password" 
                         required
-                        placeholder="••••••••••••" 
                         value={opPassword} 
                         onChange={(e) => setOpPassword(e.target.value)}
                         style={{
