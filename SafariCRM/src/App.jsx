@@ -1050,18 +1050,21 @@ export default function App() {
             const cleanUrl = window.location.pathname + (window.location.hash || '');
             window.history.replaceState({}, document.title, cleanUrl);
           }}
-          onUpdateBookingStatus={(id, newStatus) => {
-            setBookings(prev => (prev || []).map(b => b.id === id ? { ...b, status: newStatus } : b));
+          onUpdateBookingStatus={(id, updateData) => {
+            const updates = typeof updateData === 'string' ? { status: updateData } : updateData;
+            setBookings(prev => (prev || []).map(b => b.id === id ? { ...b, ...updates } : b));
             try {
               fetch('api.php?action=save&table=bookings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...activeBooking, id, status: newStatus })
+                body: JSON.stringify({ ...activeBooking, id, ...updates })
               }).catch(() => {});
             } catch (e) {}
           }}
           isAuthenticated={isAuthenticated}
           userRole={userRole}
+          currentUser={currentUser}
+          setCurrentUser={setCurrentUser}
           onLoginSuccess={handleLoginSuccess}
           drivers={drivers}
           partners={partners}
@@ -1742,10 +1745,15 @@ export default function App() {
             const cleanUrl = window.location.pathname + (window.location.hash || '');
             window.history.replaceState({}, document.title, cleanUrl);
           }}
-          onUpdateBookingStatus={(id, newStatus) => {
-            setBookings(prev => (prev || []).map(b => b.id === id ? { ...b, status: newStatus } : b));
+          onUpdateBookingStatus={(id, updateData) => {
+            const updates = typeof updateData === 'string' ? { status: updateData } : updateData;
+            setBookings(prev => (prev || []).map(b => b.id === id ? { ...b, ...updates } : b));
           }}
-          isStaff={Boolean(isAuthenticated && ['master_admin', 'company_admin', 'admin', 'operations', 'driver'].includes(userRole))}
+          isAuthenticated={isAuthenticated}
+          userRole={userRole}
+          currentUser={currentUser}
+          setCurrentUser={setCurrentUser}
+          onLoginSuccess={handleLoginSuccess}
           drivers={drivers}
           partners={partners}
         />

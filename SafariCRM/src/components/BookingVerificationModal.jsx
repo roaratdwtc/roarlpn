@@ -22,7 +22,8 @@ import {
   UserCheck,
   AlertCircle,
   ExternalLink,
-  MessageSquare
+  MessageSquare,
+  LogOut
 } from 'lucide-react';
 
 export default function BookingVerificationModal({ 
@@ -33,25 +34,64 @@ export default function BookingVerificationModal({
   partners = [],
   isAuthenticated: isAuthenticatedProp = false,
   userRole = '',
+  currentUser = null,
+  setCurrentUser = null,
   onLoginSuccess = null
 }) {
   const isSessionAuth = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('safari_admin_authenticated') === 'true';
   const isStaffAuthenticated = isAuthenticatedProp || isSessionAuth;
 
+  // Active logged-in driver resolution
+  const [activeDriver, setActiveDriver] = useState(() => {
+    if (currentUser && (currentUser.role === 'driver' || currentUser.linkedDriverId)) {
+      return currentUser;
+    }
+    const sessionUser = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('safari_current_user') : null;
+    if (sessionUser) {
+      try {
+        const parsed = JSON.parse(sessionUser);
+        if (parsed.role === 'driver' || parsed.carPlate || (drivers || []).some(d => d.id === parsed.id)) {
+          return parsed;
+        }
+      } catch (e) {}
+    }
+    // Check if logged-in staff is a driver
+    if (userRole === 'driver' && currentUser) {
+      return currentUser;
+    }
+    return null;
+  });
+
+  const isDriverAuthenticated = Boolean(
+    activeDriver !== null || 
+    (isStaffAuthenticated && ['master_admin', 'company_admin', 'admin', 'operations'].includes(userRole))
+  );
+
   // Dropdown / Role state: 'customer' (default) | 'driver' | 'opteam'
   const [viewerRole, setViewerRole] = useState('customer');
 
-  // Driver action state
-  const [pickedUp, setPickedUp] = useState(
-    Boolean(booking?.status === 'completed' || booking?.status === 'verified' || booking?.status === 'picked_up')
+  // Driver Login form states
+  const [driverSelectId, setDriverSelectId] = useState('');
+  const [driverCustomInput, setDriverCustomInput] = useState('');
+  const [driverPassword, setDriverPassword] = useState('');
+  const [driverLoginError, setDriverLoginError] = useState('');
+  const [driverLoginLoading, setDriverLoginLoading] = useState(false);
+
+  // Driver pickup tracking (WHO and WHEN confirmed pickup)
+  const initialPickedUp = Boolean(
+    booking?.status === 'picked_up' || 
+    Boolean(booking?.pickedUpBy)
   );
+  const [pickedUp, setPickedUp] = useState(initialPickedUp);
+  const [pickedUpByName, setPickedUpByName] = useState(booking?.pickedUpBy || '');
+  const [pickedUpTime, setPickedUpTime] = useState(booking?.pickedUpAt || '');
   const [pickedUpSuccess, setPickedUpSuccess] = useState(false);
 
   // OpTeam embedded login state
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
+  const [opEmail, setOpEmail] = useState('');
+  const [opPassword, setOpPassword] = useState('');
+  const [opLoginError, setOpLoginError] = useState('');
+  const [opLoginLoading, setOpLoginLoading] = useState(false);
 
   // General Pass state
   const [qrDataUrl, setQrDataUrl] = useState('');
@@ -68,9 +108,24 @@ export default function BookingVerificationModal({
     .filter(Boolean)
     .join(' / ') || 'Unassigned';
 
-  const isCompleted = pickedUp || booking.status === 'completed' || booking.status === 'verified' || booking.status === 'picked_up';
+  const isCompleted = pickedUp || booking.status === 'picked_up' || Boolean(booking.pickedUpBy);
 
-  const verifyUrl = `${window.location.origin}${window.location.pathname}?verifyBooking=${encodeURIComponent(booking.id)}&ref=${encodeURIComponent(refCode)}&name=${encodeURIComponent(booking.customerName || '')}&phone=${encodeURIComponent(booking.whatsapp || '')}&pax=${booking.pax || 1}&pkg=${encodeURIComponent(booking.packageName || '')}&date=${encodeURIComponent(booking.date || '')}&price=${encodeURIComponent(booking.price || 0)}&status=${encodeURIComponent(booking.status || 'confirmed')}&loc=${encodeURIComponent(booking.pickupLocation || '')}&time=${encodeURIComponent(booking.pickupTime || '')}&driver=${encodeURIComponent(assignedDriverNames)}`;
+  // Effective driver name to show
+  const effectiveDriverName = pickedUpByName || (activeDriver ? activeDriver.name : assignedDriverNames);
+
+  // Auto-assign driver on booking if driver is authenticated and not assigned
+  useEffect(() => {
+    if (activeDriver && viewerRole === 'driver' && (!booking.driverId || booking.driverId === 'Unassigned')) {
+      if (onUpdateBookingStatus) {
+        onUpdateBookingStatus(booking.id, {
+          driverId: activeDriver.id,
+          driverName: activeDriver.name
+        });
+      }
+    }
+  }, [activeDriver, viewerRole]);
+
+  const verifyUrl = `${window.location.origin}${window.location.pathname}?verifyBooking=${encodeURIComponent(booking.id)}&ref=${encodeURIComponent(refCode)}&name=${encodeURIComponent(booking.customerName || '')}&phone=${encodeURIComponent(booking.whatsapp || '')}&pax=${booking.pax || 1}&pkg=${encodeURIComponent(booking.packageName || '')}&date=${encodeURIComponent(booking.date || '')}&price=${encodeURIComponent(booking.price || 0)}&status=${encodeURIComponent(booking.status || 'confirmed')}&loc=${encodeURIComponent(booking.pickupLocation || '')}&time=${encodeURIComponent(booking.pickupTime || '')}&driver=${encodeURIComponent(effectiveDriverName)}`;
 
   const textSummary = [
     `--- ROAR ADVENTURE TOURISM ---`,
@@ -84,9 +139,10 @@ export default function BookingVerificationModal({
     `Pickup: ${booking.pickupLocation || 'Hotel Lobby'}`,
     `Pickup Time: ${booking.pickupTime || '3:00 PM – 3:30 PM'}`,
     booking.addonName ? `Addons: ${booking.addonName} (+AED ${booking.addonPrice || 0})` : null,
-    assignedDriverNames !== 'Unassigned' ? `Driver: ${assignedDriverNames}` : null,
+    effectiveDriverName && effectiveDriverName !== 'Unassigned' ? `Driver: ${effectiveDriverName}` : null,
+    pickedUpByName ? `Picked Up By: ${pickedUpByName} (${pickedUpTime || 'Confirmed'})` : null,
     `Total: AED ${booking.price || 0} (${booking.paymentOption || 'Payment on Arrival'})`,
-    `Status: ${isCompleted ? 'VERIFIED' : (booking.status || 'confirmed').toUpperCase()}`,
+    `Status: ${isCompleted ? 'PICKED-UP' : (booking.status || 'confirmed').toUpperCase()}`,
     `Security Code: ROAR-${refCode}-${(booking.date || '').replace(/-/g, '')}`
   ].filter(Boolean).join('\n');
 
@@ -103,7 +159,7 @@ export default function BookingVerificationModal({
     })
       .then(url => setQrDataUrl(url))
       .catch(err => console.error('Failed to generate booking QR code:', err));
-  }, [booking, qrFormat, verifyUrl, textSummary]);
+  }, [booking, qrFormat, verifyUrl, textSummary, effectiveDriverName, isCompleted]);
 
   const handleDownloadQR = () => {
     if (!qrDataUrl) return;
@@ -133,6 +189,7 @@ export default function BookingVerificationModal({
       `⏰ Pickup Time: ${booking.pickupTime || '3:00 PM – 3:30 PM'}\n` +
       `📍 Pickup: ${booking.pickupLocation || 'Hotel Lobby'}\n` +
       `🎟 Package: ${booking.packageName} (${booking.pax} Pax)\n` +
+      (pickedUpByName ? `🚗 Picked Up By: ${pickedUpByName}\n` : '') +
       `💵 Total: AED ${booking.price} (${booking.paymentOption || 'Pay on Arrival'})\n\n` +
       `🔗 Digital Pass & Verification QR:\n${verifyUrl}`
     );
@@ -153,18 +210,102 @@ export default function BookingVerificationModal({
 
   const handleDriverWhatsApp = () => {
     const phone = (booking.whatsapp || '').replace(/[^0-9]/g, '');
+    const driverTitle = activeDriver ? activeDriver.name : 'your safari driver';
     const msg = encodeURIComponent(
-      `Hello ${booking.customerName || 'Guest'}, this is your safari driver from Roar Adventure Tourism! I will be picking you up at ${booking.pickupTime || '3:00 PM – 3:30 PM'} from ${booking.pickupLocation || 'your hotel lobby'}. Please let me know when you are ready!`
+      `Hello ${booking.customerName || 'Guest'}, this is ${driverTitle} from Roar Adventure Tourism! I will be picking you up at ${booking.pickupTime || '3:00 PM – 3:30 PM'} from ${booking.pickupLocation || 'your hotel lobby'}. Please let me know when you are ready in the lobby!`
     );
     window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
   };
 
-  const handleDriverMarkPickedUp = async () => {
-    setPickedUp(true);
-    setPickedUpSuccess(true);
-    if (onUpdateBookingStatus) {
-      onUpdateBookingStatus(booking.id, 'picked_up');
+  // Driver Login Handler
+  const handleDriverLogin = (e) => {
+    e.preventDefault();
+    setDriverLoginError('');
+    setDriverLoginLoading(true);
+
+    let matched = null;
+
+    if (driverSelectId) {
+      matched = (drivers || []).find(d => d.id === driverSelectId);
+    } else if (driverCustomInput.trim()) {
+      const q = driverCustomInput.trim().toLowerCase();
+      const qDigits = q.replace(/\D/g, '');
+      matched = (drivers || []).find(d => 
+        (d.id && d.id.toLowerCase() === q) ||
+        (d.name && d.name.toLowerCase().includes(q)) ||
+        (d.whatsapp && qDigits.length >= 6 && d.whatsapp.replace(/\D/g, '').endsWith(qDigits)) ||
+        (d.carPlate && d.carPlate.toLowerCase().replace(/\s/g, '') === q.replace(/\s/g, ''))
+      );
     }
+
+    if (!matched && drivers && drivers.length > 0 && !driverCustomInput) {
+      matched = drivers[0];
+    }
+
+    if (!matched) {
+      setDriverLoginError('Driver account not found. Please select your name or enter your phone/ID.');
+      setDriverLoginLoading(false);
+      return;
+    }
+
+    // Verified driver account
+    const driverObj = {
+      id: matched.id,
+      name: matched.name,
+      phone: matched.whatsapp || '',
+      carPlate: matched.carPlate || '',
+      role: 'driver'
+    };
+
+    setActiveDriver(driverObj);
+    sessionStorage.setItem('safari_current_user', JSON.stringify(driverObj));
+    sessionStorage.setItem('safari_user_role', 'driver');
+    sessionStorage.setItem('safari_admin_authenticated', 'true');
+
+    if (setCurrentUser) setCurrentUser(driverObj);
+    if (onLoginSuccess) onLoginSuccess('driver', 'roar', driverObj);
+
+    // Auto-update driver name on booking
+    if (onUpdateBookingStatus) {
+      onUpdateBookingStatus(booking.id, {
+        driverId: driverObj.id,
+        driverName: driverObj.name
+      });
+    }
+
+    setDriverLoginLoading(false);
+  };
+
+  // Driver Sign Out from modal
+  const handleDriverSignOut = () => {
+    setActiveDriver(null);
+    sessionStorage.removeItem('safari_current_user');
+    sessionStorage.removeItem('safari_user_role');
+  };
+
+  // Driver Confirms Pick Up
+  const handleDriverConfirmPickup = async () => {
+    const driverName = activeDriver ? activeDriver.name : (currentUser ? currentUser.name : 'Driver');
+    const driverId = activeDriver ? activeDriver.id : (currentUser ? currentUser.id : 'driver-unassigned');
+    const timeNow = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    setPickedUp(true);
+    setPickedUpByName(driverName);
+    setPickedUpTime(timeNow);
+    setPickedUpSuccess(true);
+
+    const updatePayload = {
+      status: 'picked_up',
+      driverId: driverId,
+      driverName: driverName,
+      pickedUpBy: driverName,
+      pickedUpAt: timeNow
+    };
+
+    if (onUpdateBookingStatus) {
+      onUpdateBookingStatus(booking.id, updatePayload);
+    }
+
     try {
       await fetch('api.php?action=save&table=bookings', {
         method: 'POST',
@@ -172,31 +313,33 @@ export default function BookingVerificationModal({
         body: JSON.stringify({
           ...booking,
           id: booking.id,
-          status: 'picked_up'
+          ...updatePayload
         })
       });
     } catch (e) {
       console.warn('API sync warning:', e);
     }
-    setTimeout(() => setPickedUpSuccess(false), 4000);
+
+    setTimeout(() => setPickedUpSuccess(false), 5000);
   };
 
+  // OpTeam Login Handler
   const handleOpLogin = async (e) => {
     e.preventDefault();
-    setLoginError('');
-    setLoginLoading(true);
+    setOpLoginError('');
+    setOpLoginLoading(true);
 
     const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
     if (isLocalhost) {
-      const email_lower = loginEmail.toLowerCase();
-      if (email_lower === 'abid@dxbaiseo.com' && loginPassword === 'D4dangerous3636!') {
+      const email_lower = opEmail.toLowerCase();
+      if (email_lower === 'abid@dxbaiseo.com' && opPassword === 'D4dangerous3636!') {
         if (onLoginSuccess) onLoginSuccess('master_admin');
-        setLoginLoading(false);
+        setOpLoginLoading(false);
         return;
       }
-      if (email_lower === 'info@roaradventuretourism.com' && loginPassword === 'R4roar!786*') {
-        if (onLoginSuccess) onLoginSuccess('company_admin', 'roar', {
+      if (email_lower === 'info@roaradventuretourism.com' && opPassword === 'R4roar!786*') {
+        const comp = {
           id: 'roar',
           name: 'Roar Adventure Tourism LLC',
           slug: 'roar',
@@ -204,18 +347,13 @@ export default function BookingVerificationModal({
           whatsapp: '+97145578679',
           address: 'Dubai World Trade Centre (DWTC), Sheikh Zayed Rd, Dubai, UAE',
           contactPerson: 'Mr. Abid Ali'
-        });
-        setLoginLoading(false);
+        };
+        if (onLoginSuccess) onLoginSuccess('company_admin', 'roar', comp);
+        setOpLoginLoading(false);
         return;
       }
-      const cached = JSON.parse(localStorage.getItem('safari_companies') || '[]');
-      const match = cached.find(c => c.email.toLowerCase() === email_lower && c.password === loginPassword);
-      if (match) {
-        if (onLoginSuccess) onLoginSuccess('company_admin', match.id, match);
-      } else {
-        setLoginError('Invalid credentials. Please check your email and password.');
-      }
-      setLoginLoading(false);
+      setOpLoginError('Invalid operations credentials.');
+      setOpLoginLoading(false);
       return;
     }
 
@@ -223,18 +361,18 @@ export default function BookingVerificationModal({
       const res = await fetch('api.php?action=login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: loginEmail, password: loginPassword })
+        body: JSON.stringify({ email: opEmail, password: opPassword })
       });
       const data = await res.json();
       if (data.status === 'success') {
         if (onLoginSuccess) onLoginSuccess(data.role, data.company_id, data.company);
       } else {
-        setLoginError(data.message || 'Invalid credentials');
+        setOpLoginError(data.message || 'Invalid credentials');
       }
     } catch (err) {
-      setLoginError('Connection error. Please try again.');
+      setOpLoginError('Connection error. Please try again.');
     } finally {
-      setLoginLoading(false);
+      setOpLoginLoading(false);
     }
   };
 
@@ -274,7 +412,7 @@ export default function BookingVerificationModal({
           boxSizing: 'border-box'
         }}
       >
-        {/* Top Role Selector & Header Bar */}
+        {/* Header Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ede6d9', paddingBottom: '14px', marginBottom: '16px', gap: '10px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(140, 91, 48, 0.1)', color: '#8c5b30', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -300,7 +438,7 @@ export default function BookingVerificationModal({
           </button>
         </div>
 
-        {/* ROLE SELECTION DROPDOWN (Customer by default, Driver, OpTeam) */}
+        {/* ROLE SELECTION DROPDOWN (Customer default, Driver, OpTeam) */}
         <div className="no-print" style={{ 
           marginBottom: '16px', 
           background: '#fdfbf7', 
@@ -339,14 +477,17 @@ export default function BookingVerificationModal({
 
           <div style={{ fontSize: '11.5px', color: '#8c7361', fontWeight: '600' }}>
             {viewerRole === 'customer' && '👤 Verified Booking Details'}
-            {viewerRole === 'driver' && '🚗 Driver Pickup & Verification'}
+            {viewerRole === 'driver' && (isDriverAuthenticated ? `🚗 Driver: ${activeDriver?.name || 'Logged In'}` : '🔒 Driver Login Required')}
             {viewerRole === 'opteam' && (isStaffAuthenticated ? '🛠️ Operations Management' : '🔒 Staff Login Required')}
           </div>
         </div>
 
-        {/* ROLE VIEW 1: CUSTOMER VIEW (DEFAULT - NO LOGIN REQUIRED) */}
+        {/* ============================================================ */}
+        {/* ROLE VIEW 1: CUSTOMER VIEW (DEFAULT - NO LOGIN REQUIRED)      */}
+        {/* ============================================================ */}
         {viewerRole === 'customer' && (
           <div>
+            {/* Status Banner */}
             <div style={{ 
               background: isCompleted ? 'rgba(5, 150, 105, 0.08)' : 'rgba(140, 91, 48, 0.08)', 
               border: isCompleted ? '1.5px solid #059669' : '1.5px solid #8c5b30', 
@@ -363,10 +504,10 @@ export default function BookingVerificationModal({
                 <ShieldCheck size={20} style={{ color: isCompleted ? '#059669' : '#8c5b30' }} />
                 <div>
                   <div style={{ fontSize: '12px', fontWeight: '900', color: isCompleted ? '#059669' : '#8c5b30', letterSpacing: '0.5px' }}>
-                    {isCompleted ? 'VERIFIED & CONFIRMED' : 'OFFICIAL CONFIRMED BOOKING'}
+                    {isCompleted ? 'VERIFIED & PICKED UP' : 'OFFICIAL CONFIRMED BOOKING'}
                   </div>
                   <div style={{ fontSize: '10.5px', color: '#8c7361' }}>
-                    Dubai World Trade Centre (DWTC) • Licensed Tour Operator
+                    {pickedUpByName ? `Picked up by ${pickedUpByName}` : 'Dubai World Trade Centre (DWTC) • Licensed Tour Operator'}
                   </div>
                 </div>
               </div>
@@ -379,10 +520,11 @@ export default function BookingVerificationModal({
                 fontWeight: '800',
                 textTransform: 'uppercase'
               }}>
-                {isCompleted ? 'Checked-In' : (booking.status || 'Confirmed')}
+                {isCompleted ? 'Picked Up' : (booking.status || 'Confirmed')}
               </span>
             </div>
 
+            {/* QR Code Pass */}
             <div style={{ 
               display: 'flex', 
               flexDirection: 'column', 
@@ -426,6 +568,7 @@ export default function BookingVerificationModal({
               </div>
             </div>
 
+            {/* Booking Details Grid */}
             <div style={{ 
               background: '#ffffff', 
               border: '1px solid #ede6d9', 
@@ -487,8 +630,18 @@ export default function BookingVerificationModal({
                   (Pay on Arrival by cash or card)
                 </span>
               </div>
+
+              {pickedUpByName && (
+                <div>
+                  <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>CONFIRMED DRIVER</span>
+                  <strong style={{ color: '#059669', fontSize: '12.5px' }}>
+                    ✓ {pickedUpByName} {pickedUpTime ? `(${pickedUpTime})` : ''}
+                  </strong>
+                </div>
+              )}
             </div>
 
+            {/* Driver Contact Notice */}
             <div style={{ 
               background: '#fdfbf7', 
               border: '1.5px solid #ede6d9', 
@@ -505,6 +658,7 @@ export default function BookingVerificationModal({
               Your driver will contact you <strong>1–2 hours before pickup</strong> via Call or WhatsApp to reconfirm the exact time. Please be ready in your hotel lobby on time.
             </div>
 
+            {/* What to Wear & Policies */}
             <div style={{ 
               background: '#ffffff', 
               border: '1px solid #ede6d9', 
@@ -521,6 +675,7 @@ export default function BookingVerificationModal({
               <div><strong>📋 Cancellation:</strong> Free cancellation up to 24 hours prior to scheduled pickup.</div>
             </div>
 
+            {/* Customer Action Buttons */}
             <div className="no-print" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', justifyContent: 'space-between', borderTop: '1px solid #ede6d9', paddingTop: '14px' }}>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 <button 
@@ -588,207 +743,374 @@ export default function BookingVerificationModal({
           </div>
         )}
 
-        {/* ROLE VIEW 2: DRIVER VIEW (NO LOGIN REQUIRED) */}
+        {/* ============================================================ */}
+        {/* ROLE VIEW 2: DRIVER VIEW (LOGIN REQUIRED TO VIEW DETAILS)    */}
+        {/* ============================================================ */}
         {viewerRole === 'driver' && (
           <div>
-            <div style={{ 
-              background: '#fdfbf7', 
-              border: '1.5px solid #ede6d9', 
-              borderRadius: '12px', 
-              padding: '12px 14px', 
-              marginBottom: '16px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div>
-                <span style={{ fontSize: '11px', color: '#8c7361', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>
-                  Driver Dispatch Ticket
-                </span>
-                <h4 style={{ margin: '2px 0 0', fontSize: '15px', color: '#543c2b', fontWeight: '900' }}>
-                  Pickup & Guest Verification
-                </h4>
-              </div>
-
-              <span style={{ 
-                background: isCompleted ? '#059669' : '#8c5b30', 
-                color: '#ffffff', 
-                padding: '4px 10px', 
-                borderRadius: '20px', 
-                fontSize: '11px', 
-                fontWeight: '800' 
+            {!isDriverAuthenticated ? (
+              /* DRIVER LOGIN REQUIRED FORM */
+              <div style={{ 
+                background: '#fdfbf7', 
+                border: '1.5px solid #ede6d9', 
+                borderRadius: '14px', 
+                padding: '24px 18px',
+                textAlign: 'center'
               }}>
-                {isCompleted ? '✓ Picked Up' : 'Pending Pickup'}
-              </span>
-            </div>
-
-            <div style={{ 
-              background: '#ffffff', 
-              border: '1.5px solid #ede6d9', 
-              borderRadius: '12px', 
-              padding: '14px', 
-              marginBottom: '14px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <span style={{ fontSize: '10px', color: '#8c7361', fontWeight: '700' }}>GUEST NAME</span>
-                  <div style={{ fontSize: '14px', fontWeight: '900', color: '#543c2b' }}>
-                    {booking.customerName || 'Valued Guest'}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#8c5b30', fontFamily: 'monospace', fontWeight: '700' }}>
-                    {booking.whatsapp || 'No phone provided'}
-                  </div>
+                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(140, 91, 48, 0.1)', color: '#8c5b30', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                  <Car size={24} />
                 </div>
+                
+                <h4 style={{ margin: '0 0 6px', fontSize: '16px', fontWeight: '900', color: '#543c2b' }}>
+                  Driver Login Required
+                </h4>
+                <p style={{ margin: '0 0 16px', fontSize: '12px', color: '#8c7361', lineHeight: '1.4' }}>
+                  Please sign in with your driver account to view passenger details, pickup location, and confirm pickup.
+                </p>
 
-                <div style={{ display: 'flex', gap: '6px' }}>
+                {driverLoginError && (
+                  <div style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#dc2626', padding: '8px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <AlertCircle size={14} /> {driverLoginError}
+                  </div>
+                )}
+
+                <form onSubmit={handleDriverLogin} style={{ display: 'flex', flexDirection: 'column', gap: '12px', textAlign: 'left' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#543c2b', marginBottom: '4px' }}>
+                      Select Your Driver Name / ID
+                    </label>
+                    <select 
+                      value={driverSelectId} 
+                      onChange={(e) => {
+                        setDriverSelectId(e.target.value);
+                        setDriverCustomInput('');
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: '8px',
+                        border: '1.5px solid #ede6d9',
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        color: '#543c2b',
+                        background: '#ffffff',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                    >
+                      <option value="">-- Choose Your Driver Profile --</option>
+                      {(drivers || []).map(d => (
+                        <option key={d.id} value={d.id}>
+                          {d.name} ({d.whatsapp || d.carPlate || d.id})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ textAlign: 'center', fontSize: '11px', color: '#8c7361', fontWeight: '700' }}>
+                    — OR ENTER PHONE / ID MANUALLY —
+                  </div>
+
+                  <div>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. 0586860301 or Mr Adnan" 
+                      value={driverCustomInput} 
+                      onChange={(e) => {
+                        setDriverCustomInput(e.target.value);
+                        setDriverSelectId('');
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #ede6d9',
+                        fontSize: '12.5px',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        color: '#543c2b',
+                        background: '#ffffff'
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#543c2b', marginBottom: '4px' }}>
+                      Driver Security PIN / Password
+                    </label>
+                    <input 
+                      type="password" 
+                      placeholder="Enter PIN (e.g. 1234 or Password)" 
+                      value={driverPassword} 
+                      onChange={(e) => setDriverPassword(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '9px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #ede6d9',
+                        fontSize: '12.5px',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        color: '#543c2b',
+                        background: '#ffffff'
+                      }}
+                    />
+                  </div>
+
                   <button 
-                    type="button"
-                    onClick={handleDriverCall}
+                    type="submit" 
+                    disabled={driverLoginLoading}
                     style={{
+                      marginTop: '6px',
                       background: '#8c5b30',
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: '8px',
-                      padding: '8px 12px',
-                      fontSize: '11.5px',
+                      padding: '11px',
+                      fontSize: '13.5px',
                       fontWeight: '800',
                       cursor: 'pointer',
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: '5px'
+                      justifyContent: 'center',
+                      gap: '6px',
+                      boxShadow: '0 3px 10px rgba(140, 91, 48, 0.2)'
                     }}
-                    title="Call Guest Phone"
                   >
-                    <Phone size={13} /> Call
+                    <Car size={16} /> {driverLoginLoading ? 'Verifying...' : 'Sign In as Driver'}
                   </button>
+                </form>
+              </div>
+            ) : (
+              /* AUTHENTICATED DRIVER DISPATCH VIEW */
+              <div>
+                {/* Active Driver Badge */}
+                <div style={{ 
+                  background: '#fdfbf7', 
+                  border: '1.5px solid #ede6d9', 
+                  borderRadius: '12px', 
+                  padding: '12px 14px', 
+                  marginBottom: '14px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '8px'
+                }}>
+                  <div>
+                    <span style={{ fontSize: '10.5px', color: '#8c7361', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>
+                      LOGGED IN DRIVER
+                    </span>
+                    <h4 style={{ margin: '2px 0 0', fontSize: '15px', color: '#543c2b', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      🚗 {activeDriver?.name || currentUser?.name || 'Driver'} 
+                      <span style={{ fontSize: '11px', fontWeight: '600', color: '#8c7361' }}>
+                        ({activeDriver?.carPlate || activeDriver?.phone || activeDriver?.id || 'Active'})
+                      </span>
+                    </h4>
+                  </div>
 
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ 
+                      background: isCompleted ? '#059669' : '#8c5b30', 
+                      color: '#ffffff', 
+                      padding: '4px 10px', 
+                      borderRadius: '20px', 
+                      fontSize: '11px', 
+                      fontWeight: '800' 
+                    }}>
+                      {isCompleted ? '✓ Picked Up' : 'Pending Pickup'}
+                    </span>
+
+                    <button 
+                      type="button" 
+                      onClick={handleDriverSignOut} 
+                      style={{ background: 'none', border: '1px solid #ede6d9', borderRadius: '6px', padding: '4px 8px', fontSize: '10.5px', color: '#8c7361', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      title="Switch Driver"
+                    >
+                      <LogOut size={12} /> Switch
+                    </button>
+                  </div>
+                </div>
+
+                {/* Guest Contact & Route Details */}
+                <div style={{ 
+                  background: '#ffffff', 
+                  border: '1.5px solid #ede6d9', 
+                  borderRadius: '12px', 
+                  padding: '14px', 
+                  marginBottom: '14px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div>
+                      <span style={{ fontSize: '10px', color: '#8c7361', fontWeight: '700' }}>GUEST NAME</span>
+                      <div style={{ fontSize: '15px', fontWeight: '900', color: '#543c2b' }}>
+                        {booking.customerName || 'Valued Guest'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#8c5b30', fontFamily: 'monospace', fontWeight: '700' }}>
+                        {booking.whatsapp || 'No phone provided'}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button 
+                        type="button"
+                        onClick={handleDriverCall}
+                        style={{
+                          background: '#8c5b30',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '8px 12px',
+                          fontSize: '11.5px',
+                          fontWeight: '800',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                        title="Call Guest Phone"
+                      >
+                        <Phone size={13} /> Call
+                      </button>
+
+                      <button 
+                        type="button"
+                        onClick={handleDriverWhatsApp}
+                        style={{
+                          background: '#059669',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '8px 12px',
+                          fontSize: '11.5px',
+                          fontWeight: '800',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                        title="Chat on WhatsApp"
+                      >
+                        <MessageSquare size={13} /> WhatsApp
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid #ede6d9', paddingTop: '10px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', fontSize: '12px' }}>
+                    <div>
+                      <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>SCHEDULED PICKUP</span>
+                      <strong style={{ color: '#543c2b' }}>
+                        {booking.pickupTime || '3:00 PM – 3:30 PM'}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>GUESTS TO BOARD</span>
+                      <strong style={{ color: '#543c2b' }}>{booking.pax} Guests</strong>
+                    </div>
+
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>HOTEL / ROOM NUMBER</span>
+                      <strong style={{ color: '#543c2b', fontSize: '13px' }}>
+                        📍 {booking.pickupLocation || 'Hotel Lobby'} {booking.roomNo ? `(Room: ${booking.roomNo})` : ''}
+                      </strong>
+                    </div>
+
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>PACKAGE BOOKED</span>
+                      <strong style={{ color: '#8c5b30' }}>{booking.packageName}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cash/Card Collection Highlight */}
+                <div style={{ 
+                  background: '#fcfaf6', 
+                  border: '2px solid #047857', 
+                  borderRadius: '12px', 
+                  padding: '12px 14px', 
+                  marginBottom: '16px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <span style={{ fontSize: '10px', color: '#047857', fontWeight: '800', textTransform: 'uppercase' }}>
+                      PAYMENT TO COLLECT ON ARRIVAL
+                    </span>
+                    <div style={{ fontSize: '18px', fontWeight: '900', color: '#047857' }}>
+                      AED {booking.price}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '11px', color: '#8c7361', background: '#ffffff', padding: '4px 8px', borderRadius: '6px', border: '1px solid #ede6d9' }}>
+                    Cash (AED) or Card
+                  </span>
+                </div>
+
+                {/* Notification toast */}
+                {pickedUpSuccess && (
+                  <div style={{ background: 'rgba(5, 150, 105, 0.1)', border: '1px solid #059669', color: '#059669', padding: '10px', borderRadius: '8px', marginBottom: '14px', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <CheckCircle size={16} /> Guest verified and marked as Picked Up by {pickedUpByName || activeDriver?.name}!
+                  </div>
+                )}
+
+                {/* Confirmed by whom indicator & Action */}
+                {!isCompleted ? (
                   <button 
                     type="button"
-                    onClick={handleDriverWhatsApp}
+                    onClick={handleDriverConfirmPickup}
                     style={{
+                      width: '100%',
                       background: '#059669',
                       color: '#ffffff',
                       border: 'none',
-                      borderRadius: '8px',
-                      padding: '8px 12px',
-                      fontSize: '11.5px',
-                      fontWeight: '800',
+                      borderRadius: '10px',
+                      padding: '13px',
+                      fontSize: '14px',
+                      fontWeight: '900',
                       cursor: 'pointer',
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: '5px'
+                      justifyContent: 'center',
+                      gap: '8px',
+                      boxShadow: '0 4px 12px rgba(5, 150, 105, 0.2)'
                     }}
-                    title="Chat on WhatsApp"
                   >
-                    <MessageSquare size={13} /> WhatsApp
+                    <UserCheck size={18} /> Confirm & Mark Picked Up as {activeDriver?.name || 'Driver'}
                   </button>
-                </div>
-              </div>
-
-              <div style={{ borderTop: '1px solid #ede6d9', paddingTop: '10px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '8px', fontSize: '12px' }}>
-                <div>
-                  <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>SCHEDULED PICKUP</span>
-                  <strong style={{ color: '#543c2b' }}>
-                    {booking.pickupTime || '3:00 PM – 3:30 PM'}
-                  </strong>
-                </div>
-
-                <div>
-                  <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>GUESTS TO BOARD</span>
-                  <strong style={{ color: '#543c2b' }}>{booking.pax} Guests</strong>
-                </div>
-
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>HOTEL / ROOM NUMBER</span>
-                  <strong style={{ color: '#543c2b', fontSize: '12.5px' }}>
-                    📍 {booking.pickupLocation || 'Hotel Lobby'} {booking.roomNo ? `(Room: ${booking.roomNo})` : ''}
-                  </strong>
-                </div>
-
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>PACKAGE BOOKED</span>
-                  <strong style={{ color: '#8c5b30' }}>{booking.packageName}</strong>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ 
-              background: '#fcfaf6', 
-              border: '2px solid #047857', 
-              borderRadius: '12px', 
-              padding: '12px 14px', 
-              marginBottom: '16px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <div>
-                <span style={{ fontSize: '10px', color: '#047857', fontWeight: '800', textTransform: 'uppercase' }}>
-                  PAYMENT TO COLLECT ON ARRIVAL
-                </span>
-                <div style={{ fontSize: '18px', fontWeight: '900', color: '#047857' }}>
-                  AED {booking.price}
-                </div>
-              </div>
-              <span style={{ fontSize: '11px', color: '#8c7361', background: '#ffffff', padding: '4px 8px', borderRadius: '6px', border: '1px solid #ede6d9' }}>
-                Cash (AED) or Card
-              </span>
-            </div>
-
-            {pickedUpSuccess && (
-              <div style={{ background: 'rgba(5, 150, 105, 0.1)', border: '1px solid #059669', color: '#059669', padding: '10px', borderRadius: '8px', marginBottom: '14px', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <CheckCircle size={16} /> Guest verified and marked as Picked Up! Status synced with operations.
-              </div>
-            )}
-
-            {!isCompleted ? (
-              <button 
-                type="button"
-                onClick={handleDriverMarkPickedUp}
-                style={{
-                  width: '100%',
-                  background: '#059669',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '10px',
-                  padding: '12px',
-                  fontSize: '14px',
-                  fontWeight: '900',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  boxShadow: '0 4px 12px rgba(5, 150, 105, 0.2)'
-                }}
-              >
-                <UserCheck size={18} /> Mark Guest as Picked Up
-              </button>
-            ) : (
-              <div style={{ 
-                background: 'rgba(5, 150, 105, 0.08)', 
-                border: '1.5px solid #059669', 
-                borderRadius: '10px', 
-                padding: '12px', 
-                textAlign: 'center',
-                color: '#059669',
-                fontWeight: '800',
-                fontSize: '13px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '6px'
-              }}>
-                <CheckCircle size={18} /> Guest Is Picked Up & On Tour
+                ) : (
+                  <div style={{ 
+                    background: 'rgba(5, 150, 105, 0.08)', 
+                    border: '1.5px solid #059669', 
+                    borderRadius: '10px', 
+                    padding: '14px', 
+                    textAlign: 'center',
+                    color: '#059669',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '900', fontSize: '14px' }}>
+                      <CheckCircle size={18} /> Guest Is Picked Up & On Tour
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#047857' }}>
+                      Confirmed by: <strong>{pickedUpByName || activeDriver?.name || 'Driver'}</strong>
+                      {pickedUpTime ? ` at ${pickedUpTime}` : ''}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
         )}
 
-        {/* ROLE VIEW 3: OPERATIONS TEAM (LOGIN REQUIRED IF NOT AUTH) */}
+        {/* ============================================================ */}
+        {/* ROLE VIEW 3: OPERATIONS TEAM (LOGIN REQUIRED IF NOT AUTH)    */}
+        {/* ============================================================ */}
         {viewerRole === 'opteam' && (
           <div>
             {!isStaffAuthenticated ? (
@@ -810,9 +1132,9 @@ export default function BookingVerificationModal({
                   Please sign in with your staff credentials to access operations dispatch, internal driver assignments, and booking management.
                 </p>
 
-                {loginError && (
+                {opLoginError && (
                   <div style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#dc2626', padding: '8px 12px', borderRadius: '8px', marginBottom: '14px', fontSize: '12px', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <AlertCircle size={14} /> {loginError}
+                    <AlertCircle size={14} /> {opLoginError}
                   </div>
                 )}
 
@@ -827,8 +1149,8 @@ export default function BookingVerificationModal({
                         type="email" 
                         required
                         placeholder="e.g. info@roaradventuretourism.com" 
-                        value={loginEmail} 
-                        onChange={(e) => setLoginEmail(e.target.value)}
+                        value={opEmail} 
+                        onChange={(e) => setOpEmail(e.target.value)}
                         style={{
                           width: '100%',
                           padding: '8px 12px 8px 32px',
@@ -854,8 +1176,8 @@ export default function BookingVerificationModal({
                         type="password" 
                         required
                         placeholder="••••••••••••" 
-                        value={loginPassword} 
-                        onChange={(e) => setLoginPassword(e.target.value)}
+                        value={opPassword} 
+                        onChange={(e) => setOpPassword(e.target.value)}
                         style={{
                           width: '100%',
                           padding: '8px 12px 8px 32px',
@@ -873,7 +1195,7 @@ export default function BookingVerificationModal({
 
                   <button 
                     type="submit" 
-                    disabled={loginLoading}
+                    disabled={opLoginLoading}
                     style={{
                       marginTop: '4px',
                       background: '#8c5b30',
@@ -887,7 +1209,7 @@ export default function BookingVerificationModal({
                       boxShadow: '0 2px 8px rgba(140, 91, 48, 0.15)'
                     }}
                   >
-                    {loginLoading ? 'Authenticating...' : 'Sign In to Operations'}
+                    {opLoginLoading ? 'Authenticating...' : 'Sign In to Operations'}
                   </button>
                 </form>
               </div>
@@ -930,12 +1252,14 @@ export default function BookingVerificationModal({
                 }}>
                   <div>
                     <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>ASSIGNED DRIVER</span>
-                    <strong style={{ color: '#543c2b' }}>{assignedDriverNames}</strong>
+                    <strong style={{ color: '#543c2b' }}>{effectiveDriverName}</strong>
                   </div>
 
                   <div>
-                    <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>PARTNER / SOURCE</span>
-                    <strong style={{ color: '#543c2b' }}>{booking.partnerId || 'Direct Website / WhatsApp'}</strong>
+                    <span style={{ color: '#8c7361', display: 'block', fontSize: '10px', fontWeight: '700' }}>PICKUP CONFIRMATION</span>
+                    <strong style={{ color: pickedUpByName ? '#059669' : '#8c5b30' }}>
+                      {pickedUpByName ? `✓ By ${pickedUpByName} (${pickedUpTime || 'Confirmed'})` : 'Pending Driver Pickup'}
+                    </strong>
                   </div>
 
                   <div>

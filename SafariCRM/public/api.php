@@ -44,7 +44,9 @@ $tables = [
         addonPrice DECIMAL(10,2) DEFAULT 0.00,
         calendar_event_id VARCHAR(255) DEFAULT '',
         carPax VARCHAR(255) DEFAULT '',
-        tourType VARCHAR(50) DEFAULT 'pick_drop'
+        tourType VARCHAR(50) DEFAULT 'pick_drop',
+        pickedUpBy VARCHAR(255) DEFAULT '',
+        pickedUpAt VARCHAR(100) DEFAULT ''
     )",
     "drivers" => "CREATE TABLE IF NOT EXISTS drivers (
         id VARCHAR(100) PRIMARY KEY,
@@ -216,6 +218,10 @@ foreach ($tables as $name => $query) {
 
 $conn->query("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES ('show_coupons', '1')");
 $conn->query("ALTER TABLE settings MODIFY COLUMN setting_value LONGTEXT");
+$chkPickup = $conn->query("SHOW COLUMNS FROM bookings LIKE 'pickedUpBy'");
+if ($chkPickup && $chkPickup->num_rows === 0) {
+    $conn->query("ALTER TABLE bookings ADD COLUMN pickedUpBy VARCHAR(255) DEFAULT '', ADD COLUMN pickedUpAt VARCHAR(100) DEFAULT ''");
+}
 
 $conn->query("INSERT IGNORE INTO company_details (id, fullName, address, contactPerson, whatsapp, email, regDate, licenseNo, whatWeOffer) VALUES (
     'company_info',
