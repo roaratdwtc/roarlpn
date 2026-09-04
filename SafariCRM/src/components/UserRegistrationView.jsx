@@ -20,10 +20,7 @@ import {
 import { 
   sendPhoneOtp, 
   verifyPhoneOtp, 
-  formatPhoneNumber,
-  syncUserToFirestore,
-  markInviteUsedInFirestore,
-  fetchInviteFromFirestore
+  formatPhoneNumber
 } from '../utils/firebaseAuth';
 
 export default function UserRegistrationView({ 
@@ -87,7 +84,7 @@ export default function UserRegistrationView({
     }
   }, []);
 
-  // Validate Invite Code against localStorage 'safari_invites', Firestore, or valid pattern
+  // Validate Invite Code against MySQL database, with local cache fallback
   const validateAndApplyInvite = async (rawCode) => {
     setInviteError('');
     const clean = (rawCode || '').trim().toUpperCase();
@@ -97,23 +94,32 @@ export default function UserRegistrationView({
       return null;
     }
 
-    const storedInvites = JSON.parse(localStorage.getItem('safari_invites') || '[]');
-    let match = storedInvites.find(i => (i.code || '').toUpperCase() === clean);
+    let match = null;
 
-    // 1. If not found in localStorage, check Firestore
-    if (!match) {
-      try {
-        const remoteInvite = await fetchInviteFromFirestore(clean);
-        if (remoteInvite) {
-          match = remoteInvite;
-          localStorage.setItem('safari_invites', JSON.stringify([remoteInvite, ...storedInvites]));
+    // 1. Check directly against MySQL via api.php?action=verify_invite
+    try {
+      const res = await fetch(`api.php?action=verify_invite&code=${encodeURIComponent(clean)}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.status === 'success' && json.invite) {
+          match = json.invite;
+          // Update local cache
+          const stored = JSON.parse(localStorage.getItem('safari_invites') || '[]');
+          const updated = [match, ...stored.filter(i => (i.code || '').toUpperCase() !== clean)];
+          localStorage.setItem('safari_invites', JSON.stringify(updated));
         }
-      } catch (e) {
-        console.warn("Firestore invite lookup fallback:", e);
       }
+    } catch (e) {
+      console.warn("MySQL verify_invite query failed, checking local cache:", e);
     }
 
-    // 2. Fallback: Check valid management invite code pattern INV-(DRV|FL|OPS)-[A-Z0-9]+
+    // 2. Fallback to localStorage cache
+    if (!match) {
+      const storedInvites = JSON.parse(localStorage.getItem('safari_invites') || '[]');
+      match = storedInvites.find(i => (i.code || '').toUpperCase() === clean);
+    }
+
+    // 3. Fallback: Check valid management invite code pattern INV-(DRV|FL|OPS)-[A-Z0-9]+
     if (!match) {
       const inviteRegex = /^INV-(DRV|FL|OPS)-([A-Z0-9]{3,})$/i;
       const parsed = clean.match(inviteRegex);
@@ -130,6 +136,15 @@ export default function UserRegistrationView({
           isUsed: false,
           createdAt: new Date().toISOString()
         };
+        // Auto-save to MySQL so it persists
+        try {
+          fetch('api.php?action=save&table=invites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...match, isUsed: 0 })
+          }).catch(() => {});
+        } catch (e) {}
+        const storedInvites = JSON.parse(localStorage.getItem('safari_invites') || '[]');
         localStorage.setItem('safari_invites', JSON.stringify([match, ...storedInvites]));
       }
     }
@@ -140,7 +155,8 @@ export default function UserRegistrationView({
       return null;
     }
 
-    if (match.isUsed) {
+    const isRedeemed = Boolean(match.isUsed && match.isUsed !== '0' && match.isUsed !== 0);
+    if (isRedeemed) {
       setInviteError("This invitation code has already been redeemed. Please request a new invite.");
       setVerifiedInvite(null);
       return null;
@@ -182,7 +198,7 @@ export default function UserRegistrationView({
   };
 
 
-  // Direct Staff Sign In using Registered Phone & Password
+  // Direct Staff Sign In using Registered Phone & Password via MySQL
   const handlePasswordLogin = async (e) => {
     e?.preventDefault();
     setError('');
@@ -202,24 +218,55 @@ export default function UserRegistrationView({
     setLoading(true);
     try {
       const cleanPhone = formatted;
-      const cleanDigits = cleanPhone.replace(/\D/g, '');
-      const registeredUsers = JSON.parse(localStorage.getItem('safari_registered_users') || '[]');
+      let matchedUser = null;
 
-      const matchedUser = registeredUsers.find(u => {
-        const uDigits = (u.phone || '').replace(/\D/g, '');
-        return uDigits && (uDigits.endsWith(cleanDigits.slice(-9)) || cleanDigits.endsWith(uDigits.slice(-9)));
-      });
+      // 1. Verify credentials directly via MySQL database
+      try {
+        const res = await fetch('api.php?action=staff_login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: cleanPhone, password: loginPassword.trim() })
+        });
+        if (res.ok) {
+          const r = await res.json();
+          if (r.status === 'success' && r.user) {
+            matchedUser = r.user;
+          } else if (r.status === 'error') {
+            throw new Error(r.message || 'Login failed.');
+          }
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          if (errJson.message) {
+            throw new Error(errJson.message);
+          }
+        }
+      } catch (apiErr) {
+        if (apiErr.message && (apiErr.message.includes('password') || apiErr.message.includes('suspended'))) {
+          throw apiErr;
+        }
+        console.warn("MySQL staff_login network check failed, testing local cache:", apiErr);
+      }
 
+      // 2. Fallback to localStorage cache
       if (!matchedUser) {
-        throw new Error(`No staff account registered for ${cleanPhone}. Please register with your invite code first.`);
-      }
+        const cleanDigits = cleanPhone.replace(/\D/g, '');
+        const registeredUsers = JSON.parse(localStorage.getItem('safari_registered_users') || '[]');
+        matchedUser = registeredUsers.find(u => {
+          const uDigits = (u.phone || '').replace(/\D/g, '');
+          return uDigits && (uDigits.endsWith(cleanDigits.slice(-9)) || cleanDigits.endsWith(uDigits.slice(-9)));
+        });
 
-      if (matchedUser.status === 'suspended') {
-        throw new Error('This account has been suspended. Please contact operations management.');
-      }
+        if (!matchedUser) {
+          throw new Error(`No staff account registered for ${cleanPhone}. Please register with your invite code first.`);
+        }
 
-      if (matchedUser.password && matchedUser.password !== loginPassword.trim()) {
-        throw new Error('Incorrect password. Please verify and try again.');
+        if (matchedUser.status === 'suspended') {
+          throw new Error('This account has been suspended. Please contact operations management.');
+        }
+
+        if (matchedUser.password && matchedUser.password !== loginPassword.trim()) {
+          throw new Error('Incorrect password. Please verify and try again.');
+        }
       }
 
       // Authenticate immediately
@@ -431,8 +478,29 @@ export default function UserRegistrationView({
             }
           }
 
-          // Mark invite as redeemed
+          // Mark invite as redeemed in MySQL database and local cache
           if (currentInvite) {
+            try {
+              fetch('api.php?action=redeem_invite', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: currentInvite.code, phone: cleanPhone })
+              }).catch(() => {});
+            } catch (e) {}
+
+            try {
+              fetch('api.php?action=save&table=invites', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  ...currentInvite,
+                  isUsed: 1,
+                  usedByPhone: cleanPhone,
+                  usedAt: new Date().toISOString()
+                })
+              }).catch(() => {});
+            } catch (e) {}
+
             const storedInvites = JSON.parse(localStorage.getItem('safari_invites') || '[]');
             const updatedInvites = storedInvites.map(inv => {
               if (inv.id === currentInvite.id || inv.code === currentInvite.code) {
@@ -446,13 +514,11 @@ export default function UserRegistrationView({
               return inv;
             });
             localStorage.setItem('safari_invites', JSON.stringify(updatedInvites));
-            markInviteUsedInFirestore(currentInvite.code, cleanPhone);
           }
 
-          // Save registered user
+          // Save registered user to MySQL database and local cache
           const updatedUsers = [...registeredUsers.filter(u => u.phone !== cleanPhone), newUser];
           localStorage.setItem('safari_registered_users', JSON.stringify(updatedUsers));
-          syncUserToFirestore(newUser);
 
           try {
             fetch('api.php?action=save&table=users', {

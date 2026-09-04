@@ -247,6 +247,63 @@ if ($chkPickup && $chkPickup->num_rows === 0) {
     $conn->query("ALTER TABLE bookings ADD COLUMN pickedUpBy VARCHAR(255) DEFAULT '', ADD COLUMN pickedUpAt VARCHAR(100) DEFAULT ''");
 }
 
+// Auto-migrate users table columns
+$chkUserPhone = $conn->query("SHOW COLUMNS FROM users LIKE 'phone'");
+if ($chkUserPhone && $chkUserPhone->num_rows === 0) {
+    $conn->query("ALTER TABLE users ADD COLUMN phone VARCHAR(100) DEFAULT ''");
+}
+$chkUserPass = $conn->query("SHOW COLUMNS FROM users LIKE 'password'");
+if ($chkUserPass && $chkUserPass->num_rows === 0) {
+    $conn->query("ALTER TABLE users ADD COLUMN password VARCHAR(255) DEFAULT ''");
+}
+$chkUserRole = $conn->query("SHOW COLUMNS FROM users LIKE 'role'");
+if ($chkUserRole && $chkUserRole->num_rows === 0) {
+    $conn->query("ALTER TABLE users ADD COLUMN role VARCHAR(100) DEFAULT 'driver'");
+}
+$chkUserDrv = $conn->query("SHOW COLUMNS FROM users LIKE 'linkedDriverId'");
+if ($chkUserDrv && $chkUserDrv->num_rows === 0) {
+    $conn->query("ALTER TABLE users ADD COLUMN linkedDriverId VARCHAR(100) DEFAULT ''");
+}
+$chkUserPlate = $conn->query("SHOW COLUMNS FROM users LIKE 'linkedCarPlate'");
+if ($chkUserPlate && $chkUserPlate->num_rows === 0) {
+    $conn->query("ALTER TABLE users ADD COLUMN linkedCarPlate VARCHAR(100) DEFAULT ''");
+}
+$chkUserStatus = $conn->query("SHOW COLUMNS FROM users LIKE 'status'");
+if ($chkUserStatus && $chkUserStatus->num_rows === 0) {
+    $conn->query("ALTER TABLE users ADD COLUMN status VARCHAR(50) DEFAULT 'active'");
+}
+
+// Auto-migrate invites table columns
+$chkInvCode = $conn->query("SHOW COLUMNS FROM invites LIKE 'code'");
+if ($chkInvCode && $chkInvCode->num_rows === 0) {
+    $conn->query("ALTER TABLE invites ADD COLUMN code VARCHAR(100) DEFAULT ''");
+}
+$chkInvRole = $conn->query("SHOW COLUMNS FROM invites LIKE 'role'");
+if ($chkInvRole && $chkInvRole->num_rows === 0) {
+    $conn->query("ALTER TABLE invites ADD COLUMN role VARCHAR(100) DEFAULT 'driver'");
+}
+$chkInvUsed = $conn->query("SHOW COLUMNS FROM invites LIKE 'isUsed'");
+if ($chkInvUsed && $chkInvUsed->num_rows === 0) {
+    $conn->query("ALTER TABLE invites ADD COLUMN isUsed INT DEFAULT 0");
+}
+$chkInvUsedPhone = $conn->query("SHOW COLUMNS FROM invites LIKE 'usedByPhone'");
+if ($chkInvUsedPhone && $chkInvUsedPhone->num_rows === 0) {
+    $conn->query("ALTER TABLE invites ADD COLUMN usedByPhone VARCHAR(100) DEFAULT ''");
+}
+$chkInvUsedAt = $conn->query("SHOW COLUMNS FROM invites LIKE 'usedAt'");
+if ($chkInvUsedAt && $chkInvUsedAt->num_rows === 0) {
+    $conn->query("ALTER TABLE invites ADD COLUMN usedAt VARCHAR(50) DEFAULT NULL");
+}
+$chkInvPlate = $conn->query("SHOW COLUMNS FROM invites LIKE 'targetPlate'");
+if ($chkInvPlate && $chkInvPlate->num_rows === 0) {
+    $conn->query("ALTER TABLE invites ADD COLUMN targetPlate VARCHAR(100) DEFAULT ''");
+}
+$chkInvDrvId = $conn->query("SHOW COLUMNS FROM invites LIKE 'targetDriverId'");
+if ($chkInvDrvId && $chkInvDrvId->num_rows === 0) {
+    $conn->query("ALTER TABLE invites ADD COLUMN targetDriverId VARCHAR(100) DEFAULT ''");
+}
+
+
 $conn->query("INSERT IGNORE INTO company_details (id, fullName, address, contactPerson, whatsapp, email, regDate, licenseNo, whatWeOffer) VALUES (
     'company_info',
     'Roar Adventure Tourism LLC',
@@ -349,12 +406,61 @@ if ($action === 'login') {
     $email = isset($input['email']) ? trim($input['email']) : '';
     $password = isset($input['password']) ? trim($input['password']) : '';
     
-    if (strtolower($email) === 'info@roaradventuretourism.com' && $password === 'R4roar!786*') {
-        echo json_encode(["status" => "success", "user" => ["email" => $email]]);
-    } else {
-        http_response_code(401);
-        echo json_encode(["status" => "error", "message" => "Invalid email or security password."]);
+    // Master Admin Check
+    if (strtolower($email) === 'abid@dxbaiseo.com' && $password === 'D4dangerous3636!') {
+        echo json_encode(["status" => "success", "user" => ["email" => $email, "role" => "master_admin"], "role" => "master_admin"]);
+        exit();
     }
+
+    // Company Admin Check
+    if (strtolower($email) === 'info@roaradventuretourism.com' && $password === 'R4roar!786*') {
+        echo json_encode([
+            "status" => "success", 
+            "user" => [
+                "id" => "roar",
+                "name" => "Roar Adventure Tourism LLC",
+                "email" => $email,
+                "role" => "company_admin"
+            ],
+            "role" => "company_admin",
+            "companyId" => "roar"
+        ]);
+        exit();
+    }
+
+    // Check Staff / Driver accounts in MySQL users table
+    $cleanInput = $conn->real_escape_string($email);
+    $cleanDigits = preg_replace('/\D/', '', $email);
+    $uQuery = "SELECT * FROM users WHERE phone = '$cleanInput' OR name = '$cleanInput'";
+    if (!empty($cleanDigits) && strlen($cleanDigits) >= 7) {
+        $suffix = substr($cleanDigits, -9);
+        $uQuery .= " OR phone LIKE '%$suffix'";
+    }
+    $uRes = $conn->query($uQuery);
+    if ($uRes && $uRes->num_rows > 0) {
+        $uRow = $uRes->fetch_assoc();
+        if ($uRow['password'] === $password) {
+            if (isset($uRow['status']) && $uRow['status'] === 'suspended') {
+                http_response_code(403);
+                echo json_encode(["status" => "error", "message" => "This account has been suspended. Please contact operations management."]);
+                exit();
+            }
+            echo json_encode([
+                "status" => "success",
+                "user" => $uRow,
+                "role" => $uRow['role'] ?: 'driver',
+                "companyId" => "roar"
+            ]);
+            exit();
+        } else {
+            http_response_code(401);
+            echo json_encode(["status" => "error", "message" => "Incorrect security password."]);
+            exit();
+        }
+    }
+
+    http_response_code(401);
+    echo json_encode(["status" => "error", "message" => "Invalid email / phone number or security password."]);
     exit();
 }
 
@@ -404,6 +510,8 @@ if ($action === 'load') {
                     $row['amount'] = (float)$row['amount'];
                 } else if ($table === 'company_sims') {
                     $row['monthlyCost'] = (float)$row['monthlyCost'];
+                } else if ($table === 'invites') {
+                    $row['isUsed'] = ((int)$row['isUsed'] === 1 || $row['isUsed'] === true || $row['isUsed'] === '1');
                 }
                 $rows[] = $row;
             }
@@ -427,6 +535,102 @@ if ($action === 'save_setting') {
     }
     exit();
 }
+
+// 2.6 INVITE ACTIONS
+if ($action === 'get_invites') {
+    $result = $conn->query("SELECT * FROM invites ORDER BY createdAt DESC");
+    $invList = [];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $row['isUsed'] = ((int)$row['isUsed'] === 1 || $row['isUsed'] === true || $row['isUsed'] === '1');
+            $invList[] = $row;
+        }
+    }
+    echo json_encode(["status" => "success", "invites" => $invList]);
+    exit();
+}
+
+if ($action === 'verify_invite') {
+    $code = isset($_GET['code']) ? trim($_GET['code']) : '';
+    if (!$code) {
+        $input = json_decode(file_get_contents('php://input'), true);
+        $code = isset($input['code']) ? trim($input['code']) : '';
+    }
+    $escaped = $conn->real_escape_string(strtoupper($code));
+    $res = $conn->query("SELECT * FROM invites WHERE UPPER(TRIM(code)) = '$escaped' LIMIT 1");
+    if ($res && $res->num_rows > 0) {
+        $row = $res->fetch_assoc();
+        $row['isUsed'] = ((int)$row['isUsed'] === 1 || $row['isUsed'] === true || $row['isUsed'] === '1');
+        echo json_encode(["status" => "success", "invite" => $row]);
+    } else {
+        echo json_encode(["status" => "error", "message" => "Invite code not found in MySQL database."]);
+    }
+    exit();
+}
+
+if ($action === 'redeem_invite') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $code = isset($input['code']) ? trim($input['code']) : '';
+    $phone = isset($input['phone']) ? trim($input['phone']) : '';
+    if ($code) {
+        $escapedCode = $conn->real_escape_string(strtoupper($code));
+        $escapedPhone = $conn->real_escape_string($phone);
+        $now = date('Y-m-d H:i:s');
+        $conn->query("UPDATE invites SET isUsed = 1, usedByPhone = '$escapedPhone', usedAt = '$now' WHERE UPPER(TRIM(code)) = '$escapedCode'");
+        echo json_encode(["status" => "success"]);
+    } else {
+        echo json_encode(["status" => "error", "message" => "Missing invite code."]);
+    }
+    exit();
+}
+
+if ($action === 'staff_login') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    $phone = isset($input['phone']) ? trim($input['phone']) : '';
+    $password = isset($input['password']) ? trim($input['password']) : '';
+
+    if (!$phone || !$password) {
+        http_response_code(400);
+        echo json_encode(["status" => "error", "message" => "Mobile number and password are required."]);
+        exit();
+    }
+
+    $cleanInput = $conn->real_escape_string($phone);
+    $cleanDigits = preg_replace('/\D/', '', $phone);
+    $query = "SELECT * FROM users WHERE phone = '$cleanInput'";
+    if (!empty($cleanDigits) && strlen($cleanDigits) >= 7) {
+        $suffix = substr($cleanDigits, -9);
+        $query .= " OR phone LIKE '%$suffix'";
+    }
+
+    $res = $conn->query($query);
+    if ($res && $res->num_rows > 0) {
+        $user = $res->fetch_assoc();
+        if ($user['password'] === $password) {
+            if (isset($user['status']) && $user['status'] === 'suspended') {
+                http_response_code(403);
+                echo json_encode(["status" => "error", "message" => "This account has been suspended. Please contact operations management."]);
+                exit();
+            }
+            echo json_encode([
+                "status" => "success",
+                "user" => $user,
+                "role" => $user['role'] ?: 'driver',
+                "companyId" => "roar"
+            ]);
+            exit();
+        } else {
+            http_response_code(401);
+            echo json_encode(["status" => "error", "message" => "Incorrect security password."]);
+            exit();
+        }
+    } else {
+        http_response_code(404);
+        echo json_encode(["status" => "error", "message" => "No registered account found for this mobile number in MySQL. Please register with your invite code."]);
+        exit();
+    }
+}
+
 
 // 2.7 CREATE STRIPE CHECKOUT SESSION ACTION
 if ($action === 'create-stripe-session') {

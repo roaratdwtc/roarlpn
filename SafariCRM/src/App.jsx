@@ -338,6 +338,29 @@ export default function App() {
     return getLocalStorageItemSafe('safari_invites', []);
   });
 
+  // Always sync invites from MySQL database on app mount
+  useEffect(() => {
+    const syncCoreFromMySQL = async () => {
+      try {
+        const res = await fetch('api.php?action=get_invites');
+        if (res.ok) {
+          const r = await res.json();
+          if (r.status === 'success' && Array.isArray(r.invites)) {
+            const cleanInvites = r.invites.map(inv => ({
+              ...inv,
+              isUsed: Boolean(inv.isUsed && inv.isUsed !== '0' && inv.isUsed !== 0)
+            }));
+            setInvites(cleanInvites);
+            localStorage.setItem('safari_invites', JSON.stringify(cleanInvites));
+          }
+        }
+      } catch (e) {
+        console.warn("Initial MySQL invites sync note:", e);
+      }
+    };
+    syncCoreFromMySQL();
+  }, []);
+
   const setInvitesCustom = (valOrUpdater) => {
     setInvites(prev => {
       const next = typeof valOrUpdater === 'function' ? valOrUpdater(prev) : valOrUpdater;
@@ -409,7 +432,7 @@ export default function App() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const result = await res.json();
         if (result.status === 'success' && result.data) {
-          const { bookings: bList, drivers: dList, expenses: eList, partners: pList, cars: cList, packages: pkgList, coupons: cpnList, customers: custList, settings: settingsList, company_details: compDetails, company_documents: docList, car_expenses: ceList, company_expenses: compExpList, company_sims: simList, car_documents: carDocList } = result.data;
+          const { bookings: bList, drivers: dList, expenses: eList, partners: pList, cars: cList, packages: pkgList, coupons: cpnList, customers: custList, settings: settingsList, company_details: compDetails, company_documents: docList, car_expenses: ceList, company_expenses: compExpList, company_sims: simList, car_documents: carDocList, invites: invList, users: usrList } = result.data;
           
           if (bList && bList.length > 0) {
             let processedBList = bList;
@@ -589,6 +612,19 @@ export default function App() {
             } catch (e) {
               console.warn("Failed to write loaded car documents to localStorage:", e);
             }
+          }
+
+          if (invList && Array.isArray(invList)) {
+            const cleanInvites = invList.map(inv => ({
+              ...inv,
+              isUsed: Boolean(inv.isUsed && inv.isUsed !== '0' && inv.isUsed !== 0)
+            }));
+            setInvites(cleanInvites);
+            localStorage.setItem('safari_invites', JSON.stringify(cleanInvites));
+          }
+
+          if (usrList && Array.isArray(usrList)) {
+            localStorage.setItem('safari_registered_users', JSON.stringify(usrList));
           }
           
           setDbStatus('success');

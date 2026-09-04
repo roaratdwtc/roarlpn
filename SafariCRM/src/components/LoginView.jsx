@@ -66,7 +66,10 @@ export default function LoginView({ onLoginSuccess }) {
       const result = await res.json();
 
       if (res.ok && result.status === 'success') {
-        onLoginSuccess(result.role, result.company_id, result.company);
+        const targetRole = result.role || (result.user?.role) || 'company_admin';
+        const targetCompId = result.company_id || result.companyId || 'roar';
+        const targetProfile = result.user || result.company;
+        onLoginSuccess(targetRole, targetCompId, targetProfile);
       } else {
         throw new Error(result.message || 'Login failed.');
       }

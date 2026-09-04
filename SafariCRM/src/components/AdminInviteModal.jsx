@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Send, 
   Key, 
@@ -13,7 +13,7 @@ import {
   Settings,
   AlertCircle
 } from 'lucide-react';
-import { getFirebaseConfig, saveFirebaseConfig, isFirebaseConfigured, syncInviteToFirestore } from '../utils/firebaseAuth';
+import { getFirebaseConfig, saveFirebaseConfig, isFirebaseConfigured } from '../utils/firebaseAuth';
 
 export default function AdminInviteModal({ 
   onClose, 
@@ -38,8 +38,29 @@ export default function AdminInviteModal({
   const [fbSuccess, setFbSuccess] = useState('');
   const [fbError, setFbError] = useState('');
 
-  // Generate Invite Code
-  const handleGenerateInvite = (e) => {
+  // Always fetch latest invites from MySQL database on modal open
+  useEffect(() => {
+    const fetchInvitesFromMySQL = async () => {
+      try {
+        const res = await fetch('api.php?action=get_invites');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'success' && Array.isArray(data.invites)) {
+            if (setInvites) {
+              setInvites(data.invites);
+            }
+            localStorage.setItem('safari_invites', JSON.stringify(data.invites));
+          }
+        }
+      } catch (err) {
+        console.warn("Could not fetch invites from MySQL:", err);
+      }
+    };
+    fetchInvitesFromMySQL();
+  }, []);
+
+  // Generate Invite Code and Persist to MySQL
+  const handleGenerateInvite = async (e) => {
     e.preventDefault();
 
     const rolePrefix = newInviteRole === 'driver' ? 'DRV' : newInviteRole === 'freelancer' ? 'FL' : 'OPS';
@@ -60,14 +81,27 @@ export default function AdminInviteModal({
       createdAt: new Date().toISOString()
     };
 
+    // 1. Immediately Save to MySQL Database (Zero Data Loss)
+    try {
+      await fetch('api.php?action=save&table=invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newInvite,
+          isUsed: 0
+        })
+      });
+    } catch (err) {
+      console.warn("Failed to save invite to MySQL:", err);
+    }
+
+    // 2. Update React State & Local Storage Cache
     if (setInvites) {
       setInvites(prev => [newInvite, ...(prev || [])]);
     } else {
       const stored = JSON.parse(localStorage.getItem('safari_invites') || '[]');
       localStorage.setItem('safari_invites', JSON.stringify([newInvite, ...stored]));
     }
-
-    syncInviteToFirestore(newInvite);
 
     setLastGeneratedInvite(newInvite);
     setTargetName('');
@@ -82,9 +116,21 @@ export default function AdminInviteModal({
     setTimeout(() => setCopiedCode(null), 2500);
   };
 
-  // Revoke Invite
-  const handleRevokeInvite = (inviteId) => {
+  // Revoke Invite and Delete from MySQL
+  const handleRevokeInvite = async (inviteId) => {
     if (confirm("Are you sure you want to revoke this invite code?")) {
+      // 1. Delete from MySQL Database
+      try {
+        await fetch('api.php?action=delete&table=invites', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: inviteId })
+        });
+      } catch (err) {
+        console.warn("Failed to delete invite from MySQL:", err);
+      }
+
+      // 2. Update State & Local Storage Cache
       if (setInvites) {
         setInvites(prev => prev.filter(i => i.id !== inviteId));
       } else {
