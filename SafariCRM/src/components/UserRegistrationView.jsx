@@ -750,11 +750,14 @@ export default function UserRegistrationView({
                   style={{ fontWeight: '700' }}
                 >
                   <option value="">-- Select Your Vehicle Plate --</option>
-                  {cars.map((c) => (
-                    <option key={c.id || c.plate || c.plateNo} value={c.plate || c.plateNo}>
-                      Plate: {c.plate || c.plateNo} ({c.model || c.brand || 'Vehicle'} - {c.owner || 'Lease'})
-                    </option>
-                  ))}
+                  {cars.map((c) => {
+                    const plateNo = c.plateNo || c.plate || c.carPlate || '';
+                    return (
+                      <option key={c.id || plateNo} value={plateNo}>
+                        {plateNo} ({c.brand ? `${c.brand} ` : ''}{c.model ? `${c.model} - ` : ''}{c.owner || 'Freelancer'})
+                      </option>
+                    );
+                  })}
                   <option value="OTHER">Other / New Vehicle Plate...</option>
                 </select>
                 {selectedCarPlate === 'OTHER' && (

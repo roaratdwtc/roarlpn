@@ -52,12 +52,12 @@ export default function FreelancerPortalView({
       (c.owner && currentUser.name && c.owner.toLowerCase().includes(currentUser.name.toLowerCase())) ||
       (c.driver && currentUser.name && c.driver.toLowerCase().includes(currentUser.name.toLowerCase()))
     );
-    return matched.map(c => (c.plate || '').toUpperCase()).filter(Boolean);
+    return matched.map(c => (c.plateNo || c.plate || c.carPlate || '').toUpperCase()).filter(Boolean);
   }, [currentUser, cars]);
 
   // Scoped Cars: ONLY their own cars!
   const myCars = useMemo(() => {
-    return cars.filter(c => userPlates.includes((c.plate || '').toUpperCase()));
+    return cars.filter(c => userPlates.includes((c.plateNo || c.plate || c.carPlate || '').toUpperCase()));
   }, [cars, userPlates]);
 
   const selectedCar = myCars[0] || null;
@@ -65,7 +65,7 @@ export default function FreelancerPortalView({
   // Scoped Car Expenses: ONLY for their own car(s)!
   const myExpenses = useMemo(() => {
     return (carExpenses || []).filter(e => {
-      const expPlate = (e.plate || '').toUpperCase();
+      const expPlate = (e.plateNo || e.plate || e.carPlate || '').toUpperCase();
       return userPlates.includes(expPlate);
     }).sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [carExpenses, userPlates]);
@@ -133,7 +133,7 @@ export default function FreelancerPortalView({
       freelancerId: currentUser?.id,
       freelancerName: currentUser?.name || 'Freelancer',
       phone: currentUser?.phone || '',
-      plate: selectedCar?.plate || userPlates[0] || 'Unassigned',
+      plate: selectedCar?.plateNo || selectedCar?.plate || userPlates[0] || 'Unassigned',
       amount: parsedAmount,
       paymentDate: receiptForm.paymentDate,
       referenceNo: receiptForm.referenceNo || `REF-${Date.now().toString().slice(-6)}`,
@@ -263,10 +263,10 @@ export default function FreelancerPortalView({
               My Vehicle
             </div>
             <div style={{ fontSize: '20px', fontWeight: '900', color: '#543c2b' }}>
-              {selectedCar ? selectedCar.plate : (userPlates[0] || 'No Car Assigned')}
+              {selectedCar ? (selectedCar.plateNo || selectedCar.plate) : (userPlates[0] || 'No Car Assigned')}
             </div>
             <div style={{ fontSize: '11px', color: '#8c7361', marginTop: '2px' }}>
-              {selectedCar ? `${selectedCar.model || selectedCar.brand} (${selectedCar.year || '2024'})` : 'Contact admin to assign plate'}
+              {selectedCar ? `${selectedCar.brand ? `${selectedCar.brand} ` : ''}${selectedCar.model || ''} (${selectedCar.year || '2024'})` : 'Contact admin to assign plate'}
             </div>
           </div>
 
@@ -390,7 +390,7 @@ export default function FreelancerPortalView({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', borderBottom: '1px solid #ede6d9', paddingBottom: '14px', marginBottom: '16px' }}>
                   <div>
                     <h3 style={{ margin: '0 0 4px 0', fontSize: '18px', fontWeight: '900', color: '#543c2b' }}>
-                      {selectedCar.plate} • {selectedCar.model || selectedCar.brand}
+                      {(selectedCar.plateNo || selectedCar.plate)} • {selectedCar.brand ? `${selectedCar.brand} ` : ''}{selectedCar.model || ''}
                     </h3>
                     <span style={{ fontSize: '12px', color: '#8c7361' }}>
                       Official Leaseholder / Freelancer: <strong>{selectedCar.owner || currentUser?.name}</strong>

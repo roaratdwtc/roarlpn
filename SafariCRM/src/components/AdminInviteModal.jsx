@@ -29,7 +29,7 @@ export default function AdminInviteModal({
   const [newInviteRole, setNewInviteRole] = useState('driver');
   const [targetName, setTargetName] = useState('');
   const [targetPhone, setTargetPhone] = useState('');
-  const [selectedPlate, setSelectedPlate] = useState(cars[0]?.plate || '');
+  const [selectedPlate, setSelectedPlate] = useState(cars[0]?.plateNo || cars[0]?.plate || '');
   const [selectedDriverId, setSelectedDriverId] = useState(drivers[0]?.id || '');
   const [lastGeneratedInvite, setLastGeneratedInvite] = useState(null);
 
@@ -259,11 +259,14 @@ export default function AdminInviteModal({
                     onChange={(e) => setSelectedPlate(e.target.value)}
                   >
                     <option value="">-- Pre-assign Vehicle Plate (Optional) --</option>
-                    {cars.map(c => (
-                      <option key={c.id || c.plate} value={c.plate}>
-                        Vehicle Plate: {c.plate} ({c.model || c.brand} - {c.owner || 'Freelancer'})
-                      </option>
-                    ))}
+                    {cars.map(c => {
+                      const plate = c.plateNo || c.plate || c.carPlate || '';
+                      return (
+                        <option key={c.id || plate} value={plate}>
+                          {plate} ({c.brand ? `${c.brand} ` : ''}{c.model ? `${c.model} - ` : ''}{c.owner || 'Freelancer'})
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               )}
@@ -279,7 +282,7 @@ export default function AdminInviteModal({
                     <option value="">-- Pre-assign Fleet Driver Profile (Optional) --</option>
                     {drivers.map(d => (
                       <option key={d.id} value={d.id}>
-                        Driver Profile: {d.name} ({d.phone || 'Fleet Captain'})
+                        {d.name} ({d.whatsapp || d.phone || d.carPlate || 'Fleet Driver'})
                       </option>
                     ))}
                   </select>
