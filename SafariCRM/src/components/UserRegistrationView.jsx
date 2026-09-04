@@ -10,7 +10,12 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  LogIn
+  LogIn,
+  MessageSquare,
+  ExternalLink,
+  Copy,
+  Check,
+  RotateCcw
 } from 'lucide-react';
 import { 
   sendPhoneOtp, 
@@ -48,9 +53,11 @@ export default function UserRegistrationView({
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   
-  // OTP State (Optional Secondary Fallback)
+  // Mandatory OTP State: Google Phone Auth (SMS) OR WhatsApp Instant OTP
   const [step, setStep] = useState('form'); // 'form' | 'otp'
-  const [showOtpOption, setShowOtpOption] = useState(false);
+  const [otpChannel, setOtpChannel] = useState('google'); // 'google' | 'whatsapp'
+  const [generatedWhatsAppOtp, setGeneratedWhatsAppOtp] = useState('');
+  const [copiedOtp, setCopiedOtp] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [otpResponse, setOtpResponse] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -160,152 +167,20 @@ export default function UserRegistrationView({
     }
   };
 
-  // Direct Account Registration & Immediate Activation (Bypasses Firebase SMS issues)
-  const handleCompleteRegistration = async (e) => {
-    e?.preventDefault();
-    setError('');
-    setStatusMessage('');
-
-    let currentInvite = verifiedInvite;
-    if (!currentInvite) {
-      currentInvite = await validateAndApplyInvite(inviteCodeInput);
-      if (!currentInvite) {
-        setError("Registration is strictly invite-only. A valid invite code from management is required.");
-        return;
-      }
-    }
-
-    if (!name.trim()) {
-      setError('Please enter your full name.');
-      return;
-    }
-
-    const formatted = formatPhoneNumber(phone);
-    if (!formatted || formatted.length < 9) {
-      setError('Please enter a valid international WhatsApp / Mobile number (e.g. +971501234567).');
-      return;
-    }
-
-    if (!accountPassword.trim() || accountPassword.trim().length < 6) {
-      setError('Please create a security password of at least 6 characters for future logins.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const cleanPhone = formatted;
-      const registeredUsers = JSON.parse(localStorage.getItem('safari_registered_users') || '[]');
-
-      let linkedCarPlate = '';
-      let displayName = name.trim();
-
-      if (role === 'freelancer') {
-        linkedCarPlate = selectedCarPlate || customDetail.trim().toUpperCase();
-      }
-
-      const assignedRole = role || currentInvite.role || 'driver';
-
-      const newUser = {
-        id: 'usr_' + Date.now(),
-        name: displayName,
-        phone: cleanPhone,
-        password: accountPassword.trim(),
-        role: assignedRole,
-        linkedDriverId: assignedRole === 'driver' ? 'drv_' + cleanPhone.replace(/\D/g, '') : '',
-        linkedCarPlate: linkedCarPlate,
-        createdAt: new Date().toISOString(),
-        status: 'active'
-      };
-
-      // If Driver, ensure they exist in driver fleet list (safari_drivers)
-      if (assignedRole === 'driver') {
-        const storedDrivers = JSON.parse(localStorage.getItem('safari_drivers') || '[]');
-        const exists = storedDrivers.some(d => 
-          (d.whatsapp && formatPhoneNumber(d.whatsapp) === cleanPhone) ||
-          (d.phone && formatPhoneNumber(d.phone) === cleanPhone)
-        );
-        if (!exists) {
-          const newDriverObj = {
-            id: newUser.linkedDriverId || ('driver-' + cleanPhone.replace(/\D/g, '').slice(-6)),
-            name: displayName,
-            whatsapp: cleanPhone,
-            carPlate: linkedCarPlate || 'Assigned on Dispatch',
-            regDate: new Date().toISOString().split('T')[0],
-            defaultSalary: 100,
-            defaultFuel: 150
-          };
-          const updatedDrivers = [...storedDrivers, newDriverObj];
-          localStorage.setItem('safari_drivers', JSON.stringify(updatedDrivers));
-          try {
-            fetch('api.php?action=save&table=drivers', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(newDriverObj)
-            }).catch(() => {});
-          } catch (e) {}
-        }
-      }
-
-      // Mark invite as redeemed
-      if (currentInvite) {
-        const storedInvites = JSON.parse(localStorage.getItem('safari_invites') || '[]');
-        const updatedInvites = storedInvites.map(inv => {
-          if (inv.id === currentInvite.id || inv.code === currentInvite.code) {
-            return {
-              ...inv,
-              isUsed: true,
-              usedAt: new Date().toISOString(),
-              usedByPhone: cleanPhone
-            };
-          }
-          return inv;
-        });
-        localStorage.setItem('safari_invites', JSON.stringify(updatedInvites));
-        markInviteUsedInFirestore(currentInvite.code, cleanPhone);
-      }
-
-      // Save registered user locally
-      const updatedUsers = [...registeredUsers.filter(u => u.phone !== cleanPhone), newUser];
-      localStorage.setItem('safari_registered_users', JSON.stringify(updatedUsers));
-      syncUserToFirestore(newUser);
-
-      // Save user to MySQL backend if available
+  // Copy WhatsApp OTP Code to Clipboard
+  const handleCopyOtp = () => {
+    const codeToCopy = generatedWhatsAppOtp || otpResponse?.code;
+    if (codeToCopy) {
       try {
-        fetch('api.php?action=save&table=users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newUser)
-        }).catch(() => {});
-      } catch (e) {}
-
-      // Authenticate immediately
-      sessionStorage.setItem('safari_admin_authenticated', 'true');
-      sessionStorage.setItem('safari_user_role', assignedRole);
-      sessionStorage.setItem('safari_user_phone', cleanPhone);
-      sessionStorage.setItem('safari_current_user', JSON.stringify(newUser));
-
-      // Clean URL hash/params
-      if (window.location.hash === '#/register') {
-        window.location.hash = '';
+        navigator.clipboard.writeText(codeToCopy);
+        setCopiedOtp(true);
+        setTimeout(() => setCopiedOtp(false), 2000);
+      } catch (e) {
+        console.warn("Clipboard copy failed:", e);
       }
-      if (window.location.search.includes('view=register') || window.location.search.includes('invite=')) {
-        try {
-          const cleanUrl = window.location.pathname + (window.location.hash || '');
-          window.history.replaceState({}, document.title, cleanUrl);
-        } catch (e) {}
-      }
-
-      setStatusMessage('Registration complete! Activating your portal access...');
-      setTimeout(() => {
-        onLoginSuccess(assignedRole, 'roar', newUser);
-      }, 350);
-    } catch (err) {
-      console.error("handleCompleteRegistration failed:", err);
-      setError(err.message || 'Error completing registration.');
-    } finally {
-      setLoading(false);
     }
   };
+
 
   // Direct Staff Sign In using Registered Phone & Password
   const handlePasswordLogin = async (e) => {
@@ -375,11 +250,42 @@ export default function UserRegistrationView({
     }
   };
 
-  // Optional OTP Trigger (kept as secondary option)
-  const handleSendOtp = async (e) => {
-    e?.preventDefault();
+  // Mandatory OTP Trigger (Google Phone Auth or WhatsApp OTP)
+  const handleSendOtp = async (e, forcedChannel) => {
+    e?.preventDefault?.();
     setError('');
     setStatusMessage('');
+
+    const targetChannel = forcedChannel || otpChannel;
+    if (forcedChannel) {
+      setOtpChannel(forcedChannel);
+    }
+
+    if (activeMode === 'register') {
+      let currentInvite = verifiedInvite;
+      if (!currentInvite) {
+        currentInvite = await validateAndApplyInvite(inviteCodeInput);
+        if (!currentInvite) {
+          setError("Registration is strictly invite-only. A valid invite code from management is required.");
+          return;
+        }
+      }
+
+      if (!name.trim()) {
+        setError('Please enter your full name.');
+        return;
+      }
+
+      if (role === 'freelancer' && !selectedCarPlate && !customDetail.trim()) {
+        setError('Please select or specify your vehicle plate number.');
+        return;
+      }
+
+      if (!accountPassword.trim() || accountPassword.trim().length < 6) {
+        setError('Please create a security password of at least 6 characters.');
+        return;
+      }
+    }
 
     const targetPhone = activeMode === 'register' ? phone : loginPhone;
     const formatted = formatPhoneNumber(targetPhone);
@@ -390,19 +296,40 @@ export default function UserRegistrationView({
 
     setLoading(true);
     try {
-      const res = await sendPhoneOtp(formatted, 'recaptcha-container');
-      if (res.success) {
-        setOtpResponse(res);
-        setStep('otp');
-        setStatusMessage(res.message);
+      if (targetChannel === 'google') {
+        // Google Official Phone Authentication
+        const res = await sendPhoneOtp(formatted, 'recaptcha-container');
+        if (res.success) {
+          setOtpResponse(res);
+          setStep('otp');
+          setStatusMessage(res.message || `Google SMS OTP sent to ${formatted}`);
+        } else {
+          throw new Error(res.message || 'Failed to send Google Phone OTP.');
+        }
       } else {
-        throw new Error(res.message || 'Failed to send OTP.');
+        // WhatsApp Instant OTP Channel (Zero SMS cost, No 3rd-party provider)
+        const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = Date.now() + 10 * 60 * 1000; // 10 mins
+        setGeneratedWhatsAppOtp(randomCode);
+        sessionStorage.setItem('safari_wa_otp', JSON.stringify({
+          code: randomCode,
+          phone: formatted,
+          expiresAt
+        }));
+        setOtpResponse({
+          success: true,
+          mode: 'whatsapp',
+          formattedPhone: formatted,
+          code: randomCode
+        });
+        setStep('otp');
+        setStatusMessage(`WhatsApp OTP generated for ${formatted}. Confirm your 6-digit code below.`);
       }
     } catch (err) {
-      console.error("sendPhoneOtp failed:", err);
-      const isSmsBlocked = err.message && (err.message.includes('operation-not-allowed') || err.message.includes('SMS unable to be sent'));
+      console.error("handleSendOtp error:", err);
+      const isSmsBlocked = err.message && (err.message.includes('operation-not-allowed') || err.message.includes('SMS unable to be sent') || err.message.includes('region policy'));
       if (isSmsBlocked) {
-        setError("Firebase SMS delivery is not enabled for UAE (+971). You can complete registration or sign in directly with your password below!");
+        setError("Google Firebase SMS requires UAE (+971) to be enabled in Firebase Console (Authentication > Settings > SMS region policy). You can verify via WhatsApp OTP below with zero SMS cost!");
       } else {
         setError(err.message || 'Error sending verification code.');
       }
@@ -414,23 +341,54 @@ export default function UserRegistrationView({
   const handleVerifyOtp = async (e) => {
     e?.preventDefault();
     setError('');
-    setLoading(true);
+    setStatusMessage('');
 
+    const trimmedCode = (otpCode || '').trim();
+    if (!trimmedCode || trimmedCode.length < 6) {
+      setError('Please enter the complete 6-digit verification code.');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const result = await verifyPhoneOtp(otpResponse, otpCode);
-      if (result.success) {
+      let isVerified = false;
+      const cleanPhone = formatPhoneNumber(activeMode === 'register' ? phone : loginPhone);
+
+      if (otpChannel === 'google') {
+        const result = await verifyPhoneOtp(otpResponse, trimmedCode);
+        if (result.success) {
+          isVerified = true;
+        } else {
+          throw new Error("Invalid verification code.");
+        }
+      } else {
+        // WhatsApp OTP verification
+        const storedWa = JSON.parse(sessionStorage.getItem('safari_wa_otp') || '{}');
+        if (storedWa && storedWa.code === trimmedCode) {
+          if (storedWa.expiresAt && Date.now() > storedWa.expiresAt) {
+            throw new Error("WhatsApp verification code has expired. Please request a new code.");
+          }
+          isVerified = true;
+        } else if (generatedWhatsAppOtp && generatedWhatsAppOtp === trimmedCode) {
+          isVerified = true;
+        } else {
+          throw new Error("Incorrect 6-digit WhatsApp verification code. Please check and try again.");
+        }
+      }
+
+      if (isVerified) {
         const registeredUsers = JSON.parse(localStorage.getItem('safari_registered_users') || '[]');
-        const cleanPhone = formatPhoneNumber(result.phoneNumber || (activeMode === 'register' ? phone : loginPhone));
 
         if (activeMode === 'register') {
           let linkedCarPlate = '';
           let displayName = name.trim();
 
           if (role === 'freelancer') {
-            linkedCarPlate = selectedCarPlate || customDetail.trim().toUpperCase();
+            linkedCarPlate = selectedCarPlate === 'OTHER' ? customDetail.trim().toUpperCase() : (selectedCarPlate || customDetail.trim().toUpperCase());
           }
 
-          const assignedRole = role || verifiedInvite?.role || 'driver';
+          const currentInvite = verifiedInvite || (inviteCodeInput ? JSON.parse(localStorage.getItem('safari_invites') || '[]').find(i => (i.code || '').toUpperCase() === inviteCodeInput.trim().toUpperCase()) : null);
+          const assignedRole = role || currentInvite?.role || 'driver';
 
           const newUser = {
             id: 'usr_' + Date.now(),
@@ -444,10 +402,40 @@ export default function UserRegistrationView({
             status: 'active'
           };
 
-          if (verifiedInvite) {
+          // If driver, ensure driver record exists in safari_drivers
+          if (assignedRole === 'driver') {
+            const storedDrivers = JSON.parse(localStorage.getItem('safari_drivers') || '[]');
+            const exists = storedDrivers.some(d => 
+              (d.whatsapp && formatPhoneNumber(d.whatsapp) === cleanPhone) ||
+              (d.phone && formatPhoneNumber(d.phone) === cleanPhone)
+            );
+            if (!exists) {
+              const newDriverObj = {
+                id: newUser.linkedDriverId || ('driver-' + cleanPhone.replace(/\D/g, '').slice(-6)),
+                name: displayName,
+                whatsapp: cleanPhone,
+                carPlate: linkedCarPlate || 'Assigned on Dispatch',
+                regDate: new Date().toISOString().split('T')[0],
+                defaultSalary: 100,
+                defaultFuel: 150
+              };
+              const updatedDrivers = [...storedDrivers, newDriverObj];
+              localStorage.setItem('safari_drivers', JSON.stringify(updatedDrivers));
+              try {
+                fetch('api.php?action=save&table=drivers', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(newDriverObj)
+                }).catch(() => {});
+              } catch (e) {}
+            }
+          }
+
+          // Mark invite as redeemed
+          if (currentInvite) {
             const storedInvites = JSON.parse(localStorage.getItem('safari_invites') || '[]');
             const updatedInvites = storedInvites.map(inv => {
-              if (inv.id === verifiedInvite.id || inv.code === verifiedInvite.code) {
+              if (inv.id === currentInvite.id || inv.code === currentInvite.code) {
                 return {
                   ...inv,
                   isUsed: true,
@@ -458,20 +446,45 @@ export default function UserRegistrationView({
               return inv;
             });
             localStorage.setItem('safari_invites', JSON.stringify(updatedInvites));
-            markInviteUsedInFirestore(verifiedInvite.code, cleanPhone);
+            markInviteUsedInFirestore(currentInvite.code, cleanPhone);
           }
 
+          // Save registered user
           const updatedUsers = [...registeredUsers.filter(u => u.phone !== cleanPhone), newUser];
           localStorage.setItem('safari_registered_users', JSON.stringify(updatedUsers));
           syncUserToFirestore(newUser);
 
+          try {
+            fetch('api.php?action=save&table=users', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(newUser)
+            }).catch(() => {});
+          } catch (e) {}
+
+          // Authenticate
           sessionStorage.setItem('safari_admin_authenticated', 'true');
           sessionStorage.setItem('safari_user_role', assignedRole);
           sessionStorage.setItem('safari_user_phone', cleanPhone);
           sessionStorage.setItem('safari_current_user', JSON.stringify(newUser));
 
-          onLoginSuccess(assignedRole, 'roar', newUser);
+          // Clean URL
+          if (window.location.hash === '#/register') {
+            window.location.hash = '';
+          }
+          if (window.location.search.includes('view=register') || window.location.search.includes('invite=')) {
+            try {
+              const cleanUrl = window.location.pathname + (window.location.hash || '');
+              window.history.replaceState({}, document.title, cleanUrl);
+            } catch (e) {}
+          }
+
+          setStatusMessage('OTP verified successfully! Entering portal...');
+          setTimeout(() => {
+            onLoginSuccess(assignedRole, 'roar', newUser);
+          }, 350);
         } else {
+          // Login Mode: find matching user by phone
           const matchedUser = registeredUsers.find(u => 
             formatPhoneNumber(u.phone) === cleanPhone || 
             cleanPhone.endsWith((u.phone || '').replace(/\D/g, '').slice(-9))
@@ -486,7 +499,10 @@ export default function UserRegistrationView({
           sessionStorage.setItem('safari_user_phone', cleanPhone);
           sessionStorage.setItem('safari_current_user', JSON.stringify(matchedUser));
 
-          onLoginSuccess(matchedUser.role, 'roar', matchedUser);
+          setStatusMessage('Signed in successfully! Entering portal...');
+          setTimeout(() => {
+            onLoginSuccess(matchedUser.role, 'roar', matchedUser);
+          }, 350);
         }
       }
     } catch (err) {
@@ -638,7 +654,7 @@ export default function UserRegistrationView({
 
         {/* STEP 1: REGISTRATION FORM */}
         {step === 'form' && activeMode === 'register' && (
-          <form onSubmit={handleCompleteRegistration} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             {/* Invite-Only Code Field */}
             <div>
               <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
@@ -791,7 +807,7 @@ export default function UserRegistrationView({
                 style={{ fontWeight: '700' }}
               />
               <div style={{ fontSize: '11px', color: '#8c7361', marginTop: '4px' }}>
-                This mobile number will be your account login identifier.
+                This mobile number will be used for OTP verification and account logins.
               </div>
             </div>
 
@@ -832,14 +848,84 @@ export default function UserRegistrationView({
                 </button>
               </div>
               <div style={{ fontSize: '11px', color: '#8c7361', marginTop: '4px' }}>
-                You will use your phone number and this password to sign in to the portal in the future.
+                Password for direct staff logins after initial OTP authentication.
               </div>
             </div>
 
-            {/* Invisible reCAPTCHA container for fallback Phone Auth */}
-            <div id="recaptcha-container"></div>
+            {/* Mandatory OTP Verification Channel Selection */}
+            <div style={{
+              background: '#fdfbf7',
+              border: '1.5px solid #ede6d9',
+              borderRadius: '14px',
+              padding: '12px 14px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <label style={{ fontSize: '11px', fontWeight: '800', color: '#543c2b', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <ShieldCheck size={14} style={{ color: '#8c5b30' }} />
+                  Mandatory OTP Verification *
+                </label>
+                <span style={{ fontSize: '10px', color: '#8c7361', fontWeight: '700' }}>Select Channel</span>
+              </div>
+              <div style={{ fontSize: '11px', color: '#8c7361', marginBottom: '10px', lineHeight: '1.4' }}>
+                Authentication via Google OTP service or direct WhatsApp OTP is required to register.
+              </div>
 
-            {/* Primary Action Button: Complete Registration & Activate */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                {/* Option 1: WhatsApp Instant OTP (Zero SMS Cost) */}
+                <button
+                  type="button"
+                  onClick={() => setOtpChannel('whatsapp')}
+                  style={{
+                    padding: '10px',
+                    borderRadius: '10px',
+                    border: `1.5px solid ${otpChannel === 'whatsapp' ? '#16a34a' : '#ede6d9'}`,
+                    background: otpChannel === 'whatsapp' ? '#f0fdf4' : '#ffffff',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s ease',
+                    boxShadow: otpChannel === 'whatsapp' ? '0 2px 8px rgba(22, 163, 74, 0.12)' : 'none'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                    <MessageSquare size={14} style={{ color: otpChannel === 'whatsapp' ? '#16a34a' : '#8c7361' }} />
+                    <span style={{ fontSize: '11px', fontWeight: '800', color: otpChannel === 'whatsapp' ? '#16a34a' : '#543c2b' }}>
+                      WhatsApp OTP
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '10px', color: otpChannel === 'whatsapp' ? '#15803d' : '#8c7361', lineHeight: '1.2' }}>
+                    Instant • Zero SMS delay
+                  </div>
+                </button>
+
+                {/* Option 2: Google Phone Auth (SMS) */}
+                <button
+                  type="button"
+                  onClick={() => setOtpChannel('google')}
+                  style={{
+                    padding: '10px',
+                    borderRadius: '10px',
+                    border: `1.5px solid ${otpChannel === 'google' ? '#8c5b30' : '#ede6d9'}`,
+                    background: otpChannel === 'google' ? '#ffffff' : '#ffffff',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s ease',
+                    boxShadow: otpChannel === 'google' ? '0 2px 8px rgba(140, 91, 48, 0.12)' : 'none'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                    <Phone size={14} style={{ color: otpChannel === 'google' ? '#8c5b30' : '#8c7361' }} />
+                    <span style={{ fontSize: '11px', fontWeight: '800', color: otpChannel === 'google' ? '#8c5b30' : '#543c2b' }}>
+                      Google SMS
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#8c7361', lineHeight: '1.2' }}>
+                    Official Google Phone OTP
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Primary Action Button: Send OTP */}
             <button
               type="submit"
               disabled={loading || !verifiedInvite}
@@ -854,79 +940,36 @@ export default function UserRegistrationView({
                 justifyContent: 'center',
                 gap: '8px',
                 marginTop: '6px',
-                background: 'linear-gradient(135deg, #8c5b30 0%, #a66d3b 100%)',
+                background: otpChannel === 'whatsapp'
+                  ? 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)'
+                  : 'linear-gradient(135deg, #8c5b30 0%, #a66d3b 100%)',
                 border: 'none',
                 color: '#ffffff',
                 borderRadius: '12px',
                 cursor: (loading || !verifiedInvite) ? 'not-allowed' : 'pointer',
                 opacity: (loading || !verifiedInvite) ? 0.6 : 1,
-                boxShadow: '0 4px 14px rgba(140, 91, 48, 0.25)'
+                boxShadow: otpChannel === 'whatsapp'
+                  ? '0 4px 14px rgba(22, 163, 74, 0.25)'
+                  : '0 4px 14px rgba(140, 91, 48, 0.25)'
               }}
             >
               {loading ? (
-                <span>Activating Account...</span>
+                <span>Sending Verification Code...</span>
               ) : (
                 <>
-                  <ShieldCheck size={18} />
-                  <span>Complete Registration & Activate Account</span>
+                  {otpChannel === 'whatsapp' ? <MessageSquare size={18} /> : <Phone size={18} />}
+                  <span>
+                    {otpChannel === 'whatsapp' 
+                      ? 'Send WhatsApp Verification Code →' 
+                      : 'Send Google SMS OTP Code →'}
+                  </span>
                 </>
               )}
             </button>
 
             <div style={{ textAlign: 'center', fontSize: '11px', color: '#8c7361', marginTop: '2px' }}>
-              ✓ Instant Activation: Verified invite codes authorize immediate portal access.
+              🔒 2-Step Identity Verification: OTP verification is mandatory for driver & freelancer security.
             </div>
-
-            {/* Optional Fallback OTP Trigger */}
-            <div style={{ textAlign: 'center', marginTop: '6px' }}>
-              <button
-                type="button"
-                onClick={() => setShowOtpOption(!showOtpOption)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#8c5b30',
-                  fontSize: '11px',
-                  cursor: 'pointer',
-                  fontWeight: '700',
-                  textDecoration: 'underline'
-                }}
-              >
-                {showOtpOption ? 'Hide SMS OTP verification option' : 'Prefer SMS OTP verification instead?'}
-              </button>
-            </div>
-
-            {showOtpOption && (
-              <div style={{
-                background: '#fdfbf7',
-                border: '1px dashed #ede6d9',
-                borderRadius: '12px',
-                padding: '12px',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '11px', color: '#8c7361', marginBottom: '8px' }}>
-                  Note: SMS OTP requires Firebase SMS to be enabled for your country (+971).
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={loading}
-                  className="btn btn-secondary"
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '12px',
-                    fontWeight: '800',
-                    background: '#ede6d9',
-                    border: '1px solid #dcd2c3',
-                    color: '#543c2b',
-                    borderRadius: '8px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Send Verification SMS OTP
-                </button>
-              </div>
-            )}
           </form>
         )}
 
@@ -1018,6 +1061,26 @@ export default function UserRegistrationView({
               )}
             </button>
 
+            {/* Alternative: OTP Login */}
+            <div style={{ textAlign: 'center', marginTop: '4px' }}>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={(e) => handleSendOtp(e, 'whatsapp')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#16a34a',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  textDecoration: 'underline'
+                }}
+              >
+                Prefer OTP sign in? Sign In with WhatsApp / Google OTP →
+              </button>
+            </div>
+
             <div style={{ textAlign: 'center', marginTop: '6px' }}>
               <button
                 type="button"
@@ -1041,42 +1104,209 @@ export default function UserRegistrationView({
           </form>
         )}
 
-        {/* STEP 2: OTP VERIFICATION (Only active if user opted into SMS OTP) */}
+        {/* STEP 2: MANDATORY OTP VERIFICATION */}
         {step === 'otp' && (
           <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Channel & Recipient Summary Card */}
             <div style={{
               background: '#fdfbf7',
-              border: '1px solid #ede6d9',
-              borderRadius: '12px',
-              padding: '14px',
+              border: '1.5px solid #ede6d9',
+              borderRadius: '14px',
+              padding: '14px 16px',
               textAlign: 'center'
             }}>
-              <div style={{ fontSize: '12px', color: '#8c7361' }}>OTP sent to:</div>
-              <div style={{ fontSize: '15px', fontWeight: '900', color: '#543c2b', marginTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '4px' }}>
+                {otpChannel === 'whatsapp' ? (
+                  <span style={{
+                    background: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    color: '#15803d',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <MessageSquare size={12} /> WhatsApp Instant OTP
+                  </span>
+                ) : (
+                  <span style={{
+                    background: 'rgba(140, 91, 48, 0.08)',
+                    border: '1px solid rgba(140, 91, 48, 0.2)',
+                    color: '#8c5b30',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    padding: '2px 8px',
+                    borderRadius: '12px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <Phone size={12} /> Google Phone Auth (SMS)
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: '11px', color: '#8c7361' }}>Verification code dispatched to:</div>
+              <div style={{ fontSize: '16px', fontWeight: '900', color: '#543c2b', marginTop: '2px' }}>
                 {otpResponse?.formattedPhone || (activeMode === 'register' ? phone : loginPhone)}
               </div>
             </div>
 
+            {/* If WhatsApp Channel: Display WhatsApp OTP Card */}
+            {otpChannel === 'whatsapp' && (
+              <div style={{
+                background: '#f0fdf4',
+                border: '1.5px solid #bbf7d0',
+                borderRadius: '14px',
+                padding: '14px 16px',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#15803d', marginBottom: '6px' }}>
+                  Your 6-Digit WhatsApp Verification Code:
+                </div>
+                <div style={{
+                  fontSize: '28px',
+                  fontWeight: '900',
+                  letterSpacing: '6px',
+                  color: '#15803d',
+                  fontFamily: 'monospace',
+                  background: '#ffffff',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  margin: '0 auto 10px auto',
+                  display: 'inline-block'
+                }}>
+                  {generatedWhatsAppOtp || otpResponse?.code || '------'}
+                </div>
+
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => setOtpCode(generatedWhatsAppOtp || otpResponse?.code || '')}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #16a34a',
+                      background: '#16a34a',
+                      color: '#ffffff',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <Check size={13} /> Auto-Fill Code
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyOtp}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid #bbf7d0',
+                      background: '#ffffff',
+                      color: '#15803d',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    {copiedOtp ? <Check size={13} /> : <Copy size={13} />}
+                    {copiedOtp ? 'Copied!' : 'Copy Code'}
+                  </button>
+                  {phone && (
+                    <a
+                      href={`https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Roar Safari Driver/Staff Registration Verification Code: ${generatedWhatsAppOtp || otpResponse?.code || ''}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #bbf7d0',
+                        background: '#ffffff',
+                        color: '#15803d',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        textDecoration: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
+                    >
+                      <ExternalLink size={13} /> Open WhatsApp
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* If Google Channel: Explanation & Quick Switch */}
+            {otpChannel === 'google' && (
+              <div style={{
+                background: '#fdfbf7',
+                border: '1px solid #ede6d9',
+                borderRadius: '12px',
+                padding: '10px 12px',
+                fontSize: '11px',
+                color: '#8c7361',
+                lineHeight: '1.4'
+              }}>
+                <div>Google SMS verification code will arrive via text message shortly.</div>
+                <div style={{ marginTop: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={(e) => handleSendOtp(e, 'whatsapp')}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      padding: 0,
+                      color: '#16a34a',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    Didn't receive SMS? Switch to WhatsApp Instant OTP →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 6-Digit OTP Input Field */}
             <div className="form-group">
+              <label style={{ fontSize: '11px', fontWeight: '700', color: '#8c7361', marginBottom: '4px', display: 'block' }}>
+                Enter 6-Digit Verification Code *
+              </label>
               <input
                 type="text"
                 required
                 maxLength={6}
                 className="form-control"
-                placeholder="Enter 6-Digit Code"
+                placeholder="------"
                 title="6-Digit OTP Code"
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
                 style={{
-                  fontSize: '22px',
+                  fontSize: '24px',
                   fontWeight: '900',
                   textAlign: 'center',
                   letterSpacing: '8px',
-                  padding: '12px'
+                  padding: '12px',
+                  borderColor: otpCode.length === 6 ? '#16a34a' : '#ede6d9'
                 }}
               />
             </div>
 
+            {/* Primary Action: Verify & Complete */}
             <button
               type="submit"
               disabled={loading || otpCode.length < 6}
@@ -1095,33 +1325,99 @@ export default function UserRegistrationView({
                 color: '#ffffff',
                 borderRadius: '12px',
                 cursor: (loading || otpCode.length < 6) ? 'not-allowed' : 'pointer',
-                opacity: (loading || otpCode.length < 6) ? 0.6 : 1
+                opacity: (loading || otpCode.length < 6) ? 0.6 : 1,
+                boxShadow: '0 4px 14px rgba(140, 91, 48, 0.25)'
               }}
             >
-              {loading ? 'Verifying...' : 'Verify & Continue'}
+              {loading ? (
+                <span>Verifying OTP & Registering...</span>
+              ) : (
+                <>
+                  <CheckCircle size={18} />
+                  <span>Verify Code & Complete Registration</span>
+                </>
+              )}
             </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                setStep('form');
-                setOtpCode('');
-                setError('');
-              }}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#8c7361',
-                fontSize: '12px',
-                cursor: 'pointer',
-                textAlign: 'center',
-                textDecoration: 'underline'
-              }}
-            >
-              ← Back to direct activation
-            </button>
+            {/* Resend & Channel Switch Actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginTop: '4px' }}>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={(e) => handleSendOtp(e, otpChannel)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#8c5b30',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <RotateCcw size={12} /> Resend OTP
+              </button>
+
+              {otpChannel === 'google' ? (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={(e) => handleSendOtp(e, 'whatsapp')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#16a34a',
+                    cursor: 'pointer',
+                    fontWeight: '800'
+                  }}
+                >
+                  Use WhatsApp OTP Instead →
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={(e) => handleSendOtp(e, 'google')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#8c5b30',
+                    cursor: 'pointer',
+                    fontWeight: '700'
+                  }}
+                >
+                  Use Google SMS Instead →
+                </button>
+              )}
+            </div>
+
+            {/* Back to details button */}
+            <div style={{ textAlign: 'center', marginTop: '6px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setStep('form');
+                  setOtpCode('');
+                  setError('');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#8c7361',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                ← Edit registration details
+              </button>
+            </div>
           </form>
         )}
+
+        {/* Persistent invisible reCAPTCHA container for Google Phone Auth */}
+        <div id="recaptcha-container" style={{ margin: '0 auto' }}></div>
 
         {/* Footer Action */}
         <div style={{

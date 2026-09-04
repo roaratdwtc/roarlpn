@@ -175,7 +175,7 @@ export async function sendPhoneOtp(phoneNumber, containerId = 'recaptcha-contain
     } else if (err.code === 'auth/unauthorized-domain') {
       userMsg = `Current domain (${window.location.hostname}) is not authorized in Firebase Console > Authentication > Settings > Authorized domains.`;
     } else if (err.code === 'auth/operation-not-allowed' || (err.message && err.message.includes('operation-not-allowed'))) {
-      userMsg = "Firebase SMS is not enabled for UAE (+971) in Firebase Console. Please register or sign in directly using your password without SMS.";
+      userMsg = "Google Firebase SMS requires UAE (+971) to be enabled in Firebase Console (Authentication > Settings > SMS region policy). You can verify via WhatsApp OTP immediately.";
     }
     throw new Error(userMsg);
   }
